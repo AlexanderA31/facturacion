@@ -94,7 +94,12 @@ export default {
         this.errorDetails = [];
         this.file = null;
         this.password = '';
-        this.$refs.fileInput.value = '';
+
+        this.$nextTick(() => {
+          if (this.$refs.fileInput) {
+            this.$refs.fileInput.value = '';
+          }
+        });
 
       } catch (error) {
         this.messageType = 'error';
