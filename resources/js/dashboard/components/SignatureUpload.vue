@@ -77,8 +77,8 @@ export default {
       this.loading = true;
 
       const formData = new FormData();
-      formData.append('signature', this.file);
-      formData.append('password', this.password);
+      formData.append('signature_file', this.file);
+      formData.append('signature_key', this.password);
 
       try {
         const token = localStorage.getItem('jwt_token');
