@@ -47,6 +47,10 @@ Route::post('/logout', function () {
     return $redirection;
 })->name('swagger.logout');
 
+Route::get('/dashboard', function () {
+    return view('dashboard');
+});
+
 Route::get('/{any}', function () {
     return view('welcome');
 })->where('any', '.*');
