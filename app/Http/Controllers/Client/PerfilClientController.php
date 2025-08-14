@@ -11,7 +11,6 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use App\Enums\RolesEnum;
 use App\Services\CertificadoFirma;
-use Illuminate\Support\Facades\Log;
 
 class PerfilClientController extends Controller implements HasMiddleware
 {
@@ -99,7 +98,6 @@ class PerfilClientController extends Controller implements HasMiddleware
     /* --------------- Actualizar certificado .p12 --------------- */
     public function updateSignature(LoadSignatureRequest $request)
     {
-        Log::info("Iniciando el proceso de actualización de firma para el usuario: " . auth()->id());
         try {
             $user = auth()->user();
 
