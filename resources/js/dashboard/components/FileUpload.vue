@@ -86,25 +86,19 @@ export default {
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-          if (jsonData.length < 1) {
-            this.error = 'El archivo Excel está vacío.';
+          // Use the default sheet_to_json behavior, which automatically uses the first row as headers.
+          // This is more robust than manually reconstructing the objects.
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+          if (jsonData.length === 0) {
+            this.error = 'El archivo Excel no contiene datos.';
             return;
           }
 
-          const headers = jsonData[0];
-          const rows = jsonData.slice(1).map(row => {
-            let rowData = {};
-            headers.forEach((header, index) => {
-              rowData[header] = row[index];
-            });
-            return rowData;
-          });
-
-          this.$emit('file-parsed', rows);
+          this.$emit('file-parsed', jsonData);
         } catch (err) {
-          this.error = 'Error al procesar el archivo Excel.';
+          this.error = 'Error al procesar el archivo Excel. Asegúrate de que el formato es correcto.';
           console.error(err);
         }
       };
