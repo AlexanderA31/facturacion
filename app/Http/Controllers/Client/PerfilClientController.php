@@ -122,7 +122,7 @@ class PerfilClientController extends Controller implements HasMiddleware
                 'expires_at' => $result['expires_at'],
             ]);
         } catch(\Exception $e) {
-            return $this->sendError('Error al actualizar el certificado', $e->getMessage(), code: 500);
+            return $this->sendError($e->getMessage(), null, 500);
         }
     }
 }
