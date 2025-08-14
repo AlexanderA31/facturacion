@@ -12,7 +12,7 @@ class AccessKeyGenerator
             $tipoComprobante = $data['codDoc'];
             $tipoAmbiente = $data['ambiente'];
             $serie = ($data['estab'] ?? '001') . ($data['ptoEmi'] ?? '001');
-            $secuencial = $data['secuencial'];
+            $secuencial = str_pad($data['secuencial'], 9, '0', STR_PAD_LEFT);
             $codNumerico = self::generateNumericCode();
             $tipoEmision = '1'; // FIJO
 
