@@ -87,14 +87,41 @@ export default {
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
 
-          // Use the default sheet_to_json behavior, which automatically uses the first row as headers.
-          // This is more robust than manually reconstructing the objects.
-          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
-          if (jsonData.length === 0) {
-            this.error = 'El archivo Excel no contiene datos.';
+          if (sheetData.length === 0) {
+            this.error = 'El archivo Excel está vacío.';
             return;
           }
+
+          // Find the header row by looking for key columns
+          let headerRowIndex = -1;
+          let headers = [];
+          for (let i = 0; i < sheetData.length; i++) {
+            const row = sheetData[i];
+            const normalizedRow = row.map(h => typeof h === 'string' ? h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '');
+            if (normalizedRow.includes('codigo') && normalizedRow.includes('cedula')) {
+              headerRowIndex = i;
+              headers = row;
+              break;
+            }
+          }
+
+          if (headerRowIndex === -1) {
+            this.error = 'No se pudo encontrar la fila de encabezados en el archivo Excel. Asegúrate de que contiene las columnas "Código" y "Cédula".';
+            return;
+          }
+
+          const dataRows = sheetData.slice(headerRowIndex + 1);
+          const jsonData = dataRows.map(row => {
+            let rowData = {};
+            headers.forEach((header, index) => {
+              if (header) { // Only add if header is not empty
+                rowData[header] = row[index];
+              }
+            });
+            return rowData;
+          }).filter(row => Object.values(row).some(val => val)); // Filter out completely empty rows
 
           this.$emit('file-parsed', jsonData);
         } catch (err) {
@@ -108,20 +135,18 @@ export default {
       reader.readAsArrayBuffer(file);
     },
     async parsePdf(file) {
+      // PDF parsing logic remains the same
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
           const data = new Uint8Array(e.target.result);
           const pdf = await pdfjsLib.getDocument({ data }).promise;
           let allRows = [];
-
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
-
             let pageText = textContent.items.map(item => item.str).join('');
             const lines = pageText.split(/\r\n?|\n/);
-
             if (i === 1 && lines.length > 0) {
               const headers = lines[0].split(/\s{2,}/);
               const rows = lines.slice(1).map(line => {
@@ -138,9 +163,7 @@ export default {
                allRows.push(...rows);
             }
           }
-
           this.$emit('file-parsed', allRows);
-
         } catch (err) {
           this.error = 'Error al procesar el archivo PDF.';
           console.error(err);
