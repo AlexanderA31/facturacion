@@ -107,9 +107,9 @@ export default {
       const iva = parseFloat((precio - totalSinImpuestos).toFixed(2));
       return {
         fechaEmision: new Date().toISOString().split('T')[0],
-        tipoIdentificacionComprador: cedula.length === 13 ? '04' : '05',
+        tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
         razonSocialComprador: nombres,
-        identificacionComprador: cedula,
+        identificacionComprador: String(cedula),
         direccionComprador: direccion,
         totalSinImpuestos: totalSinImpuestos,
         totalDescuento: 0,
@@ -117,7 +117,7 @@ export default {
         importeTotal: precio,
         pagos: [{ formaPago: '01', total: precio }],
         detalles: [{
-          codigoPrincipal: codigo,
+          codigoPrincipal: String(codigo),
           descripcion: evento,
           cantidad: 1,
           precioUnitario: totalSinImpuestos,
