@@ -6,7 +6,7 @@
     <title>Billing Dashboard</title>
     @vite('resources/js/dashboard/dashboard.js')
 </head>
-<body>
+<body class="bg-gray-100">
     <div id="app"></div>
 </body>
 </html>

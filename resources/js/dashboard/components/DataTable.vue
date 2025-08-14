@@ -11,7 +11,7 @@
       <tbody class="bg-white divide-y divide-gray-200">
         <tr v-if="data.length === 0">
           <td :colspan="headers.length" class="px-6 py-4 text-center text-gray-500">
-            No data to display. Upload a file to get started.
+            No hay datos para mostrar. Sube un archivo para comenzar.
           </td>
         </tr>
         <tr v-for="(row, index) in data" :key="index" class="hover:bg-gray-50">
@@ -45,11 +45,13 @@ export default {
   methods: {
     getStatusClass(status) {
       switch (status) {
-        case 'Billed':
+        case 'Facturado':
           return 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800';
-        case 'Not Billed':
+        case 'No Facturado':
           return 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800';
-        case 'Pending':
+        case 'Procesando':
+          return 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800';
+        case 'Pendiente':
         default:
           return 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800';
       }
