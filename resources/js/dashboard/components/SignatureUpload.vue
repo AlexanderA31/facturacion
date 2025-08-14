@@ -1,7 +1,10 @@
 <template>
   <div class="p-4 border rounded-lg shadow-sm">
-    <div v-if="message" :class="messageType === 'success' ? 'text-green-500' : 'text-red-500'" class="mb-4">
-      {{ message }}
+    <div v-if="message" class="mb-4 p-3 rounded-md" :class="messageType === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+      <p class="font-semibold">{{ messageTitle }}</p>
+      <ul v-if="errorDetails.length" class="list-disc list-inside text-sm">
+        <li v-for="(detail, index) in errorDetails" :key="index">{{ detail }}</li>
+      </ul>
     </div>
     <form @submit.prevent="uploadSignature">
       <div class="mb-4">
@@ -31,13 +34,25 @@ export default {
       loading: false,
       message: '',
       messageType: '',
+      errorDetails: [],
     };
+  },
+  computed: {
+      messageTitle() {
+          if (this.messageType === 'success') return 'Éxito';
+          if (this.messageType === 'error') return 'Error';
+          return '';
+      }
   },
   methods: {
     handleFileChange(event) {
       this.file = event.target.files[0];
     },
     async uploadSignature() {
+      this.message = '';
+      this.messageType = '';
+      this.errorDetails = [];
+
       if (!this.file) {
         this.message = 'Por favor, selecciona un archivo.';
         this.messageType = 'error';
@@ -45,8 +60,6 @@ export default {
       }
 
       this.loading = true;
-      this.message = '';
-      this.messageType = '';
 
       const formData = new FormData();
       formData.append('signature', this.file);
@@ -54,7 +67,6 @@ export default {
 
       try {
         const token = localStorage.getItem('jwt_token');
-
         const response = await axios.post('/api/profile/signature', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -65,12 +77,17 @@ export default {
         this.message = response.data.message;
         this.messageType = 'success';
       } catch (error) {
-        if (error.response) {
-          this.message = error.response.data.message || 'Ocurrió un error durante la subida.';
-        } else {
-          this.message = 'Ocurrió un error. Por favor, revisa la consola.';
-        }
         this.messageType = 'error';
+        if (error.response) {
+            this.message = error.response.data.message || 'Ocurrió un error durante la subida.';
+
+            // Handle validation errors (422)
+            if (error.response.status === 422 && error.response.data.errors) {
+                this.errorDetails = Object.values(error.response.data.errors).flat();
+            }
+        } else {
+            this.message = 'Ocurrió un error de red. Por favor, revisa la consola.';
+        }
         console.error('Signature upload error:', error);
       } finally {
         this.loading = false;
