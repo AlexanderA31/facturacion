@@ -8,69 +8,110 @@ use Exception;
 
 class CertificadoFirma
 {
+    /**
+     * Valida un certificado .p12 y su contraseña usando el JAR firmador.
+     *
+     * @param string $p12Path Ruta al archivo .p12.
+     * @param string $password Contraseña del certificado.
+     * @return boolean
+     * @throws Exception Si el JAR no puede procesar el archivo.
+     */
+    private function validateCertificateWithJar($p12Path, $password)
+    {
+        Log::info("Iniciando validación del certificado con JAR.");
+
+        $jarPath = base_path('app/firmador/sri-fat.jar');
+        $tempDir = storage_path('app/temp_jar_validation');
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+
+        // Crear un archivo XML temporal para el proceso de firma
+        $dummyXmlPath = $tempDir . '/dummy.xml';
+        file_put_contents($dummyXmlPath, '<test/>');
+
+        $outputXmlPath = $tempDir . '/dummy_signed.xml';
+
+        $command = sprintf(
+            'java -jar %s %s %s %s %s %s',
+            escapeshellarg($jarPath),
+            escapeshellarg($p12Path),
+            escapeshellarg($password),
+            escapeshellarg($dummyXmlPath),
+            escapeshellarg($tempDir),
+            'dummy_signed.xml'
+        );
+
+        Log::info("Ejecutando comando de validación JAR: " . $command);
+        exec($command, $output, $return_var);
+
+        // Limpiar archivos temporales
+        @unlink($dummyXmlPath);
+        if (file_exists($outputXmlPath)) {
+            @unlink($outputXmlPath);
+        }
+        @rmdir($tempDir);
+
+        Log::info("Comando JAR finalizado. Código de retorno: " . $return_var);
+        Log::info("Salida del comando JAR: " . implode("\n", $output));
+
+        if ($return_var !== 0) {
+            $errorOutput = implode("\n", $output);
+            if (str_contains(strtolower($errorOutput), 'password')) {
+                 throw new Exception('La contraseña del certificado parece ser incorrecta (verificado con JAR).');
+            }
+            throw new Exception('El JAR firmador no pudo procesar el archivo. El archivo puede estar corrupto o no ser un .p12 válido.');
+        }
+
+        Log::info("Validación con JAR exitosa.");
+        return true;
+    }
+
     public function handleCertificate($certificateFile, $certificateKey, $expectedRuc, $existingCertificatePath = null)
     {
         Log::info("Servicio CertificadoFirma: Iniciando manejo de certificado.");
 
+        $tempP12Path = $certificateFile->getRealPath();
+
+        // 1. Validar la integridad del archivo y la clave usando el método alternativo con JAR
+        $this->validateCertificateWithJar($tempP12Path, $certificateKey);
+
+        // 2. Si la validación con JAR es exitosa, proceder a extraer metadatos con OpenSSL
         try {
-            // 1. Validar y leer el contenido del certificado
-            Log::info("Paso 1: Leyendo contenido del certificado.");
-            $certificateContent = file_get_contents($certificateFile->getRealPath());
+            Log::info("Validación con JAR exitosa, procediendo a extraer metadatos con OpenSSL.");
+            $certificateContent = file_get_contents($tempP12Path);
             $certData = [];
 
-            Log::info("Intentando leer el archivo PKCS12 con openssl_pkcs12_read.");
             if (!openssl_pkcs12_read($certificateContent, $certData, $certificateKey)) {
-                Log::error("Fallo en openssl_pkcs12_read. La clave o el archivo son inválidos.");
-                throw new Exception('El archivo del certificado o la clave son inválidos.');
+                Log::error("Fallo en openssl_pkcs12_read DESPUÉS de la validación con JAR. Esto puede indicar un problema con la extensión OpenSSL de PHP.");
+                throw new Exception('El archivo y la clave son válidos, pero ocurrió un error al leerlos con OpenSSL en el servidor.');
             }
-            Log::info("openssl_pkcs12_read exitoso.");
 
-            // 2. Validar la fecha de expiración
-            Log::info("Paso 2: Validando fecha de expiración.");
             $x509Cert = $certData['cert'];
             $parsedCert = openssl_x509_parse($x509Cert);
             if (!$parsedCert) {
-                Log::error("Fallo en openssl_x509_parse. No se pudo analizar el certificado.");
-                throw new Exception('No se pudo analizar el certificado.');
+                throw new Exception('No se pudo analizar el certificado con OpenSSL.');
             }
-            Log::info("openssl_x509_parse exitoso.");
 
             $validTo = $parsedCert['validTo_time_t'];
-            Log::info("Fecha de expiración del certificado (timestamp): " . $validTo);
             if (time() > $validTo) {
-                Log::error("El certificado ha caducado. Fecha de expiración: " . date('Y-m-d H:i:s', $validTo));
                 throw new Exception('El certificado ha caducado.');
             }
-            Log::info("Validación de fecha de expiración exitosa.");
 
-            // 3. Validar que el RUC del certificado coincida con el del usuario
-            Log::info("Paso 3: Validando RUC.");
             $certRuc = $parsedCert['subject']['serialNumber'] ?? null;
-
             if (!$certRuc) {
-                Log::error("No se pudo encontrar el serialNumber en el certificado.");
                 throw new Exception('No se pudo obtener el RUC del certificado.');
             }
-            Log::info("serialNumber encontrado en el certificado: " . $certRuc);
-
             $certRuc = preg_replace('/[^0-9]/', '', $certRuc);
-            Log::info("RUC limpiado del certificado: " . $certRuc . ". RUC esperado del usuario: " . $expectedRuc);
-
             if (substr($expectedRuc, 0, 10) !== $certRuc) {
-                Log::error("El RUC no coincide. Certificado: " . $certRuc . " | Usuario: " . $expectedRuc);
-                throw new Exception("El RUC del certificado no coincide con el RUC del usuario.");
+                throw new Exception("El RUC del certificado ($certRuc) no coincide con el RUC del usuario ($expectedRuc).");
             }
-            Log::info("Validación de RUC exitosa.");
 
-            // 4. Reemplazar el certificado anterior si existe
             if ($existingCertificatePath && Storage::exists($existingCertificatePath)) {
-                Log::info("Paso 4: Eliminando certificado anterior: " . $existingCertificatePath);
                 Storage::delete($existingCertificatePath);
             }
 
-            // 5. Guardar el archivo en el almacenamiento
             $fileName = 'signature_' . uniqid() . '.p12';
-            Log::info("Paso 5: Guardando nuevo archivo de firma como: " . $fileName);
             $filePath = $certificateFile->storeAs('signatures', $fileName);
             Log::info("Archivo guardado exitosamente en: " . $filePath);
 
@@ -79,9 +120,9 @@ class CertificadoFirma
                 'signature_key' => encrypt($certificateKey),
                 'expires_at' => date('Y-m-d H:i:s', $validTo),
             ];
+
         } catch (Exception $e) {
             Log::error("Excepción capturada en handleCertificate: " . $e->getMessage());
-            // Re-lanzamos la excepción para que el controlador la maneje
             throw $e;
         }
     }
