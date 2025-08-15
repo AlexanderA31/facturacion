@@ -27,11 +27,24 @@
                 {{ row[header] }}
               </span>
             </span>
-            <span v-else-if="header === 'Acciones'">
+              <span v-else-if="header === 'Acciones'" class="space-x-2">
               <button v-if="row.estado === 'autorizado'" @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
                 XML
+                </button>
+                <button v-if="row.estado === 'autorizado'" @click="$emit('download-pdf', row.clave_acceso)" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
+                  PDF
               </button>
             </span>
+              <span v-else-if="header === 'Mensaje de Error'">
+                <span v-if="row.error_message">
+                    <span v-if="!row.isErrorExpanded" @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer" :title="row.error_message">
+                        {{ truncateText(row.error_message, 30) }}
+                    </span>
+                    <span v-else @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer">
+                        {{ row.error_message }}
+                    </span>
+                </span>
+              </span>
             <span v-else>
               {{ row[header] }}
             </span>
