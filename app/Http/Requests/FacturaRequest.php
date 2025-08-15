@@ -56,7 +56,7 @@ class FacturaRequest extends FormRequest
             "detalles.*.codigoAuxiliar" => "string|max:25",
             "detalles.*.descripcion" => "required|string|max:300",
             "detalles.*.cantidad" => "required|numeric|min:0|regex:/^\d+(\.\d{2,6})?$/",
-            "detalles.*.precioUnitario" => "required|numeric|min:0|regex:/^\d+(\.\d{2,6})?$/",
+            "detalles.*.precioUnitario" => "required|numeric|min:0",
             "detalles.*.descuento" => "required|numeric|min:0|max:1.0E+14",
             "detalles.*.precioTotalSinImpuesto" => "required|numeric|min:0|max:1.0E+14",
             "detalles.*.impuestos" => "required|array",
