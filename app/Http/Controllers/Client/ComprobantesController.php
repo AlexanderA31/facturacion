@@ -163,9 +163,9 @@ class ComprobantesController extends Controller
             $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
 
             // Validar que el comprobante haya sido autorizado
-            if ($comprobante->estado !== EstadosComprobanteEnum::AUTORIZADO) {
-                return $this->sendError('Comprobante no autorizado', 'No es posible obtener el XML porque el comprobante no ha sido autorizado por el SRI', 409);
-            }
+            // if ($comprobante->estado !== EstadosComprobanteEnum::AUTORIZADO) {
+            //     return $this->sendError('Comprobante no autorizado', 'No es posible obtener el XML porque el comprobante no ha sido autorizado por el SRI', 409);
+            // }
 
             // Autorizar la acción
             Gate::authorize('viewXml', $comprobante);
