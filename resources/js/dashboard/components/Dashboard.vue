@@ -1,47 +1,77 @@
 <template>
-  <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-4xl font-bold text-gray-900">Dashboard de Facturación</h1>
-        <button @click="handleLogout" class="px-4 py-2 font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
+  <div class="min-h-screen bg-gray-50">
+    <header class="bg-white shadow-md">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <h1 class="text-3xl font-bold text-gray-800">Dashboard de Facturación</h1>
+          <button @click="handleLogout" class="flex items-center px-4 py-2 font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
             Cerrar Sesión
-        </button>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-      <h2 class="text-2xl font-semibold mb-4 border-b pb-3">Configuración</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <h3 class="text-xl font-semibold mb-3 text-gray-700">Firma Electrónica</h3>
-          <SignatureUpload />
-        </div>
-        <div>
-          <h3 class="text-xl font-semibold mb-3 text-gray-700">Cargar Archivo de Datos</h3>
-          <FileUpload @file-parsed="handleFileParsed" />
+          </button>
         </div>
       </div>
-    </div>
+    </header>
 
-    <div class="mb-8">
-        <StatusChecker :token="token" />
-    </div>
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+      <div class="mb-6">
+        <div class="flex border-b border-gray-200">
+          <button @click="currentView = 'billing'" :class="['px-6 py-3 text-lg font-semibold', currentView === 'billing' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700']">
+            Facturación
+          </button>
+          <button @click="currentView = 'clients'" :class="['px-6 py-3 text-lg font-semibold', currentView === 'clients' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700']">
+            Clientes
+          </button>
+        </div>
+      </div>
 
-    <div class="bg-white rounded-xl shadow-lg p-6">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-          <h2 class="text-2xl font-semibold mb-3 sm:mb-0">Facturación Masiva</h2>
-          <button @click="startBilling" :disabled="isBilling || tableData.length === 0"
-                  class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-medium text-sm leading-tight uppercase rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed">
+      <div v-if="currentView === 'billing'">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div class="lg:col-span-1 bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-3">Firma Electrónica</h3>
+            <p class="text-gray-600 mb-4">Cargue su certificado de firma electrónica para poder emitir comprobantes.</p>
+            <SignatureUpload />
+          </div>
+          <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-3">Cargar Archivo de Datos</h3>
+            <p class="text-gray-600 mb-4">Seleccione un archivo de Excel (.xlsx, .xls) con los datos de los clientes y las facturas a emitir.</p>
+            <FileUpload @file-parsed="handleFileParsed" />
+          </div>
+        </div>
+
+        <div class="mb-8 bg-white rounded-xl shadow-lg p-6">
+           <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-3">Estado del Sistema</h3>
+           <p class="text-gray-600 mb-4">Verifique el estado de los servicios del SRI y la configuración de su cuenta.</p>
+          <StatusChecker :token="token" />
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+            <div >
+              <h2 class="text-2xl font-bold text-gray-800">Facturación Masiva</h2>
+              <p class="text-gray-600">Revise los datos cargados y proceda a emitir las facturas.</p>
+            </div>
+            <button @click="startBilling" :disabled="isBilling || tableData.length === 0"
+                    class="w-full sm:w-auto mt-4 sm:mt-0 px-6 py-3 bg-blue-600 text-white font-medium text-lg leading-tight uppercase rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center">
               <span v-if="isBilling">
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 Facturando...
               </span>
-              <span v-else>Iniciar Facturación</span>
-          </button>
+              <span v-else class="flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Iniciar Facturación
+              </span>
+            </button>
+          </div>
+          <DataTable :data="tableData" :headers="tableHeaders" />
+        </div>
       </div>
-      <DataTable :data="tableData" :headers="tableHeaders" />
-    </div>
+      <div v-if="currentView === 'clients'">
+          <ClientManager :token="token" />
+      </div>
+    </main>
   </div>
 </template>
 
@@ -50,6 +80,7 @@ import SignatureUpload from './SignatureUpload.vue';
 import FileUpload from './FileUpload.vue';
 import DataTable from './DataTable.vue';
 import StatusChecker from './StatusChecker.vue';
+import ClientManager from './ClientManager.vue';
 import axios from 'axios';
 
 export default {
@@ -59,6 +90,7 @@ export default {
     FileUpload,
     DataTable,
     StatusChecker,
+    ClientManager,
   },
   props: {
     token: {
@@ -68,6 +100,7 @@ export default {
   },
   data() {
     return {
+      currentView: 'billing',
       tableData: [],
       tableHeaders: ['Código', 'Cédula', 'Nombres', 'Dirección', 'Teléfono', 'Email', 'Evento', 'Precio', 'Estado', 'Método de pago'],
       puntoEmisionId: 1,
