@@ -115,11 +115,22 @@ export default {
     },
     async downloadXml(claveAcceso) {
       try {
+        // First, verify the status
+        const statusResponse = await axios.get(`/api/comprobantes/${claveAcceso}/estado`, {
+          headers: { 'Authorization': `Bearer ${this.token}` },
+        });
+
+        if (statusResponse.data.data.estado !== 'autorizado') {
+          alert('Error: El estado de este comprobante no es "autorizado". Actualizando la lista.');
+          this.getInvoices();
+          return;
+        }
+
+        // If authorized, proceed with XML download
         const response = await axios.get(`/api/comprobantes/${claveAcceso}/xml`, {
           headers: { 'Authorization': `Bearer ${this.token}` }
         });
 
-        // The XML content is in response.data.data.xml
         const xmlContent = response.data.data.xml;
         const blob = new Blob([xmlContent], { type: 'application/xml' });
         const link = document.createElement('a');
@@ -130,11 +141,23 @@ export default {
         document.body.removeChild(link);
       } catch (error) {
         console.error('Error downloading XML:', error);
-        alert('No se pudo descargar el archivo XML.');
+        alert('No se pudo descargar el archivo XML. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
       }
     },
     async downloadPdf(claveAcceso) {
       try {
+        // First, verify the status
+        const statusResponse = await axios.get(`/api/comprobantes/${claveAcceso}/estado`, {
+          headers: { 'Authorization': `Bearer ${this.token}` },
+        });
+
+        if (statusResponse.data.data.estado !== 'autorizado') {
+          alert('Error: El estado de este comprobante no es "autorizado". Actualizando la lista.');
+          this.getInvoices();
+          return;
+        }
+
+        // If authorized, proceed with PDF download
         const response = await axios.get(`/api/comprobantes/${claveAcceso}/pdf`, {
           headers: { 'Authorization': `Bearer ${this.token}` },
           responseType: 'blob',
@@ -149,7 +172,7 @@ export default {
         document.body.removeChild(link);
       } catch (error) {
         console.error('Error downloading PDF:', error);
-        alert('No se pudo descargar el archivo PDF.');
+        alert('No se pudo descargar el archivo PDF. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
       }
     },
   },
