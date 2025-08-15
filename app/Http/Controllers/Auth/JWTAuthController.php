@@ -9,9 +9,46 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+use App\Enums\RolesEnum;
+use App\Enums\TarifasEnum;
+use App\Enums\AmbientesEnum;
 
 class JWTAuthController extends Controller
 {
+    public function register(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|string|min:8',
+                'ruc' => 'required|string|regex:/^[0-9]{13}$/|unique:users,ruc',
+                'razonSocial' => 'required|string',
+                'nombreComercial' => 'string',
+                'dirMatriz' => 'string',
+                'obligadoContabilidad' => 'boolean',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Datos no validos', $validator->errors(), 400);
+            }
+
+            $validated = $validator->validated();
+            $validated['password'] = bcrypt($validated['password']);
+            $validated['tarifa'] = TarifasEnum::COMPROBANTE->value;
+            $validated['ambiente'] = AmbientesEnum::PRUEBAS->value;
+
+            $user = User::create($validated);
+            $user->assignRole(RolesEnum::CLIENTE);
+
+            return $this->sendResponse('Usuario registrado exitosamente', [], 201);
+        } catch (\Exception $e) {
+            return $this->sendError('No se pudo registrar el usuario', $e->getMessage(), 500);
+        }
+    }
+
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->only('email', 'password');

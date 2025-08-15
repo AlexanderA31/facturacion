@@ -12,6 +12,7 @@ use App\Http\Controllers\Client\PerfilClientController;
 
 Route::group(['middleware' => ['json.response']], function () {
     /* ---------------------------------- Auth routes ---------------------------------- */
+    Route::post('register', [JWTAuthController::class, 'register'])->name('register');
     Route::post('login', [JWTAuthController::class, 'login'])->name('login');
     Route::middleware('jwt')->group(function () {
         Route::post('refresh-token', [JWTAuthController::class, 'refresh'])->name('refresh-token');

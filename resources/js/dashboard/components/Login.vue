@@ -20,6 +20,12 @@
           </button>
         </div>
       </form>
+      <p class="text-sm text-center text-gray-600">
+        ¿No tienes una cuenta?
+        <button @click="$emit('show-register')" class="font-medium text-blue-600 hover:text-blue-500">
+          Regístrate
+        </button>
+      </p>
     </div>
   </div>
 </template>
