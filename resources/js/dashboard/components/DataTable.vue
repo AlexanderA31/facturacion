@@ -3,50 +3,50 @@
     <table class="min-w-full bg-white">
       <thead class="bg-gray-800 text-white">
         <tr>
-          <th v-for="header in headers" :key="header" scope="col" class="px-8 py-4 text-left text-sm font-bold uppercase tracking-wider">
-            {{ header }}
+          <th v-for="header in headers" :key="header.value" scope="col" class="px-8 py-4 text-left text-sm font-bold uppercase tracking-wider">
+            {{ header.text }}
           </th>
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
         <tr v-if="data.length === 0">
           <td :colspan="headers.length" class="px-8 py-5 text-center text-gray-500 text-lg">
-            No hay datos para mostrar. Sube un archivo para comenzar.
+            No hay datos para mostrar.
           </td>
         </tr>
         <tr v-for="(row, index) in data" :key="index" class="hover:bg-gray-100 transition-colors duration-200">
-          <td v-for="header in headers" :key="header" class="px-8 py-4 whitespace-nowrap text-md text-gray-800">
-            <span v-if="header === 'Estado'" :class="getStatusClass(row[header])" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full">
-              {{ row[header] }}
+          <td v-for="header in headers" :key="header.value" class="px-8 py-4 whitespace-nowrap text-md text-gray-800">
+            <span v-if="header.value === 'estado'" :class="getStatusClass(row.estado)" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full">
+              {{ row.estado }}
             </span>
-            <span v-else-if="header === 'Evento'">
-              <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer" :title="row[header]">
-                {{ truncateText(row[header], 20) }}
+            <span v-else-if="header.value === 'evento'">
+              <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer" :title="row.evento">
+                {{ truncateText(row.evento, 20) }}
               </span>
               <span v-else @click="$emit('toggle-expansion', row.id)" class="cursor-pointer">
-                {{ row[header] }}
+                {{ row.evento }}
               </span>
             </span>
-              <span v-else-if="header === 'Acciones'" class="space-x-2">
-              <button v-if="row.estado === 'autorizado'" @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
-                XML
-                </button>
-                <button v-if="row.estado === 'autorizado'" @click="$emit('download-pdf', row.clave_acceso)" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
-                  PDF
-              </button>
-            </span>
-              <span v-else-if="header === 'Mensaje de Error'">
-                <span v-if="row.error_message">
-                    <span v-if="!row.isErrorExpanded" @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer" :title="row.error_message">
-                        {{ truncateText(row.error_message, 30) }}
-                    </span>
-                    <span v-else @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer">
-                        {{ row.error_message }}
-                    </span>
+            <span v-else-if="header.value === 'error_message'">
+              <span v-if="row.error_message">
+                <span v-if="!row.isErrorExpanded" @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer" :title="row.error_message">
+                  {{ truncateText(row.error_message, 30) }}
+                </span>
+                <span v-else @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer">
+                  {{ row.error_message }}
                 </span>
               </span>
+            </span>
+            <span v-else-if="header.value === 'acciones'" class="space-x-2">
+              <button v-if="row.estado === 'autorizado'" @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
+                XML
+              </button>
+              <button v-if="row.estado === 'autorizado'" @click="$emit('download-pdf', row.clave_acceso)" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
+                PDF
+              </button>
+            </span>
             <span v-else>
-              {{ row[header] }}
+              {{ row[header.value] }}
             </span>
           </td>
         </tr>

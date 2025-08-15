@@ -53,12 +53,16 @@ export default {
   },
   computed: {
     headers() {
-        const baseHeaders = ['Clave de Acceso', 'Estado', 'Fecha'];
+        const baseHeaders = [
+            { text: 'Clave de Acceso', value: 'clave_acceso' },
+            { text: 'Estado', value: 'estado' },
+            { text: 'Fecha', value: 'fecha_emision' },
+        ];
         if (this.currentTab === 'unauthorized') {
-            return [...baseHeaders, 'Mensaje de Error'];
+            return [...baseHeaders, { text: 'Mensaje de Error', value: 'error_message' }];
         }
         if (this.currentTab === 'authorized') {
-            return [...baseHeaders, 'Acciones'];
+            return [...baseHeaders, { text: 'Acciones', value: 'acciones' }];
         }
         return baseHeaders;
     },
