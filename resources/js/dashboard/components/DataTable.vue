@@ -21,12 +21,17 @@
                 {{ row[header] }}
               </span>
               <span v-else-if="header === 'Evento'">
-                <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer">
+                <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer" :title="row[header]">
                   {{ truncateText(row[header], 20) }}
                 </span>
                 <span v-else @click="$emit('toggle-expansion', row.id)" class="cursor-pointer">
                   {{ row[header] }}
                 </span>
+              </span>
+              <span v-else-if="header === 'Acciones'">
+                <button @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
+                  XML
+                </button>
               </span>
               <span v-else>
                 {{ row[header] }}

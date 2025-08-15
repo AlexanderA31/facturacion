@@ -16,6 +16,11 @@
           <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
           Estado del Sistema
         </a>
+        <a href="#" @click.prevent="currentDashboardView = 'my-invoices'"
+           :class="['flex items-center px-4 py-2 rounded-md transition-colors', currentDashboardView === 'my-invoices' ? 'bg-gray-700' : 'hover:bg-gray-700']">
+          <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          Mis Comprobantes
+        </a>
       </nav>
       <div class="px-4 py-4">
         <button @click="handleLogout" class="w-full flex items-center justify-center px-4 py-2 font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200">
@@ -101,6 +106,11 @@
             <StatusChecker :token="token" />
           </div>
         </div>
+
+        <!-- My Invoices Section -->
+        <div v-if="currentDashboardView === 'my-invoices'">
+          <MyInvoices :token="token" />
+        </div>
       </main>
     </div>
   </div>
@@ -111,6 +121,7 @@ import SignatureUpload from './SignatureUpload.vue';
 import FileUpload from './FileUpload.vue';
 import DataTable from './DataTable.vue';
 import StatusChecker from './StatusChecker.vue';
+import MyInvoices from './MyInvoices.vue';
 import axios from 'axios';
 
 export default {
@@ -120,6 +131,7 @@ export default {
     FileUpload,
     DataTable,
     StatusChecker,
+    MyInvoices,
   },
   props: {
     token: {

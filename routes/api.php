@@ -8,6 +8,7 @@ use App\Http\Controllers\Client\ComprobantesController;
 use App\Http\Controllers\Client\EstablecimientoController;
 use App\Http\Controllers\Client\PuntoEmisionController;
 use App\Http\Controllers\Client\PerfilClientController;
+use App\Http\Controllers\SriProxyController;
 
 
 Route::group(['middleware' => ['json.response']], function () {
@@ -81,5 +82,10 @@ Route::group(['middleware' => ['json.response']], function () {
         Route::post('/factura/{punto_emision}', [ComprobantesController::class, 'generateFactura']);
         // Route::post('/notas-credito/{punto_emision_id}/emitir', [FacturaController::class, 'generateNotaCredito']);
         // Route::post('/retenciones/{punto_emision_id}/emitir', [FacturaController::class, 'generateRetencion']);
+    });
+
+    /* ---------------------------------- Rutas Proxy SRI ---------------------------------- */
+    Route::prefix('sri')->middleware(['jwt', 'role:client'])->group(function () {
+        Route::get('/comprobante/{claveAcceso}', [SriProxyController::class, 'getComprobante']);
     });
 });
