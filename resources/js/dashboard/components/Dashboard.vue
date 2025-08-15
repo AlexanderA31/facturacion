@@ -21,9 +21,13 @@
       </div>
     </div>
 
+    <div class="mb-8">
+        <StatusChecker :token="token" />
+    </div>
+
     <div class="bg-white rounded-xl shadow-lg p-6">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-          <h2 class="text-2xl font-semibold mb-3 sm:mb-0">Estado de Facturación</h2>
+          <h2 class="text-2xl font-semibold mb-3 sm:mb-0">Facturación Masiva</h2>
           <button @click="startBilling" :disabled="isBilling || tableData.length === 0"
                   class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-medium text-sm leading-tight uppercase rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed">
               <span v-if="isBilling">
@@ -45,6 +49,7 @@
 import SignatureUpload from './SignatureUpload.vue';
 import FileUpload from './FileUpload.vue';
 import DataTable from './DataTable.vue';
+import StatusChecker from './StatusChecker.vue';
 import axios from 'axios';
 
 export default {
@@ -53,6 +58,7 @@ export default {
     SignatureUpload,
     FileUpload,
     DataTable,
+    StatusChecker,
   },
   props: {
     token: {
