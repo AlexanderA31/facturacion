@@ -18,8 +18,19 @@
       </button>
     </form>
     <div v-if="result" class="mt-4 p-3 rounded-md" :class="result.isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'">
-      <p><strong>Estado:</strong> {{ result.status }}</p>
-      <p v-if="result.message" class="text-sm">{{ result.message }}</p>
+      <div class="flex justify-between items-center">
+        <div>
+            <p><strong>Estado:</strong> {{ result.status }}</p>
+            <p v-if="result.message" class="text-sm">{{ result.message }}</p>
+        </div>
+        <button
+            v-if="result.status === 'autorizado'"
+            @click="downloadXml"
+            class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700"
+        >
+            Descargar XML
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -76,6 +87,34 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+    async downloadXml() {
+        if (!this.accessKey || this.result?.status !== 'autorizado') return;
+
+        try {
+            const response = await axios.get(`/api/comprobantes/${this.accessKey}/xml`, {
+                headers: { 'Authorization': `Bearer ${this.token}` },
+            });
+
+            const xmlContent = response.data.data.xml;
+            const blob = new Blob([xmlContent], { type: 'application/xml' });
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `factura-${this.accessKey}.xml`;
+
+            document.body.appendChild(a);
+            a.click();
+
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (error) {
+            alert('Error al descargar el XML. Por favor, revisa la consola.');
+            console.error('XML download error:', error);
+        }
     },
   },
 };
