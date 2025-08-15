@@ -25,7 +25,7 @@ class FacturaRequest extends FormRequest
     {
         return [
             "fechaEmision" => [
-                "required",
+                "sometimes",
                 "date",
                 "date_format:Y-m-d",
                 'after_or_equal:' . now()->subDays(3),
