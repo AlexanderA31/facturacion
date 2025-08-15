@@ -2,7 +2,8 @@
   <div>
     <h2 class="text-2xl font-bold text-gray-800 mb-4">Mis Comprobantes</h2>
     <div class="bg-white rounded-xl shadow-lg p-6">
-      <DataTable :data="invoices" :headers="headers" :currentPage="1" :totalPages="1" @download-xml="downloadXml" />
+      <DataTable :data="paginatedInvoices" :headers="headers" @download-xml="downloadXml" />
+      <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
     </div>
   </div>
 </template>
@@ -10,11 +11,13 @@
 <script>
 import axios from 'axios';
 import DataTable from './DataTable.vue';
+import Pagination from './Pagination.vue';
 
 export default {
   name: 'MyInvoices',
   components: {
     DataTable,
+    Pagination,
   },
   props: {
     token: {
@@ -26,7 +29,19 @@ export default {
     return {
       invoices: [],
       headers: ['Clave de Acceso', 'Estado', 'Fecha', 'Acciones'],
+      currentPage: 1,
+      itemsPerPage: 10,
     };
+  },
+  computed: {
+    totalPages() {
+      return Math.ceil(this.invoices.length / this.itemsPerPage);
+    },
+    paginatedInvoices() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.invoices.slice(start, end);
+    },
   },
   mounted() {
     this.getInvoices();

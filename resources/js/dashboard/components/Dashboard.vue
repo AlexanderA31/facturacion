@@ -94,7 +94,8 @@
                 </button>
               </div>
             </div>
-            <DataTable :data="paginatedData" :headers="tableHeaders" :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" @toggle-expansion="toggleRowExpansion" />
+            <DataTable :data="paginatedData" :headers="tableHeaders" @toggle-expansion="toggleRowExpansion" />
+            <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
           </div>
         </div>
 
@@ -122,6 +123,7 @@ import FileUpload from './FileUpload.vue';
 import DataTable from './DataTable.vue';
 import StatusChecker from './StatusChecker.vue';
 import MyInvoices from './MyInvoices.vue';
+import Pagination from './Pagination.vue';
 import axios from 'axios';
 
 export default {
@@ -132,6 +134,7 @@ export default {
     DataTable,
     StatusChecker,
     MyInvoices,
+    Pagination,
   },
   props: {
     token: {
