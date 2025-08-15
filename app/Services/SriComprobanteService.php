@@ -235,7 +235,7 @@ class SriComprobanteService
     {
         Log::info("⏳ Consultando XML autorizado para clave de acceso: {$claveAcceso}");
 
-        $wsdl = self::AUTORIZACION_PRODUCCION;
+        $wsdl = ($ambiente === '1') ? self::AUTORIZACION_PRUEBAS : self::AUTORIZACION_PRODUCCION;
 
         // Verificar disponibilidad del SRI
         if (!$this->checkSriDisponible($wsdl)) {

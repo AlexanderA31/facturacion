@@ -38,13 +38,13 @@
               </span>
             </span>
             <span v-else-if="header.value === 'acciones'" class="space-x-2">
-              <button v-if="row.estado === 'autorizado'" @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
-                XML
+                <button v-if="row.estado === 'autorizado' && row.fecha_autorizacion" @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
+                  XML
               </button>
-              <button v-if="row.estado === 'autorizado'" @click="$emit('download-pdf', row.clave_acceso)" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
+                <button v-if="row.estado === 'autorizado' && row.fecha_autorizacion" @click="$emit('download-pdf', row.clave_acceso)" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
                 PDF
-              </button>
-            </span>
+                </button>
+              </span>
             <span v-else>
               {{ row[header.value] }}
             </span>
