@@ -20,6 +20,9 @@
               <span v-if="header === 'Estado'" :class="getStatusClass(row[header])" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full">
                 {{ row[header] }}
               </span>
+              <span v-else-if="header === 'Evento'" class="truncate max-w-xs" :title="row[header]">
+                {{ row[header] }}
+              </span>
               <span v-else>
                 {{ row[header] }}
               </span>
