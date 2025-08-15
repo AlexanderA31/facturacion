@@ -18,19 +18,9 @@
       </button>
     </form>
     <div v-if="result" class="mt-4 p-3 rounded-md" :class="result.isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'">
-      <div class="flex justify-between items-center">
-        <div>
-            <p><strong>Estado:</strong> {{ result.status }}</p>
-            <p v-if="result.message" class="text-sm">{{ result.message }}</p>
-        </div>
-        <button
-            v-if="result.status === 'autorizado'"
-            @click="downloadXml"
-            class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700"
-        >
-            Descargar XML
-        </button>
-      </div>
+      <p><strong>Estado:</strong> {{ result.status }}</p>
+      <p v-if="result.message" class="text-sm">{{ result.message }}</p>
+      <p v-if="result.status === 'autorizado'" class="text-sm mt-1 text-green-800">Descargando XML...</p>
     </div>
   </div>
 </template>
@@ -70,6 +60,10 @@ export default {
           message: response.data.message,
           isError: false,
         };
+
+        if (this.result.status === 'autorizado') {
+            this.downloadXml();
+        }
 
       } catch (error) {
         let status = 'Error';
