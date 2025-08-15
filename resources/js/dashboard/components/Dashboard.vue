@@ -105,7 +105,7 @@ export default {
       if (!cedula || !nombres || !precio || !codigo || !evento) {
         throw new Error('Una o más columnas requeridas (Cédula, Nombres, Precio, Código, Evento) no se encontraron o están vacías en el archivo.');
       }
-      const totalSinImpuestos = parseFloat((precio / 1.12).toFixed(2));
+      const totalSinImpuestos = parseFloat((precio / 1.15).toFixed(2));
       const iva = parseFloat((precio - totalSinImpuestos).toFixed(2));
 
       return {
@@ -116,7 +116,7 @@ export default {
         direccionComprador: direccion,
         totalSinImpuestos: totalSinImpuestos,
         totalDescuento: 0,
-        totalConImpuestos: [{ codigo: 2, codigoPorcentaje: 2, baseImponible: totalSinImpuestos, valor: iva }],
+        totalConImpuestos: [{ codigo: 2, codigoPorcentaje: 4, baseImponible: totalSinImpuestos, valor: iva }],
         importeTotal: precio,
         pagos: [{ formaPago: '01', total: precio }],
         detalles: [{
@@ -126,7 +126,7 @@ export default {
           precioUnitario: totalSinImpuestos,
           descuento: 0,
           precioTotalSinImpuesto: totalSinImpuestos,
-          impuestos: [{ codigo: 2, codigoPorcentaje: 2, tarifa: 12.00, baseImponible: totalSinImpuestos, valor: iva }],
+          impuestos: [{ codigo: 2, codigoPorcentaje: 4, tarifa: 15.00, baseImponible: totalSinImpuestos, valor: iva }],
         }],
         infoAdicional: { email: email, telefono: telefono },
       };
