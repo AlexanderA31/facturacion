@@ -130,7 +130,7 @@ export default {
           codigoPrincipal: String(codigo),
           descripcion: evento,
           cantidad: 1,
-          precioUnitario: totalSinImpuestos, // Use higher precision here
+          precioUnitario: formatToNumber(totalSinImpuestos, 2), // Format to 2 decimal places
           descuento: 0,
           precioTotalSinImpuesto: formatToNumber(totalSinImpuestos, 2),
           impuestos: [{ codigo: 2, codigoPorcentaje: 4, tarifa: 15.00, baseImponible: formatToNumber(totalSinImpuestos, 2), valor: iva }],
