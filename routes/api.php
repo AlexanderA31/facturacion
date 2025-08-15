@@ -8,7 +8,6 @@ use App\Http\Controllers\Client\ComprobantesController;
 use App\Http\Controllers\Client\EstablecimientoController;
 use App\Http\Controllers\Client\PuntoEmisionController;
 use App\Http\Controllers\Client\PerfilClientController;
-use App\Http\Controllers\SriProxyController;
 
 
 Route::group(['middleware' => ['json.response']], function () {
@@ -77,16 +76,11 @@ Route::group(['middleware' => ['json.response']], function () {
         Route::get('/{clave_acceso}', [ComprobantesController::class, 'show']);
         Route::get('/{clave_acceso}/estado', [ComprobantesController::class, 'getEstado']);
         Route::get('/{clave_acceso}/xml', [ComprobantesController::class, 'getXml']);
+        Route::get('/{clave_acceso}/pdf', [ComprobantesController::class, 'getPdf']);
         // Route::get('/{clave_acceso}/anular', [ComprobantesController::class, 'show']);
 
         Route::post('/factura/{punto_emision}', [ComprobantesController::class, 'generateFactura']);
         // Route::post('/notas-credito/{punto_emision_id}/emitir', [FacturaController::class, 'generateNotaCredito']);
         // Route::post('/retenciones/{punto_emision_id}/emitir', [FacturaController::class, 'generateRetencion']);
-    });
-
-    /* ---------------------------------- Rutas Proxy SRI ---------------------------------- */
-    Route::prefix('sri')->middleware(['jwt', 'role:client'])->group(function () {
-        Route::get('/comprobante/{claveAcceso}', [SriProxyController::class, 'getComprobante']);
-        Route::get('/comprobante/{claveAcceso}/pdf', [SriProxyController::class, 'getComprobantePdf']);
     });
 });

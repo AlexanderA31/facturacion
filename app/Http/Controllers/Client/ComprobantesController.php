@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
+use dealfonso\sapp\PDF\Signature;
 
 
 class ComprobantesController extends Controller
@@ -185,6 +188,60 @@ class ComprobantesController extends Controller
             return $this->sendError('Error de consulta en el SRI', $e->getMessage(), 502);
         } catch (\Exception $e) {
             return $this->sendError('Error inesperado al consultar el XML', null, 500);
+        }
+    }
+
+
+    public function getPdf(string $clave_acceso)
+    {
+        try {
+            $this->validarClaveAcceso($clave_acceso);
+            $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
+            Gate::authorize('view', $comprobante);
+
+            if ($comprobante->estado !== EstadosComprobanteEnum::AUTORIZADO->value) {
+                return $this->sendError('Comprobante no autorizado', 'No es posible generar el PDF porque el comprobante no ha sido autorizado.', 409);
+            }
+
+            $xmlString = $this->sriService->consultarXmlAutorizado($clave_acceso, $comprobante->ambiente);
+            $xml = simplexml_load_string($xmlString);
+
+            if ($xml === false) {
+                throw new \Exception('No se pudo parsear el XML del comprobante.');
+            }
+
+            $data = [
+                'infoTributaria' => $xml->infoTributaria,
+                'infoFactura' => $xml->infoFactura,
+                'detalles' => $xml->detalles->detalle,
+            ];
+
+            $pdf = Pdf::loadView('pdf.invoice', $data);
+            $unsignedPdfContent = $pdf->output();
+
+            $user = auth()->user();
+            if (!$user->signature_path || !$user->signature_key) {
+                throw new \Exception('El usuario no tiene una firma electrónica configurada.');
+            }
+
+            $p12Content = Storage::disk('private')->get($user->signature_path);
+            $password = decrypt($user->signature_key);
+
+            $signedPdfContent = Signature::sign($unsignedPdfContent, $p12Content, $password);
+
+            return response($signedPdfContent, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $clave_acceso . '.pdf"',
+            ]);
+
+        } catch (AuthorizationException $e) {
+            return $this->sendError('Acceso denegado', $e->getMessage(), 403);
+        } catch (ModelNotFoundException $e) {
+            return $this->sendError('Comprobante no encontrado', 'No se encontró el comprobante con la clave de acceso proporcionada.', 404);
+        } catch (SriException $e) {
+            return $this->sendError('Error de consulta en el SRI', $e->getMessage(), 502);
+        } catch (\Exception $e) {
+            return $this->sendError('No se pudo generar el PDF: ' . $e->getMessage(), 500);
         }
     }
 

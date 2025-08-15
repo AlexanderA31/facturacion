@@ -46,13 +46,22 @@ export default {
   data() {
     return {
       invoices: [],
-      headers: ['Clave de Acceso', 'Estado', 'Fecha', 'Mensaje de Error', 'Acciones'],
       currentPage: 1,
       itemsPerPage: 10,
       currentTab: 'all',
     };
   },
   computed: {
+    headers() {
+        const baseHeaders = ['Clave de Acceso', 'Estado', 'Fecha'];
+        if (this.currentTab === 'unauthorized') {
+            return [...baseHeaders, 'Mensaje de Error'];
+        }
+        if (this.currentTab === 'authorized') {
+            return [...baseHeaders, 'Acciones'];
+        }
+        return baseHeaders;
+    },
     filteredInvoices() {
         switch (this.currentTab) {
             case 'authorized':
@@ -101,12 +110,13 @@ export default {
     },
     async downloadXml(claveAcceso) {
       try {
-        const response = await axios.get(`/api/sri/comprobante/${claveAcceso}`, {
-          headers: { 'Authorization': `Bearer ${this.token}` },
-          responseType: 'blob',
+        const response = await axios.get(`/api/comprobantes/${claveAcceso}/xml`, {
+          headers: { 'Authorization': `Bearer ${this.token}` }
         });
 
-        const blob = new Blob([response.data], { type: 'application/xml' });
+        // The XML content is in response.data.data.xml
+        const xmlContent = response.data.data.xml;
+        const blob = new Blob([xmlContent], { type: 'application/xml' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = `${claveAcceso}.xml`;
@@ -120,7 +130,7 @@ export default {
     },
     async downloadPdf(claveAcceso) {
       try {
-        const response = await axios.get(`/api/sri/comprobante/${claveAcceso}/pdf`, {
+        const response = await axios.get(`/api/comprobantes/${claveAcceso}/pdf`, {
           headers: { 'Authorization': `Bearer ${this.token}` },
           responseType: 'blob',
         });
