@@ -99,7 +99,9 @@ export default {
       const evento = findValue('Evento');
       const email = findValue('Email');
       const telefono = findValue('Teléfono');
-      const precio = parseFloat(findValue('Precio'));
+      const precioRaw = findValue('Precio');
+      const precio = precioRaw ? parseFloat(String(precioRaw).replace(',', '.')) : 0;
+
       if (!cedula || !nombres || !precio || !codigo || !evento) {
         throw new Error('Una o más columnas requeridas (Cédula, Nombres, Precio, Código, Evento) no se encontraron o están vacías en el archivo.');
       }
