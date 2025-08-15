@@ -35,7 +35,7 @@ class UsersSeeder extends Seeder
             'password' => bcrypt('123456789'),
             'tarifa' => TarifasEnum::COMPROBANTE->value,
             'ambiente' => AmbientesEnum::PRUEBAS->value,
-            'ruc' => '0202219606001',
+            'ruc' => '0202219606' . '001', // Cedula + 001
             'razonSocial' => 'USUARIO DE PRUEBAS',
             'nombreComercial' => 'USUARIO DE PRUEBAS',
             'dirMatriz' => 'Guaranda',
