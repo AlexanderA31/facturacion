@@ -20,8 +20,8 @@
               <span v-if="header === 'Estado'" :class="getStatusClass(row[header])" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full">
                 {{ row[header] }}
               </span>
-              <span v-else-if="header === 'Evento'" class="truncate max-w-xs" :title="row[header]">
-                {{ row[header] }}
+              <span v-else-if="header === 'Evento'" :title="row[header]">
+                {{ truncateText(row[header], 20) }}
               </span>
               <span v-else>
                 {{ row[header] }}
@@ -65,6 +65,12 @@ export default {
     },
   },
   methods: {
+    truncateText(text, length) {
+      if (text && text.length > length) {
+        return text.substring(0, length) + '...';
+      }
+      return text;
+    },
     getStatusClass(status) {
       switch (status) {
         case 'Facturado':
