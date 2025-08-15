@@ -92,6 +92,12 @@ export default {
         }
         return undefined;
       };
+
+      const formatToNumber = (value, decimals = 2) => {
+          const num = parseFloat(String(value).replace(',', '.'));
+          return isNaN(num) ? 0 : parseFloat(num.toFixed(decimals));
+      };
+
       const cedula = findValue('Cédula');
       const nombres = findValue('Nombres');
       const direccion = findValue('Dirección');
@@ -99,14 +105,15 @@ export default {
       const evento = findValue('Evento');
       const email = findValue('Email');
       const telefono = findValue('Teléfono');
-      const precioRaw = findValue('Precio');
-      const precio = precioRaw ? parseFloat(String(precioRaw).replace(',', '.')) : 0;
+      const precio = formatToNumber(findValue('Precio'));
 
       if (!cedula || !nombres || !precio || !codigo || !evento) {
         throw new Error('Una o más columnas requeridas (Cédula, Nombres, Precio, Código, Evento) no se encontraron o están vacías en el archivo.');
       }
-      const totalSinImpuestos = parseFloat((precio / 1.15).toFixed(2));
-      const iva = parseFloat((precio - totalSinImpuestos).toFixed(2));
+
+      // Use 6 decimal places for intermediate calculations to maintain precision
+      const totalSinImpuestos = formatToNumber(precio / 1.15, 6);
+      const iva = formatToNumber(precio - totalSinImpuestos, 2);
 
       return {
         // fechaEmision is now set by the server
@@ -114,19 +121,19 @@ export default {
         razonSocialComprador: nombres,
         identificacionComprador: String(cedula),
         direccionComprador: direccion,
-        totalSinImpuestos: totalSinImpuestos,
+        totalSinImpuestos: formatToNumber(totalSinImpuestos, 2),
         totalDescuento: 0,
-        totalConImpuestos: [{ codigo: 2, codigoPorcentaje: 4, baseImponible: totalSinImpuestos, valor: iva }],
+        totalConImpuestos: [{ codigo: 2, codigoPorcentaje: 4, baseImponible: formatToNumber(totalSinImpuestos, 2), valor: iva }],
         importeTotal: precio,
         pagos: [{ formaPago: '01', total: precio }],
         detalles: [{
           codigoPrincipal: String(codigo),
           descripcion: evento,
           cantidad: 1,
-          precioUnitario: totalSinImpuestos,
+          precioUnitario: totalSinImpuestos, // Use higher precision here
           descuento: 0,
-          precioTotalSinImpuesto: totalSinImpuestos,
-          impuestos: [{ codigo: 2, codigoPorcentaje: 4, tarifa: 15.00, baseImponible: totalSinImpuestos, valor: iva }],
+          precioTotalSinImpuesto: formatToNumber(totalSinImpuestos, 2),
+          impuestos: [{ codigo: 2, codigoPorcentaje: 4, tarifa: 15.00, baseImponible: formatToNumber(totalSinImpuestos, 2), valor: iva }],
         }],
         infoAdicional: { email: email, telefono: telefono },
       };
