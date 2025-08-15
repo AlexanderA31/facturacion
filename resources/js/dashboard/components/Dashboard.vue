@@ -1,8 +1,18 @@
 <template>
-  <div class="flex h-screen bg-gray-100">
+  <div class="relative min-h-screen md:flex">
+    <!-- Mobile menu button -->
+    <div class="md:hidden flex justify-between items-center bg-gray-800 text-white p-4">
+      <h2 class="text-2xl font-semibold">Dashboard</h2>
+      <button @click="isSidebarOpen = !isSidebarOpen">
+        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+      </button>
+    </div>
+
     <!-- Sidebar -->
-    <div class="w-64 bg-gray-800 text-white flex flex-col">
-      <div class="px-8 py-6">
+    <div :class="['bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform md:relative md:translate-x-0 transition duration-200 ease-in-out', isSidebarOpen ? 'translate-x-0' : '-translate-x-full']">
+      <div class="px-8 py-6 text-center">
         <h2 class="text-2xl font-semibold">Dashboard</h2>
       </div>
       <nav class="flex-1 px-4 py-2 space-y-2">
@@ -50,14 +60,20 @@
                 <p class="text-gray-600">Revise los datos cargados y proceda a emitir las facturas.</p>
               </div>
               <div class="flex items-center space-x-4">
-                <select v-model="filterStatus" class="mt-4 sm:mt-0 block w-full sm:w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                  <option value="Todos">Todos</option>
-                  <option value="Pendiente">Pendiente</option>
-                  <option value="Procesando">Procesando</option>
-                  <option value="Facturado">Facturado</option>
-                  <option value="No Facturado">No Facturado</option>
-                  <option value="Enviado">Enviado</option>
-                </select>
+                <div class="relative">
+                  <label for="status-filter" class="sr-only">Filtrar por estado</label>
+                  <select id="status-filter" v-model="filterStatus" class="appearance-none mt-4 sm:mt-0 block w-full sm:w-auto pl-4 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
+                    <option value="Todos">Todos los Estados</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Procesando">Procesando</option>
+                    <option value="Facturado">Facturado</option>
+                    <option value="No Facturado">No Facturado</option>
+                    <option value="Enviado">Enviado</option>
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                  </div>
+                </div>
                 <button @click="startBilling" :disabled="isBilling || tableData.length === 0"
                         class="w-full sm:w-auto mt-4 sm:mt-0 px-6 py-3 bg-blue-600 text-white font-medium text-lg leading-tight uppercase rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center">
                   <span v-if="isBilling">
@@ -74,7 +90,7 @@
                 </button>
               </div>
             </div>
-            <DataTable :data="filteredTableData" :headers="tableHeaders" />
+            <DataTable :data="paginatedData" :headers="tableHeaders" :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
           </div>
         </div>
 
@@ -114,6 +130,7 @@ export default {
   },
   data() {
     return {
+      isSidebarOpen: false,
       currentDashboardView: 'billing',
       tableData: [],
       tableHeaders: ['Nombres', 'Cédula', 'Evento', 'Precio', 'Estado'],
@@ -121,14 +138,24 @@ export default {
       isBilling: false,
       pollingIntervalId: null,
       filterStatus: 'Todos',
+      currentPage: 1,
+      itemsPerPage: 10,
     };
   },
   computed: {
-    filteredTableData() {
+    filteredData() {
       if (this.filterStatus === 'Todos') {
         return this.tableData;
       }
       return this.tableData.filter(row => row.Estado === this.filterStatus);
+    },
+    totalPages() {
+      return Math.ceil(this.filteredData.length / this.itemsPerPage);
+    },
+    paginatedData() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.filteredData.slice(start, end);
     },
   },
   methods: {
