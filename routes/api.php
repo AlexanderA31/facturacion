@@ -87,5 +87,6 @@ Route::group(['middleware' => ['json.response']], function () {
     /* ---------------------------------- Rutas Proxy SRI ---------------------------------- */
     Route::prefix('sri')->middleware(['jwt', 'role:client'])->group(function () {
         Route::get('/comprobante/{claveAcceso}', [SriProxyController::class, 'getComprobante']);
+        Route::get('/comprobante/{claveAcceso}/pdf', [SriProxyController::class, 'getComprobantePdf']);
     });
 });
