@@ -107,8 +107,15 @@ export default {
       }
       const totalSinImpuestos = parseFloat((precio / 1.12).toFixed(2));
       const iva = parseFloat((precio - totalSinImpuestos).toFixed(2));
+
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+      const year = today.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
       return {
-        fechaEmision: new Date().toISOString().split('T')[0],
+        fechaEmision: formattedDate,
         tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
         razonSocialComprador: nombres,
         identificacionComprador: String(cedula),
