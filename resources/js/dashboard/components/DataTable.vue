@@ -20,8 +20,13 @@
               <span v-if="header === 'Estado'" :class="getStatusClass(row[header])" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full">
                 {{ row[header] }}
               </span>
-              <span v-else-if="header === 'Evento'" :title="row[header]">
-                {{ truncateText(row[header], 20) }}
+              <span v-else-if="header === 'Evento'">
+                <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer">
+                  {{ truncateText(row[header], 20) }}
+                </span>
+                <span v-else @click="$emit('toggle-expansion', row.id)" class="cursor-pointer">
+                  {{ row[header] }}
+                </span>
               </span>
               <span v-else>
                 {{ row[header] }}

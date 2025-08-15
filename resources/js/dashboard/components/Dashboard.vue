@@ -89,7 +89,7 @@
                 </button>
               </div>
             </div>
-            <DataTable :data="paginatedData" :headers="tableHeaders" :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+            <DataTable :data="paginatedData" :headers="tableHeaders" :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" @toggle-expansion="toggleRowExpansion" />
           </div>
         </div>
 
@@ -158,6 +158,12 @@ export default {
     },
   },
   methods: {
+    toggleRowExpansion(rowId) {
+      const row = this.tableData.find(r => r.id === rowId);
+      if (row) {
+        row.isExpanded = !row.isExpanded;
+      }
+    },
     handleLogout() {
         this.$emit('logout');
     },
@@ -168,6 +174,7 @@ export default {
         Estado: 'Pendiente',
         clave_acceso: null,
         errorInfo: null,
+        isExpanded: false,
       }));
     },
     createInvoicePayload(row) {
