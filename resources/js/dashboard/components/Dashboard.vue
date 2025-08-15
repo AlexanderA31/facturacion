@@ -204,6 +204,9 @@ export default {
       switch (status) {
         case 'autorizado': return 'Facturado';
         case 'rechazado': case 'fallido': return 'No Facturado';
+        case 'firmado': return 'Enviado';
+        case 'pendiente':
+        case 'procesando':
         default: return 'Procesando';
       }
     },
