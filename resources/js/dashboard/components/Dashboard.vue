@@ -68,6 +68,26 @@
           </div>
 
           <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="establecimiento-select" class="block text-sm font-medium text-gray-700">Establecimiento</label>
+                    <select id="establecimiento-select" v-model="selectedEstablecimientoId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option :value="null" disabled>Seleccione un establecimiento</option>
+                        <option v-for="est in establecimientos" :key="est.id" :value="est.id">
+                            {{ est.codigo }} - {{ est.nombre }}
+                        </option>
+                    </select>
+                </div>
+                <div>
+                    <label for="punto-emision-select" class="block text-sm font-medium text-gray-700">Punto de Emisión</label>
+                    <select id="punto-emision-select" v-model="selectedPuntoEmisionId" :disabled="!selectedEstablecimientoId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md disabled:bg-gray-200">
+                        <option :value="null" disabled>Seleccione un punto de emisión</option>
+                        <option v-for="pto in availablePuntosEmision" :key="pto.id" :value="pto.id">
+                            {{ pto.codigo }} - {{ pto.nombre }}
+                        </option>
+                    </select>
+                </div>
+            </div>
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
               <div>
                 <h2 class="text-2xl font-bold text-gray-800">Facturación Masiva</h2>
@@ -89,7 +109,7 @@
                   </div>
                 </div>
                 <!-- Start Button -->
-                <BaseButton v-if="!isBilling" @click="startBilling" :disabled="tableData.length === 0" variant="primary">
+                <BaseButton v-if="!isBilling" @click="startBilling" :disabled="tableData.length === 0 || !selectedPuntoEmisionId" variant="primary">
                     <template #icon>
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </template>
@@ -189,9 +209,12 @@ export default {
         { text: 'Precio', value: 'Precio' },
         { text: 'Estado', value: 'Estado' },
       ],
-      puntoEmisionId: 1,
       isBilling: false,
       pollingIntervalId: null,
+      establecimientos: [],
+      puntosEmision: [],
+      selectedEstablecimientoId: null,
+      selectedPuntoEmisionId: null,
       filterStatus: 'Todos',
       currentPage: 1,
       itemsPerPage: 10,
@@ -203,6 +226,12 @@ export default {
     };
   },
   computed: {
+    availablePuntosEmision() {
+        if (!this.selectedEstablecimientoId) {
+            return [];
+        }
+        return this.puntosEmision.filter(p => p.establecimiento_id === this.selectedEstablecimientoId);
+    },
     pendingRows() {
         return this.tableData.filter(row => row.Estado === 'Pendiente' || row.Estado === 'Procesando');
     },
@@ -227,6 +256,10 @@ export default {
     },
     isBilling(newValue) {
         this.saveState();
+    },
+    selectedEstablecimientoId() {
+        // Reset punto de emision when establishment changes
+        this.selectedPuntoEmisionId = null;
     }
   },
   mounted() {
@@ -235,8 +268,30 @@ export default {
         // If billing was in progress, resume it.
         this.startBilling();
     }
+    this.fetchEstablecimientos();
+    this.fetchPuntosEmision();
   },
   methods: {
+    async fetchEstablecimientos() {
+        try {
+            const response = await axios.get('/api/establecimientos', {
+                headers: { 'Authorization': `Bearer ${this.token}` }
+            });
+            this.establecimientos = response.data.data.data;
+        } catch (error) {
+            console.error('Error fetching establecimientos:', error);
+        }
+    },
+    async fetchPuntosEmision() {
+        try {
+            const response = await axios.get('/api/puntos-emision', {
+                headers: { 'Authorization': `Bearer ${this.token}` }
+            });
+            this.puntosEmision = response.data.data.data;
+        } catch (error) {
+            console.error('Error fetching puntos de emision:', error);
+        }
+    },
     saveState() {
         const state = {
             tableData: this.tableData,
@@ -353,7 +408,7 @@ export default {
         this.updateRowStatus(row.id, 'Procesando', null); // Clear previous errors
         const payload = this.createInvoicePayload(row);
 
-        await axios.post(`/api/comprobantes/factura/${this.puntoEmisionId}`, payload, {
+        await axios.post(`/api/comprobantes/factura/${this.selectedPuntoEmisionId}`, payload, {
           headers: { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'application/json' },
         });
 
