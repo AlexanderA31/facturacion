@@ -20,8 +20,11 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-lg p-6">
-      <DataTable :data="paginatedInvoices" :headers="headers" @download-xml="downloadXml" @download-pdf="downloadPdf" @toggle-error-expansion="toggleErrorExpansion" />
-      <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+      <TableSkeleton v-if="isLoading" />
+      <div v-else>
+        <DataTable :data="paginatedInvoices" :headers="headers" @download-xml="downloadXml" @download-pdf="downloadPdf" @toggle-error-expansion="toggleErrorExpansion" />
+        <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+      </div>
     </div>
   </div>
 </template>
@@ -30,12 +33,14 @@
 import axios from 'axios';
 import DataTable from './DataTable.vue';
 import Pagination from './Pagination.vue';
+import TableSkeleton from './TableSkeleton.vue';
 
 export default {
   name: 'MyInvoices',
   components: {
     DataTable,
     Pagination,
+    TableSkeleton,
   },
   props: {
     token: {
@@ -46,6 +51,8 @@ export default {
   data() {
     return {
       invoices: [],
+      isLoading: false,
+      polling: null,
       currentPage: 1,
       itemsPerPage: 10,
       currentTab: 'all',
@@ -90,9 +97,18 @@ export default {
   },
   mounted() {
     this.getInvoices();
+    this.polling = setInterval(() => {
+        this.getInvoices(true); // Pass true to indicate a background poll
+    }, 10000); // Poll every 10 seconds
+  },
+  beforeUnmount() {
+    clearInterval(this.polling);
   },
   methods: {
-    async getInvoices() {
+    async getInvoices(isPolling = false) {
+      if (!isPolling) {
+        this.isLoading = true;
+      }
       try {
         const response = await axios.get('/api/comprobantes', {
           headers: { 'Authorization': `Bearer ${this.token}` },
@@ -105,6 +121,10 @@ export default {
         }));
       } catch (error) {
         console.error('Error fetching invoices:', error);
+      } finally {
+        if (!isPolling) {
+            this.isLoading = false;
+        }
       }
     },
     toggleErrorExpansion(invoiceId) {
