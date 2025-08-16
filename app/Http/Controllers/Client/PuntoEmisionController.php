@@ -25,7 +25,7 @@ class PuntoEmisionController extends Controller
                 return $this->sendError('No se encontraron establecimientos registrados', [], 404);
             }
 
-            $query = PuntoEmision::whereIn('establecimiento_id', $establecimientos->pluck('id'));
+            $query = PuntoEmision::whereIn('establecimiento_id', $establecimientos->pluck('id'))->with('establecimiento');
 
             // Aplicar filtros
             if (!empty($filters['establecimiento_id'])) {

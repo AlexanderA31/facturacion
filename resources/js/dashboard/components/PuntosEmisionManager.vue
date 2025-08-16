@@ -66,7 +66,7 @@ export default {
             establecimientos: [],
             headers: [
                 { text: 'Establecimiento', value: 'establecimiento_codigo' },
-                { text: 'Código', value: 'codigo' },
+                { text: 'Número', value: 'numero' },
                 { text: 'Nombre', value: 'nombre' },
                 { text: 'Acciones', value: 'actions' },
             ],

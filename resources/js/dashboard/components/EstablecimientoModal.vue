@@ -11,8 +11,8 @@
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <div>
-            <label for="codigo" class="block text-sm font-medium text-gray-700">Código de Establecimiento (3 dígitos)</label>
-            <input type="text" id="codigo" v-model="form.codigo" maxlength="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+            <label for="numero" class="block text-sm font-medium text-gray-700">Número de Establecimiento (3 dígitos)</label>
+            <input type="text" id="numero" v-model="form.numero" maxlength="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
           </div>
           <div>
             <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre del Establecimiento</label>
@@ -56,7 +56,7 @@ export default {
   data() {
     return {
       form: {
-        codigo: '',
+        numero: '',
         nombre: '',
         direccion: '',
       },
@@ -85,7 +85,7 @@ export default {
   methods: {
     resetForm() {
       this.form = {
-        codigo: '',
+        numero: '',
         nombre: '',
         direccion: '',
       };
