@@ -2,7 +2,19 @@
   <div>
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-bold text-gray-800">Facturación Correctiva</h2>
-      <RefreshButton :is-loading="isLoading" @click="loadState" />
+      <div class="flex space-x-2">
+        <RefreshButton :is-loading="isLoading" @click="loadState" />
+        <BaseButton @click="exportToExcel" variant="secondary" :disabled="failedRows.length === 0">
+            <template #icon>
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2.5 4A1.5 1.5 0 014 2.5h12A1.5 1.5 0 0117.5 4v12A1.5 1.5 0 0116 17.5H4A1.5 1.5 0 012.5 16V4zM4 4v12h12V4H4z" />
+                    <path d="M7.823 6.643a.5.5 0 01.714 0l1.29 1.434a.5.5 0 01-.357.823H9.5v3.5a.5.5 0 01-1 0v-3.5H7.177a.5.5 0 01-.357-.823l1.003-1.11z" />
+                    <path d="M12.177 6.643a.5.5 0 01.714 0l1.29 1.434a.5.5 0 01-.357.823h-1.29v3.5a.5.5 0 01-1 0v-3.5h-1.29a.5.5 0 01-.357-.823l1.003-1.11z" />
+                </svg>
+            </template>
+            Exportar a Excel
+        </BaseButton>
+      </div>
     </div>
     <p class="text-gray-600 mb-6">Aquí puede ver las facturas que fallaron durante el proceso masivo y necesitan corrección. Edite los datos necesarios y vuelva a procesarlas.</p>
 
@@ -81,6 +93,7 @@ import BaseButton from './BaseButton.vue';
 import EditInvoiceModal from './EditInvoiceModal.vue';
 import RefreshButton from './RefreshButton.vue';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 
 export default {
   name: 'CorrectiveBilling',
@@ -337,6 +350,16 @@ export default {
         this.currentIndex++;
 
         requestAnimationFrame(this.runBillingProcess);
+    },
+    exportToExcel() {
+        if (this.failedRows.length === 0) {
+            alert("No hay datos para exportar.");
+            return;
+        }
+        const worksheet = XLSX.utils.json_to_sheet(this.failedRows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Facturas Fallidas");
+        XLSX.writeFile(workbook, "facturas_correctivas.xlsx");
     },
   },
 };
