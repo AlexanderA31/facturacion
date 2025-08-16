@@ -2,13 +2,7 @@
   <div>
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-bold text-gray-800">Mis Comprobantes</h2>
-      <button @click="getInvoices(false)" :disabled="isLoading" class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" :class="{'animate-spin': isLoading}" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-        </svg>
-        <span v-if="isLoading">Refrescando...</span>
-        <span v-else>Refrescar</span>
-      </button>
+      <RefreshButton :is-loading="isLoading" @click="getInvoices(false)" />
     </div>
 
     <div class="mb-4 border-b border-gray-200">
@@ -46,6 +40,7 @@ import axios from 'axios';
 import DataTable from './DataTable.vue';
 import Pagination from './Pagination.vue';
 import TableSkeleton from './TableSkeleton.vue';
+import RefreshButton from './RefreshButton.vue';
 
 export default {
   name: 'MyInvoices',
@@ -53,6 +48,7 @@ export default {
     DataTable,
     Pagination,
     TableSkeleton,
+    RefreshButton,
   },
   props: {
     token: {

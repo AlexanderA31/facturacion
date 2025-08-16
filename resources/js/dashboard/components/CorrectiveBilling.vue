@@ -2,14 +2,7 @@
   <div>
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-bold text-gray-800">Facturación Correctiva</h2>
-      <BaseButton @click="loadState" variant="secondary">
-        <template #icon>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-            </svg>
-        </template>
-        Refrescar
-      </BaseButton>
+      <RefreshButton @click="loadState" />
     </div>
     <p class="text-gray-600 mb-6">Aquí puede ver las facturas que fallaron durante el proceso masivo y necesitan corrección. Edite los datos necesarios y vuelva a procesarlas.</p>
 
@@ -63,6 +56,7 @@ import DataTable from './DataTable.vue';
 import Pagination from './Pagination.vue';
 import BaseButton from './BaseButton.vue';
 import EditInvoiceModal from './EditInvoiceModal.vue';
+import RefreshButton from './RefreshButton.vue';
 import axios from 'axios';
 
 export default {
@@ -72,6 +66,7 @@ export default {
     Pagination,
     BaseButton,
     EditInvoiceModal,
+    RefreshButton,
   },
   data() {
     return {
