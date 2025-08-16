@@ -47,15 +47,15 @@
               </span>
               <span v-else-if="header.value === 'acciones'" class="space-x-2 text-center">
                   <!-- Download Buttons -->
-                  <button v-if="(row.estado === 'autorizado' && row.fecha_autorizacion) || row.error_message === 'ERROR SECUENCIAL REGISTRADO'" @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
-                      XML
+                  <button v-if="(row.estado === 'autorizado' && row.fecha_autorizacion) || row.error_message === 'ERROR SECUENCIAL REGISTRADO'" @click="$emit('download-xml', row.clave_acceso)" title="Descargar XML" class="p-1 text-blue-600 hover:text-blue-800 transition-colors">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"></path></svg>
                   </button>
-                  <button v-if="(row.estado === 'autorizado' && row.fecha_autorizacion) || row.error_message === 'ERROR SECUENCIAL REGISTRADO'" @click="$emit('download-pdf', row.clave_acceso)" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
-                      PDF
+                  <button v-if="(row.estado === 'autorizado' && row.fecha_autorizacion) || row.error_message === 'ERROR SECUENCIAL REGISTRADO'" @click="$emit('download-pdf', row.clave_acceso)" title="Descargar PDF" class="p-1 text-red-600 hover:text-red-800 transition-colors">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                   </button>
                   <!-- Edit Button -->
-                  <button v-if="showEditButton" @click="$emit('open-edit-modal', row)" class="px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-yellow-600">
-                      Editar
+                  <button v-if="showEditButton" @click="$emit('open-edit-modal', row)" title="Editar" class="p-1 text-yellow-600 hover:text-yellow-800 transition-colors">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                   </button>
               </span>
               <span v-else>
