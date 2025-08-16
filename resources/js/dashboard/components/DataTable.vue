@@ -16,49 +16,47 @@
         </tr>
         <tr v-for="row in data" :key="row.id" class="hover:bg-gray-100 transition-colors duration-200">
           <td v-for="header in headers" :key="header.value" class="px-8 py-4 whitespace-nowrap text-md text-gray-800">
-            <span v-if="header.value.toLowerCase().includes('estado')" :class="getStatusClass(row[header.value])" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full">
-              {{ row[header.value] }}
-            </span>
-            <span v-else-if="header.value === 'Evento' && row.Evento">
-              <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer" :title="row.Evento">
-                {{ truncateText(row.Evento, 20) }}
+            <slot :name="`cell(${header.value})`" :row="row">
+              <!-- Default Fallback Content -->
+              <span v-if="header.value.toLowerCase().includes('estado')" :class="getStatusClass(row[header.value])" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full">
+                {{ row[header.value] }}
               </span>
-              <span v-else @click="$emit('toggle-expansion', row.id)" class="cursor-pointer">
-                {{ row.Evento }}
-              </span>
-            </span>
-            <span v-else-if="header.value === 'errorInfo' && row.errorInfo">
-                <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer text-red-600" :title="row.errorInfo">
-                    {{ truncateText(row.errorInfo, 30) }}
+              <span v-else-if="header.value === 'Evento' && row.Evento">
+                <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer" :title="row.Evento">
+                  {{ truncateText(row.Evento, 20) }}
                 </span>
-                <span v-else @click="$emit('toggle-expansion', row.id)" class="cursor-pointer text-red-600">
-                    {{ row.errorInfo }}
+                <span v-else @click="$emit('toggle-expansion', row.id)" class="cursor-pointer">
+                  {{ row.Evento }}
                 </span>
-            </span>
-            <span v-else-if="header.value === 'error_message' && row.error_message">
-              <span v-if="!row.isErrorExpanded" @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer" :title="row.error_message">
-                {{ truncateText(row.error_message, 30) }}
               </span>
-              <span v-else @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer">
-                {{ row.error_message }}
+              <span v-else-if="header.value === 'errorInfo' && row.errorInfo">
+                  <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer text-red-600" :title="row.errorInfo">
+                      {{ truncateText(row.errorInfo, 30) }}
+                  </span>
+                  <span v-else @click="$emit('toggle-expansion', row.id)" class="cursor-pointer text-red-600">
+                      {{ row.errorInfo }}
+                  </span>
               </span>
-            </span>
-            <span v-else-if="header.value === 'acciones'" class="space-x-2 text-center">
-                <!-- Download Buttons -->
-                <button v-if="(row.estado === 'autorizado' && row.fecha_autorizacion) || row.error_message === 'ERROR SECUENCIAL REGISTRADO'" @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
-                    XML
-                </button>
-                <button v-if="(row.estado === 'autorizado' && row.fecha_autorizacion) || row.error_message === 'ERROR SECUENCIAL REGISTRADO'" @click="$emit('download-pdf', row.clave_acceso)" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
-                    PDF
-                </button>
-                <!-- Edit Button -->
-                <button v-if="showEditButton" @click="$emit('open-edit-modal', row)" class="px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-yellow-600">
-                    Editar
-                </button>
-            </span>
-            <span v-else>
-              {{ row[header.value] }}
-            </span>
+              <span v-else-if="header.value === 'error_message' && row.error_message">
+                <span v-if="!row.isErrorExpanded" @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer" :title="row.error_message">
+                  {{ truncateText(row.error_message, 30) }}
+                </span>
+                <span v-else @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer">
+                  {{ row.error_message }}
+                </span>
+              </span>
+              <span v-else-if="header.value === 'acciones'" class="space-x-2 text-center">
+                  <button v-if="(row.estado === 'autorizado' && row.fecha_autorizacion) || row.error_message === 'ERROR SECUENCIAL REGISTRADO'" @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
+                      XML
+                  </button>
+                  <button v-if="(row.estado === 'autorizado' && row.fecha_autorizacion) || row.error_message === 'ERROR SECUENCIAL REGISTRADO'" @click="$emit('download-pdf', row.clave_acceso)" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
+                      PDF
+                  </button>
+              </span>
+              <span v-else>
+                {{ row[header.value] }}
+              </span>
+            </slot>
           </td>
         </tr>
       </tbody>
@@ -78,10 +76,6 @@ export default {
       type: Array,
       required: true,
     },
-    showEditButton: {
-      type: Boolean,
-      default: false,
-    }
   },
   methods: {
     truncateText(text, length) {
