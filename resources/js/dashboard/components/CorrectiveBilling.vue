@@ -1,17 +1,28 @@
 <template>
   <div>
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">Facturación Correctiva</h2>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-bold text-gray-800">Facturación Correctiva</h2>
+      <BaseButton @click="loadState" variant="secondary">
+        <template #icon>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+            </svg>
+        </template>
+        Refrescar
+      </BaseButton>
+    </div>
     <p class="text-gray-600 mb-6">Aquí puede ver las facturas que fallaron durante el proceso masivo y necesitan corrección. Edite los datos necesarios y vuelva a procesarlas.</p>
 
     <div class="bg-white rounded-xl shadow-lg p-6">
       <!-- Billing controls will go here -->
       <div class="mb-4 flex justify-end">
         <!-- Start Button -->
-        <button v-if="!isBilling" @click="startBilling" :disabled="failedRows.length === 0"
-                class="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-medium text-lg leading-tight uppercase rounded-lg shadow-md hover:bg-green-700 disabled:bg-gray-400 flex items-center justify-center">
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <BaseButton v-if="!isBilling" @click="startBilling" :disabled="failedRows.length === 0" variant="success">
+            <template #icon>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </template>
             Facturar Corregidas
-        </button>
+        </BaseButton>
         <!-- Billing In Progress Controls -->
         <div v-if="isBilling" class="flex items-center space-x-4">
             <div class="flex items-center text-lg font-medium text-gray-700">
@@ -21,15 +32,9 @@
                 </svg>
                 <span>Procesando... ({{ currentIndex + 1 }} / {{ rowsToBill.length }})</span>
             </div>
-            <button v-if="!isPaused" @click="pauseBilling" class="px-4 py-2 bg-yellow-500 text-white rounded-md shadow-sm hover:bg-yellow-600">
-                Pausar
-            </button>
-            <button v-if="isPaused" @click="resumeBilling" class="px-4 py-2 bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600">
-                Reanudar
-            </button>
-            <button @click="cancelBilling" class="px-4 py-2 bg-red-600 text-white rounded-md shadow-sm hover:bg-red-700">
-                Cancelar
-            </button>
+            <BaseButton v-if="!isPaused" @click="pauseBilling" variant="warning">Pausar</BaseButton>
+            <BaseButton v-if="isPaused" @click="resumeBilling" variant="success">Reanudar</BaseButton>
+            <BaseButton @click="cancelBilling" variant="danger">Cancelar</BaseButton>
         </div>
       </div>
 
@@ -37,18 +42,26 @@
       <DataTable
         :data="paginatedRows"
         :headers="tableHeaders"
-        :editable="true"
-        :reprocessable="false"
-        @save-row="handleSaveRow"
+        :showEditButton="true"
+        @open-edit-modal="openEditModal"
       />
       <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
     </div>
+
+    <EditInvoiceModal
+        :show="isModalVisible"
+        :rowData="selectedRowForEdit"
+        @close="closeEditModal"
+        @save="saveEditedRow"
+    />
   </div>
 </template>
 
 <script>
 import DataTable from './DataTable.vue';
 import Pagination from './Pagination.vue';
+import BaseButton from './BaseButton.vue';
+import EditInvoiceModal from './EditInvoiceModal.vue';
 import axios from 'axios';
 
 export default {
@@ -56,12 +69,16 @@ export default {
   components: {
     DataTable,
     Pagination,
+    BaseButton,
+    EditInvoiceModal,
   },
   data() {
     return {
       failedRows: [],
       currentPage: 1,
       itemsPerPage: 10,
+      isModalVisible: false,
+      selectedRowForEdit: null,
       tableHeaders: [
         { text: 'Nombres', value: 'Nombres' },
         { text: 'Cédula', value: 'Cédula' },
@@ -104,6 +121,14 @@ export default {
     window.removeEventListener('corrective-billing-update', this.loadState);
   },
   methods: {
+    openEditModal(row) {
+        this.selectedRowForEdit = row;
+        this.isModalVisible = true;
+    },
+    closeEditModal() {
+        this.isModalVisible = false;
+        this.selectedRowForEdit = null;
+    },
     loadState() {
       const savedData = localStorage.getItem('correctiveBillingData');
       if (savedData) {
@@ -113,7 +138,7 @@ export default {
     saveState() {
       localStorage.setItem('correctiveBillingData', JSON.stringify(this.failedRows));
     },
-    handleSaveRow(updatedRow) {
+    saveEditedRow(updatedRow) {
       const index = this.failedRows.findIndex(row => row.id === updatedRow.id);
       if (index !== -1) {
         this.failedRows.splice(index, 1, updatedRow);

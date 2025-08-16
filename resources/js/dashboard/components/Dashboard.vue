@@ -84,11 +84,12 @@
                   </div>
                 </div>
                 <!-- Start Button -->
-                <button v-if="!isBilling" @click="startBilling" :disabled="tableData.length === 0"
-                        class="w-full sm:w-auto mt-4 sm:mt-0 px-6 py-3 bg-blue-600 text-white font-medium text-lg leading-tight uppercase rounded-lg shadow-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center justify-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <BaseButton v-if="!isBilling" @click="startBilling" :disabled="tableData.length === 0" variant="primary">
+                    <template #icon>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </template>
                     Iniciar Facturación
-                </button>
+                </BaseButton>
                 <!-- Billing In Progress Controls -->
                 <div v-if="isBilling" class="flex items-center space-x-4">
                     <div class="flex items-center text-lg font-medium text-gray-700">
@@ -98,18 +99,9 @@
                         </svg>
                         <span>Facturando... ({{ currentIndex + 1 }} / {{ rowsToBill.length }})</span>
                     </div>
-                    <!-- Pause Button -->
-                    <button v-if="!isPaused" @click="pauseBilling" class="px-4 py-2 bg-yellow-500 text-white rounded-md shadow-sm hover:bg-yellow-600">
-                        Pausar
-                    </button>
-                    <!-- Resume Button -->
-                    <button v-if="isPaused" @click="resumeBilling" class="px-4 py-2 bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600">
-                        Reanudar
-                    </button>
-                    <!-- Cancel Button -->
-                    <button @click="cancelBilling" class="px-4 py-2 bg-red-600 text-white rounded-md shadow-sm hover:bg-red-700">
-                        Cancelar
-                    </button>
+                    <BaseButton v-if="!isPaused" @click="pauseBilling" variant="warning">Pausar</BaseButton>
+                    <BaseButton v-if="isPaused" @click="resumeBilling" variant="success">Reanudar</BaseButton>
+                    <BaseButton @click="cancelBilling" variant="danger">Cancelar</BaseButton>
                 </div>
               </div>
             </div>
@@ -152,6 +144,7 @@ import StatusChecker from './StatusChecker.vue';
 import MyInvoices from './MyInvoices.vue';
 import CorrectiveBilling from './CorrectiveBilling.vue';
 import Pagination from './Pagination.vue';
+import BaseButton from './BaseButton.vue';
 import axios from 'axios';
 
 export default {
@@ -164,6 +157,7 @@ export default {
     MyInvoices,
     CorrectiveBilling,
     Pagination,
+    BaseButton,
   },
   props: {
     token: {
