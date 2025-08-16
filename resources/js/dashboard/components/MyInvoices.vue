@@ -1,6 +1,15 @@
 <template>
   <div>
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">Mis Comprobantes</h2>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-bold text-gray-800">Mis Comprobantes</h2>
+      <button @click="getInvoices(false)" :disabled="isLoading" class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" :class="{'animate-spin': isLoading}" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+        </svg>
+        <span v-if="isLoading">Refrescando...</span>
+        <span v-else>Refrescar</span>
+      </button>
+    </div>
 
     <div class="mb-4 border-b border-gray-200">
         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -15,6 +24,9 @@
             </a>
             <a href="#" @click.prevent="currentTab = 'unauthorized'" :class="['whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm', currentTab === 'unauthorized' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">
                 No Autorizados
+            </a>
+            <a href="#" @click.prevent="currentTab = 'duplicates'" :class="['whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm', currentTab === 'duplicates' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">
+                Duplicados
             </a>
         </nav>
     </div>
@@ -72,8 +84,8 @@ export default {
             finalHeaders.push({ text: 'Mensaje de Error', value: 'error_message' });
         }
 
-        // Show actions on 'all' and 'authorized' tabs
-        if (this.currentTab === 'all' || this.currentTab === 'authorized') {
+        // Show actions on 'all', 'authorized', and 'duplicates' tabs
+        if (this.currentTab === 'all' || this.currentTab === 'authorized' || this.currentTab === 'duplicates') {
             finalHeaders.push({ text: 'Acciones', value: 'acciones' });
         }
 
@@ -86,7 +98,15 @@ export default {
             case 'pending':
                 return this.invoices.filter(i => ['pendiente', 'procesando', 'firmado'].includes(i.estado));
             case 'unauthorized':
-                return this.invoices.filter(i => ['rechazado', 'fallido'].includes(i.estado));
+                return this.invoices.filter(i =>
+                    ['rechazado', 'fallido'].includes(i.estado) &&
+                    i.error_message !== 'ERROR SECUENCIAL REGISTRADO'
+                );
+            case 'duplicates':
+                return this.invoices.filter(i =>
+                    i.estado === 'rechazado' &&
+                    i.error_message === 'ERROR SECUENCIAL REGISTRADO'
+                );
             case 'all':
             default:
                 return this.invoices;
@@ -141,18 +161,6 @@ export default {
     },
     async downloadXml(claveAcceso) {
       try {
-        // First, verify the status
-        const statusResponse = await axios.get(`/api/comprobantes/${claveAcceso}/estado`, {
-          headers: { 'Authorization': `Bearer ${this.token}` },
-        });
-
-        if (statusResponse.data.data.estado !== 'autorizado') {
-          alert('Error: El estado de este comprobante no es "autorizado". Actualizando la lista.');
-          this.getInvoices();
-          return;
-        }
-
-        // If authorized, proceed with XML download
         const response = await axios.get(`/api/comprobantes/${claveAcceso}/xml`, {
           headers: { 'Authorization': `Bearer ${this.token}` }
         });
@@ -167,23 +175,15 @@ export default {
         document.body.removeChild(link);
       } catch (error) {
         console.error('Error downloading XML:', error);
-        alert('No se pudo descargar el archivo XML. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
+        if (error.response?.status === 409 && error.response?.data?.message?.includes('Comprobante no autorizado')) {
+            alert('Descarga no disponible: Este es un comprobante duplicado. Por favor, busque la factura original en la pestaña de "Autorizados" para descargar el archivo.');
+        } else {
+            alert('No se pudo descargar el archivo XML. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
+        }
       }
     },
     async downloadPdf(claveAcceso) {
       try {
-        // First, verify the status
-        const statusResponse = await axios.get(`/api/comprobantes/${claveAcceso}/estado`, {
-          headers: { 'Authorization': `Bearer ${this.token}` },
-        });
-
-        if (statusResponse.data.data.estado !== 'autorizado') {
-          alert('Error: El estado de este comprobante no es "autorizado". Actualizando la lista.');
-          this.getInvoices();
-          return;
-        }
-
-        // If authorized, proceed with PDF download
         const response = await axios.get(`/api/comprobantes/${claveAcceso}/pdf`, {
           headers: { 'Authorization': `Bearer ${this.token}` },
           responseType: 'blob',
@@ -198,7 +198,11 @@ export default {
         document.body.removeChild(link);
       } catch (error) {
         console.error('Error downloading PDF:', error);
-        alert('No se pudo descargar el archivo PDF. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
+        if (error.response?.status === 409 && error.response?.data?.message?.includes('Comprobante no autorizado')) {
+            alert('Descarga no disponible: Este es un comprobante duplicado. Por favor, busque la factura original en la pestaña de "Autorizados" para descargar el archivo.');
+        } else {
+            alert('No se pudo descargar el archivo PDF. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
+        }
       }
     },
   },
