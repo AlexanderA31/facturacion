@@ -256,26 +256,31 @@ export default {
     },
     async startBilling() {
       this.isBilling = true;
-      const billingPromises = this.tableData
-        .filter(row => row.Estado === 'Pendiente')
-        .map(row => {
-          return (async () => {
-            try {
-              this.updateRowStatus(row.id, 'Procesando');
-              const payload = this.createInvoicePayload(row);
-              if (!payload) return;
-              await axios.post(`/api/comprobantes/factura/${this.puntoEmisionId}`, payload, {
-                headers: { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'application/json' },
-              });
-            } catch (error) {
-              console.error('Billing error for row:', row, error);
-              this.updateRowStatus(row.id, 'No Facturado', error.message);
+      const rowsToBill = this.tableData.filter(row => row.Estado === 'Pendiente');
+
+      for (const row of rowsToBill) {
+        try {
+          this.updateRowStatus(row.id, 'Procesando');
+          const payload = this.createInvoicePayload(row);
+
+          await axios.post(`/api/comprobantes/factura/${this.puntoEmisionId}`, payload, {
+            headers: { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'application/json' },
+          });
+          // The status will be updated by the polling mechanism
+        } catch (error) {
+            // Check if the error is from createInvoicePayload (incomplete data)
+            if (error.message.includes('columnas requeridas')) {
+                console.warn(`Skipping row due to incomplete data: ${error.message}`, row);
+                this.updateRowStatus(row.id, 'Pendiente', 'Datos incompletos'); // Revert status to Pendiente and add info
+            } else {
+                console.error('Billing error for row:', row, error);
+                this.updateRowStatus(row.id, 'No Facturado', error.response?.data?.message || error.message);
             }
-          })();
-        });
-      await Promise.all(billingPromises);
+        }
+      }
+
       this.isBilling = false;
-      this.startPolling();
+      this.startPolling(); // Start polling to get final statuses
     },
     startPolling() {
       if (this.pollingIntervalId) clearInterval(this.pollingIntervalId);
