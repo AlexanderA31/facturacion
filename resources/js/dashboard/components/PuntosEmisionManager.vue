@@ -18,7 +18,8 @@
             Debe crear al menos un establecimiento antes de poder agregar puntos de emisión.
         </p>
 
-        <DataTable :data="puntosEmision" :headers="headers" :is-loading="isLoading">
+        <TableSkeleton v-if="isLoading" />
+        <DataTable v-else :data="puntosEmision" :headers="headers">
             <template #cell(actions)="{ row }">
                 <div class="space-x-2 text-center">
                     <button @click="openEditModal(row)" title="Editar" class="p-1 text-yellow-600 hover:text-yellow-800 transition-colors">
@@ -51,6 +52,7 @@ import DataTable from './DataTable.vue';
 import BaseButton from './BaseButton.vue';
 import PuntoEmisionModal from './PuntoEmisionModal.vue';
 import RefreshButton from './RefreshButton.vue';
+import TableSkeleton from './TableSkeleton.vue';
 
 export default {
     name: 'PuntosEmisionManager',
@@ -59,6 +61,7 @@ export default {
         BaseButton,
         PuntoEmisionModal,
         RefreshButton,
+        TableSkeleton,
     },
     data() {
         return {
@@ -95,6 +98,7 @@ export default {
             }
         },
         async fetchPuntosEmision() {
+            this.isLoading = true;
             try {
                 const response = await axios.get('/api/puntos-emision', {
                     headers: { 'Authorization': `Bearer ${this.token}` }
@@ -105,6 +109,8 @@ export default {
                 });
             } catch (error) {
                 console.error('Error fetching puntos de emision:', error);
+            } finally {
+                this.isLoading = false;
             }
         },
         openCreateModal() {

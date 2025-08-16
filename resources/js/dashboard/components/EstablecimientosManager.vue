@@ -15,7 +15,8 @@
             </div>
         </div>
 
-        <DataTable :data="establecimientos" :headers="headers" :is-loading="isLoading">
+        <TableSkeleton v-if="isLoading" />
+        <DataTable v-else :data="establecimientos" :headers="headers">
             <template #cell(actions)="{ row }">
                 <div class="space-x-2 text-center">
                     <button @click="openEditModal(row)" title="Editar" class="p-1 text-yellow-600 hover:text-yellow-800 transition-colors">
@@ -44,6 +45,7 @@ import DataTable from './DataTable.vue';
 import BaseButton from './BaseButton.vue';
 import EstablecimientoModal from './EstablecimientoModal.vue';
 import RefreshButton from './RefreshButton.vue';
+import TableSkeleton from './TableSkeleton.vue';
 
 export default {
     name: 'EstablecimientosManager',
@@ -52,6 +54,7 @@ export default {
         BaseButton,
         EstablecimientoModal,
         RefreshButton,
+        TableSkeleton,
     },
     data() {
         return {

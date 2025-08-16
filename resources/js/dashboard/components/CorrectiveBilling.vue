@@ -52,14 +52,17 @@
       </div>
 
       <!-- Data table for failed rows -->
-      <DataTable
-        :data="paginatedRows"
-        :headers="tableHeaders"
-        :showEditButton="true"
-        @open-edit-modal="openEditModal"
-        @toggle-expansion="toggleRowExpansion"
-      />
-      <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+      <TableSkeleton v-if="isLoading" />
+      <div v-else>
+        <DataTable
+          :data="paginatedRows"
+          :headers="tableHeaders"
+          :showEditButton="true"
+          @open-edit-modal="openEditModal"
+          @toggle-expansion="toggleRowExpansion"
+        />
+        <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+      </div>
     </div>
 
     <EditInvoiceModal
