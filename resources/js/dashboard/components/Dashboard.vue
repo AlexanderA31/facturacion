@@ -94,8 +94,21 @@
                 </button>
               </div>
             </div>
-            <DataTable :data="paginatedData" :headers="tableHeaders" @toggle-expansion="toggleRowExpansion" />
+            <DataTable :data="paginatedPendingRows" :headers="tableHeaders" @toggle-expansion="toggleRowExpansion" />
             <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+          </div>
+
+          <div v-if="failedRows.length > 0" class="bg-white rounded-xl shadow-lg p-6 mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Facturas con Errores para Corregir</h2>
+            <DataTable
+              :data="failedRows"
+              :headers="tableHeaders"
+              :editable="true"
+              :reprocessable="true"
+              @toggle-expansion="toggleRowExpansion"
+              @save-row="handleSaveRow"
+              @reprocess-row="handleReprocessRow"
+            />
           </div>
         </div>
 
@@ -163,19 +176,22 @@ export default {
     };
   },
   computed: {
-    filteredData() {
-      if (this.filterStatus === 'Todos') {
-        return this.tableData;
-      }
-      return this.tableData.filter(row => row.Estado === this.filterStatus);
+    pendingRows() {
+        return this.tableData.filter(row => row.Estado === 'Pendiente' || row.Estado === 'Procesando');
     },
-    totalPages() {
-      return Math.ceil(this.filteredData.length / this.itemsPerPage);
+    failedRows() {
+        return this.tableData.filter(row => row.Estado === 'No Facturado');
     },
-    paginatedData() {
+    paginatedPendingRows() {
+      // This computed property will be used for the main table
+      const data = this.pendingRows.filter(row => this.filterStatus === 'Todos' || row.Estado === this.filterStatus);
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.filteredData.slice(start, end);
+      return data.slice(start, end);
+    },
+    totalPages() {
+      const data = this.pendingRows.filter(row => this.filterStatus === 'Todos' || row.Estado === this.filterStatus);
+      return Math.ceil(data.length / this.itemsPerPage);
     },
   },
   methods: {
@@ -254,37 +270,52 @@ export default {
         infoAdicional: { email: email, telefono: telefono },
       };
     },
+    async processSingleInvoice(row) {
+      try {
+        this.updateRowStatus(row.id, 'Procesando', null); // Clear previous errors
+        const payload = this.createInvoicePayload(row);
+
+        await axios.post(`/api/comprobantes/factura/${this.puntoEmisionId}`, payload, {
+          headers: { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'application/json' },
+        });
+
+        // On successful POST, the backend job is queued.
+        // Remove the row from the pending/failed tables. Its status will be updated
+        // via polling in the 'My Invoices' tab.
+        this.tableData = this.tableData.filter(item => item.id !== row.id);
+
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message;
+        if (error.message.includes('columnas requeridas')) {
+          console.warn(`Skipping row due to incomplete data: ${error.message}`, row);
+          this.updateRowStatus(row.id, 'No Facturado', 'Datos incompletos en la fila.');
+        } else if (errorMessage.includes('ERROR SECUENCIAL REGISTRADO')) {
+          // This error means the invoice was already processed successfully. Remove it.
+          this.tableData = this.tableData.filter(item => item.id !== row.id);
+        } else {
+          console.error('Billing error for row:', row, error);
+          this.updateRowStatus(row.id, 'No Facturado', errorMessage);
+        }
+      }
+    },
     async startBilling() {
       this.isBilling = true;
-      // We operate on a copy to avoid issues with iterating and modifying the same array
       const rowsToBill = [...this.tableData.filter(row => row.Estado === 'Pendiente')];
 
       for (const row of rowsToBill) {
-        try {
-          this.updateRowStatus(row.id, 'Procesando');
-          const payload = this.createInvoicePayload(row);
-
-          await axios.post(`/api/comprobantes/factura/${this.puntoEmisionId}`, payload, {
-            headers: { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'application/json' },
-          });
-
-          // If successful, remove the row from the main data array
-          this.tableData = this.tableData.filter(item => item.id !== row.id);
-
-        } catch (error) {
-            if (error.message.includes('columnas requeridas')) {
-                console.warn(`Skipping row due to incomplete data: ${error.message}`, row);
-                this.updateRowStatus(row.id, 'Pendiente', 'Datos incompletos');
-            } else {
-                console.error('Billing error for row:', row, error);
-                this.updateRowStatus(row.id, 'No Facturado', error.response?.data?.message || error.message);
-            }
-        }
+        await this.processSingleInvoice(row);
       }
 
       this.isBilling = false;
-      // Polling is still useful for the "My Invoices" tab
-      this.startPolling();
+      if (!this.pollingIntervalId) {
+        this.startPolling();
+      }
+    },
+    async handleReprocessRow(row) {
+        await this.processSingleInvoice(row);
+        if (!this.pollingIntervalId) {
+            this.startPolling();
+        }
     },
     startPolling() {
       if (this.pollingIntervalId) clearInterval(this.pollingIntervalId);
@@ -348,6 +379,12 @@ export default {
       if (index !== -1) {
         this.tableData[index].Estado = status;
         this.tableData[index].errorInfo = errorInfo;
+      }
+    },
+    handleSaveRow(updatedRow) {
+      const index = this.tableData.findIndex(row => row.id === updatedRow.id);
+      if (index !== -1) {
+        this.tableData.splice(index, 1, updatedRow);
       }
     },
   },

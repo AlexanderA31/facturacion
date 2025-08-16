@@ -6,48 +6,69 @@
           <th v-for="header in headers" :key="header.value" scope="col" class="px-8 py-4 text-left text-sm font-bold uppercase tracking-wider">
             {{ header.text }}
           </th>
+          <th v-if="editable" scope="col" class="px-8 py-4 text-center text-sm font-bold uppercase tracking-wider">
+            Acciones
+          </th>
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
         <tr v-if="data.length === 0">
-          <td :colspan="headers.length" class="px-8 py-5 text-center text-gray-500 text-lg">
+          <td :colspan="headers.length + (editable ? 1 : 0)" class="px-8 py-5 text-center text-gray-500 text-lg">
             No hay datos para mostrar.
           </td>
         </tr>
-        <tr v-for="(row, index) in data" :key="index" class="hover:bg-gray-100 transition-colors duration-200">
+        <tr v-for="row in data" :key="row.id" class="hover:bg-gray-100 transition-colors duration-200">
           <td v-for="header in headers" :key="header.value" class="px-8 py-4 whitespace-nowrap text-md text-gray-800">
-            <span v-if="header.value === 'estado'" :class="getStatusClass(row.estado)" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full">
-              {{ row.estado }}
-            </span>
-            <span v-else-if="header.value === 'evento'">
-              <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer" :title="row.evento">
-                {{ truncateText(row.evento, 20) }}
+            <!-- EDITING STATE -->
+            <template v-if="editingRowId === row.id && isCellEditable(header.value)">
+              <input v-model="editedRowData[header.value]" class="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border rounded-md px-2 py-1" />
+            </template>
+            <!-- NON-EDITING STATE / SPECIAL CELLS -->
+            <template v-else>
+              <span v-if="header.value.toLowerCase().includes('estado')" :class="getStatusClass(row[header.value])" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full">
+                {{ row[header.value] }}
               </span>
-              <span v-else @click="$emit('toggle-expansion', row.id)" class="cursor-pointer">
-                {{ row.evento }}
-              </span>
-            </span>
-            <span v-else-if="header.value === 'error_message'">
-              <span v-if="row.error_message">
-                <span v-if="!row.isErrorExpanded" @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer" :title="row.error_message">
-                  {{ truncateText(row.error_message, 30) }}
+              <span v-else-if="header.value === 'Evento'">
+                <span v-if="!row.isExpanded" @click="$emit('toggle-expansion', row.id)" class="cursor-pointer" :title="row.Evento">
+                  {{ truncateText(row.Evento, 20) }}
                 </span>
-                <span v-else @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer">
-                  {{ row.error_message }}
+                <span v-else @click="$emit('toggle-expansion', row.id)" class="cursor-pointer">
+                  {{ row.Evento }}
                 </span>
               </span>
-            </span>
-            <span v-else-if="header.value === 'acciones'" class="space-x-2">
-                <button v-if="row.estado === 'autorizado' && row.fecha_autorizacion" @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
-                  XML
-              </button>
-                <button v-if="row.estado === 'autorizado' && row.fecha_autorizacion" @click="$emit('download-pdf', row.clave_acceso)" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
-                PDF
+              <span v-else-if="header.value === 'error_message'">
+                <span v-if="row.error_message">
+                  <span v-if="!row.isErrorExpanded" @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer" :title="row.error_message">
+                    {{ truncateText(row.error_message, 30) }}
+                  </span>
+                  <span v-else @click="$emit('toggle-error-expansion', row.id)" class="cursor-pointer">
+                    {{ row.error_message }}
+                  </span>
+                </span>
+              </span>
+              <span v-else-if="header.value === 'acciones'" class="space-x-2">
+                  <button v-if="row.estado === 'autorizado' && row.fecha_autorizacion" @click="$emit('download-xml', row.clave_acceso)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
+                    XML
                 </button>
+                  <button v-if="row.estado === 'autorizado' && row.fecha_autorizacion" @click="$emit('download-pdf', row.clave_acceso)" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
+                  PDF
+                  </button>
+                </span>
+              <span v-else>
+                {{ row[header.value] }}
               </span>
-            <span v-else>
-              {{ row[header.value] }}
-            </span>
+            </template>
+          </td>
+          <!-- ACTIONS COLUMN -->
+          <td v-if="editable || reprocessable" class="px-8 py-4 whitespace-nowrap text-md text-gray-800 space-x-2 text-center">
+            <template v-if="editingRowId === row.id">
+              <button @click="saveRow" class="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Guardar</button>
+              <button @click="cancelEdit" class="px-3 py-1 bg-gray-500 text-white rounded-md text-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Cancelar</button>
+            </template>
+            <template v-else>
+              <button v-if="editable" @click="editRow(row)" class="px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">Editar</button>
+              <button v-if="reprocessable" @click="$emit('reprocess-row', row)" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Reprocesar</button>
+            </template>
           </td>
         </tr>
       </tbody>
@@ -67,8 +88,43 @@ export default {
       type: Array,
       required: true,
     },
+    editable: {
+      type: Boolean,
+      default: false,
+    },
+    reprocessable: {
+      type: Boolean,
+      default: false,
+    },
+    // A list of column 'value's that should not be editable.
+    nonEditableColumns: {
+        type: Array,
+        default: () => ['Estado', 'estado', 'acciones', 'error_message']
+    }
+  },
+  data() {
+    return {
+      editingRowId: null,
+      editedRowData: {},
+    };
   },
   methods: {
+    isCellEditable(columnValue) {
+        return this.editable && !this.nonEditableColumns.includes(columnValue);
+    },
+    editRow(row) {
+      this.editingRowId = row.id;
+      // Deep copy for nested objects, though current data is flat
+      this.editedRowData = JSON.parse(JSON.stringify(row));
+    },
+    saveRow() {
+      this.$emit('save-row', this.editedRowData);
+      this.cancelEdit();
+    },
+    cancelEdit() {
+      this.editingRowId = null;
+      this.editedRowData = {};
+    },
     truncateText(text, length) {
       if (text && text.length > length) {
         return text.substring(0, length) + '...';
@@ -76,18 +132,23 @@ export default {
       return text;
     },
     getStatusClass(status) {
-      switch (status) {
-        case 'Facturado':
-          return 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800';
-        case 'No Facturado':
-          return 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800';
-        case 'Enviado':
-            return 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800';
-        case 'Procesando':
-          return 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800';
-        case 'Pendiente':
+      const lowerStatus = status ? String(status).toLowerCase() : '';
+      switch (lowerStatus) {
+        case 'facturado':
+        case 'autorizado':
+          return 'bg-green-100 text-green-800';
+        case 'no facturado':
+        case 'rechazado':
+        case 'fallido':
+          return 'bg-red-100 text-red-800';
+        case 'enviado':
+        case 'firmado':
+            return 'bg-indigo-100 text-indigo-800';
+        case 'procesando':
+          return 'bg-blue-100 text-blue-800';
+        case 'pendiente':
         default:
-          return 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800';
+          return 'bg-yellow-100 text-yellow-800';
       }
     },
   },
