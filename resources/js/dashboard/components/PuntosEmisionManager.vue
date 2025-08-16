@@ -100,7 +100,7 @@ export default {
                     headers: { 'Authorization': `Bearer ${this.token}` }
                 });
                 this.puntosEmision = response.data.data.data.map(p => {
-                    p.establecimiento_codigo = p.establecimiento?.codigo || 'N/A';
+                    p.establecimiento_codigo = p.establecimiento?.numero || 'N/A';
                     return p;
                 });
             } catch (error) {

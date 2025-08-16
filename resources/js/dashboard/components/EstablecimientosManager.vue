@@ -57,7 +57,7 @@ export default {
         return {
             establecimientos: [],
             headers: [
-                { text: 'Código', value: 'codigo' },
+                { text: 'Número', value: 'numero' },
                 { text: 'Nombre', value: 'nombre' },
                 { text: 'Dirección', value: 'direccion' },
                 { text: 'Acciones', value: 'actions' },
