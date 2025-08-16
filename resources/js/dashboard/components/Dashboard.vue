@@ -21,6 +21,11 @@
           <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
           Mis Comprobantes
         </a>
+        <a href="#" @click.prevent="currentDashboardView = 'corrective'"
+            :class="['flex items-center px-4 py-2 rounded-md transition-colors', currentDashboardView === 'corrective' ? 'bg-gray-700' : 'hover:bg-gray-700']">
+            <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            Facturación Correctiva
+        </a>
       </nav>
       <div class="px-4 py-4">
         <button @click="handleLogout" class="w-full flex items-center justify-center px-4 py-2 font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200">
@@ -78,26 +83,34 @@
                     <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                   </div>
                 </div>
-                <button @click="startBilling" :disabled="isBilling || tableData.length === 0"
-                        class="w-full sm:w-auto mt-4 sm:mt-0 px-6 py-3 bg-blue-600 text-white font-medium text-lg leading-tight uppercase rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center">
-                  <span v-if="isBilling">
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Facturando...
-                  </span>
-                  <span v-else class="flex items-center">
+                <!-- Start Button -->
+                <button v-if="!isBilling" @click="startBilling" :disabled="tableData.length === 0"
+                        class="w-full sm:w-auto mt-4 sm:mt-0 px-6 py-3 bg-blue-600 text-white font-medium text-lg leading-tight uppercase rounded-lg shadow-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center justify-center">
                     <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Iniciar Facturación
-                  </span>
                 </button>
-                <button v-if="isBilling" @click="stopBilling" class="w-full sm:w-auto mt-4 sm:mt-0 ml-4 px-6 py-3 bg-red-600 text-white font-medium text-lg leading-tight uppercase rounded-lg shadow-md hover:bg-red-700 hover:shadow-lg focus:bg-red-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-800 active:shadow-lg transition duration-150 ease-in-out flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 9a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd" />
-                    </svg>
-                    Detener
-                </button>
+                <!-- Billing In Progress Controls -->
+                <div v-if="isBilling" class="flex items-center space-x-4">
+                    <div class="flex items-center text-lg font-medium text-gray-700">
+                        <svg class="animate-spin mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Facturando... ({{ currentIndex + 1 }} / {{ rowsToBill.length }})</span>
+                    </div>
+                    <!-- Pause Button -->
+                    <button v-if="!isPaused" @click="pauseBilling" class="px-4 py-2 bg-yellow-500 text-white rounded-md shadow-sm hover:bg-yellow-600">
+                        Pausar
+                    </button>
+                    <!-- Resume Button -->
+                    <button v-if="isPaused" @click="resumeBilling" class="px-4 py-2 bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600">
+                        Reanudar
+                    </button>
+                    <!-- Cancel Button -->
+                    <button @click="cancelBilling" class="px-4 py-2 bg-red-600 text-white rounded-md shadow-sm hover:bg-red-700">
+                        Cancelar
+                    </button>
+                </div>
               </div>
             </div>
             <TableSkeleton v-if="isParsingFile" />
@@ -105,19 +118,6 @@
               <DataTable :data="paginatedPendingRows" :headers="tableHeaders" @toggle-expansion="toggleRowExpansion" />
               <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
             </template>
-          </div>
-
-          <div v-if="failedRows.length > 0" class="bg-white rounded-xl shadow-lg p-6 mt-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Facturas con Errores para Corregir</h2>
-            <DataTable
-              :data="failedRows"
-              :headers="tableHeaders"
-              :editable="true"
-              :reprocessable="true"
-              @toggle-expansion="toggleRowExpansion"
-              @save-row="handleSaveRow"
-              @reprocess-row="handleReprocessRow"
-            />
           </div>
         </div>
 
@@ -134,6 +134,11 @@
         <div v-if="currentDashboardView === 'my-invoices'">
           <MyInvoices :token="token" />
         </div>
+
+        <!-- Corrective Billing Section -->
+        <div v-if="currentDashboardView === 'corrective'">
+          <CorrectiveBilling />
+        </div>
       </main>
     </div>
   </div>
@@ -145,6 +150,7 @@ import FileUpload from './FileUpload.vue';
 import DataTable from './DataTable.vue';
 import StatusChecker from './StatusChecker.vue';
 import MyInvoices from './MyInvoices.vue';
+import CorrectiveBilling from './CorrectiveBilling.vue';
 import Pagination from './Pagination.vue';
 import axios from 'axios';
 
@@ -156,6 +162,7 @@ export default {
     DataTable,
     StatusChecker,
     MyInvoices,
+    CorrectiveBilling,
     Pagination,
   },
   props: {
@@ -183,15 +190,15 @@ export default {
       currentPage: 1,
       itemsPerPage: 10,
       isParsingFile: false,
-      isStopping: false,
+      isStopping: false, // To be replaced by isPaused
+      isPaused: false,
+      currentIndex: 0,
+      rowsToBill: [],
     };
   },
   computed: {
     pendingRows() {
         return this.tableData.filter(row => row.Estado === 'Pendiente' || row.Estado === 'Procesando');
-    },
-    failedRows() {
-        return this.tableData.filter(row => row.Estado === 'No Facturado');
     },
     paginatedPendingRows() {
       // This computed property will be used for the main table
@@ -321,6 +328,20 @@ export default {
         infoAdicional: { email: email, telefono: telefono },
       };
     },
+    addFailedRowToCorrective(row, errorMessage) {
+        row.Estado = 'No Facturado';
+        row.errorInfo = errorMessage;
+
+        const correctiveData = JSON.parse(localStorage.getItem('correctiveBillingData') || '[]');
+        correctiveData.push(row);
+        localStorage.setItem('correctiveBillingData', JSON.stringify(correctiveData));
+
+        // Remove from the main table
+        this.tableData = this.tableData.filter(item => item.id !== row.id);
+
+        // Notify other components
+        window.dispatchEvent(new Event('corrective-billing-update'));
+    },
     async processSingleInvoice(row) {
       try {
         this.updateRowStatus(row.id, 'Procesando', null); // Clear previous errors
@@ -338,54 +359,64 @@ export default {
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
         if (error.message.includes('columnas requeridas')) {
-          console.warn(`Skipping row due to incomplete data: ${error.message}`, row);
-          this.updateRowStatus(row.id, 'No Facturado', 'Datos incompletos en la fila.');
+          this.addFailedRowToCorrective(row, 'Datos incompletos en la fila.');
         } else if (errorMessage.includes('ERROR SECUENCIAL REGISTRADO')) {
           // This error means the invoice was already processed successfully. Remove it.
           this.tableData = this.tableData.filter(item => item.id !== row.id);
         } else {
-          console.error('Billing error for row:', row, error);
-          this.updateRowStatus(row.id, 'No Facturado', errorMessage);
+          this.addFailedRowToCorrective(row, errorMessage);
         }
       }
     },
-    stopBilling() {
-        this.isStopping = true;
+    pauseBilling() {
+        this.isPaused = true;
     },
-    async startBilling() {
+    resumeBilling() {
+        this.isPaused = false;
+        this.runBillingProcess();
+    },
+    cancelBilling() {
+        this.isBilling = false;
+        this.isPaused = false;
+        this.rowsToBill = [];
+        this.currentIndex = 0;
+        // Revert any 'Procesando' rows back to 'Pendiente'
+        this.tableData.forEach(row => {
+            if (row.Estado === 'Procesando') {
+                this.updateRowStatus(row.id, 'Pendiente');
+            }
+        });
+    },
+    startBilling() {
+      this.rowsToBill = [...this.tableData.filter(row => row.Estado === 'Pendiente')];
+      if (this.rowsToBill.length === 0) return;
+
       this.isBilling = true;
-      this.isStopping = false; // Reset stop flag at the beginning
-      const rowsToBill = [...this.tableData.filter(row => row.Estado === 'Pendiente')];
+      this.isPaused = false;
+      this.currentIndex = 0;
 
-      for (const row of rowsToBill) {
-        if (this.isStopping) {
-          console.log('Billing process stopped by user.');
-          break; // Exit the loop
-        }
-        await this.processSingleInvoice(row);
-      }
-
-      // If the process was stopped, revert any rows that were marked as 'Procesando' but didn't finish
-      if (this.isStopping) {
-          this.tableData.forEach(row => {
-              if (row.Estado === 'Procesando') {
-                  this.updateRowStatus(row.id, 'Pendiente');
-              }
-          });
-      }
-
-      this.isBilling = false;
-      this.isStopping = false;
-
-      if (!this.pollingIntervalId) {
-        this.startPolling();
-      }
+      this.runBillingProcess();
     },
-    async handleReprocessRow(row) {
-        await this.processSingleInvoice(row);
-        if (!this.pollingIntervalId) {
-            this.startPolling();
+    async runBillingProcess() {
+        if (this.isPaused || !this.isBilling) {
+            return;
         }
+
+        if (this.currentIndex >= this.rowsToBill.length) {
+            // Finished
+            this.isBilling = false;
+            if (!this.pollingIntervalId) {
+                this.startPolling();
+            }
+            return;
+        }
+
+        const row = this.rowsToBill[this.currentIndex];
+        await this.processSingleInvoice(row);
+
+        this.currentIndex++;
+
+        requestAnimationFrame(this.runBillingProcess);
     },
     startPolling() {
       if (this.pollingIntervalId) clearInterval(this.pollingIntervalId);
