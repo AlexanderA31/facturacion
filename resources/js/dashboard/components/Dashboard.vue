@@ -53,7 +53,7 @@
             <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
               <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-3">Cargar Archivo de Datos</h3>
               <p class="text-gray-600 mb-4">Seleccione un archivo de Excel (.xlsx, .xls) con los datos de los clientes y las facturas a emitir.</p>
-              <FileUpload @file-parsed="handleFileParsed" />
+              <FileUpload @file-parsed="handleFileParsed" @parsing-start="isParsingFile = true" @parsing-complete="isParsingFile = false" />
             </div>
           </div>
 
@@ -92,10 +92,19 @@
                     Iniciar Facturación
                   </span>
                 </button>
+                <button v-if="isBilling" @click="stopBilling" class="w-full sm:w-auto mt-4 sm:mt-0 ml-4 px-6 py-3 bg-red-600 text-white font-medium text-lg leading-tight uppercase rounded-lg shadow-md hover:bg-red-700 hover:shadow-lg focus:bg-red-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-800 active:shadow-lg transition duration-150 ease-in-out flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 9a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    Detener
+                </button>
               </div>
             </div>
-            <DataTable :data="paginatedPendingRows" :headers="tableHeaders" @toggle-expansion="toggleRowExpansion" />
-            <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+            <TableSkeleton v-if="isParsingFile" />
+            <template v-else>
+              <DataTable :data="paginatedPendingRows" :headers="tableHeaders" @toggle-expansion="toggleRowExpansion" />
+              <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+            </template>
           </div>
 
           <div v-if="failedRows.length > 0" class="bg-white rounded-xl shadow-lg p-6 mt-8">
@@ -173,6 +182,8 @@ export default {
       filterStatus: 'Todos',
       currentPage: 1,
       itemsPerPage: 10,
+      isParsingFile: false,
+      isStopping: false,
     };
   },
   computed: {
@@ -194,7 +205,45 @@ export default {
       return Math.ceil(data.length / this.itemsPerPage);
     },
   },
+  watch: {
+    tableData: {
+        handler() {
+            this.saveState();
+        },
+        deep: true,
+    },
+    isBilling(newValue) {
+        this.saveState();
+    }
+  },
+  mounted() {
+    this.loadState();
+    if (this.isBilling) {
+        // If billing was in progress, resume it.
+        this.startBilling();
+    }
+  },
   methods: {
+    saveState() {
+        const state = {
+            tableData: this.tableData,
+            isBilling: this.isBilling,
+        };
+        localStorage.setItem('bulkBillingState', JSON.stringify(state));
+    },
+    loadState() {
+        const savedState = localStorage.getItem('bulkBillingState');
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            this.tableData = state.tableData || [];
+            this.isBilling = state.isBilling || false;
+        }
+    },
+    clearState() {
+        localStorage.removeItem('bulkBillingState');
+        this.tableData = [];
+        this.isBilling = false;
+    },
     toggleRowExpansion(rowId) {
       const row = this.tableData.find(r => r.id === rowId);
       if (row) {
@@ -202,9 +251,11 @@ export default {
       }
     },
     handleLogout() {
+        this.clearState();
         this.$emit('logout');
     },
     handleFileParsed(data) {
+      this.clearState(); // Clear any old state before loading new data
       this.tableData = data.map(row => ({
         ...row,
         id: Math.random().toString(36).substr(2, 9),
@@ -298,15 +349,34 @@ export default {
         }
       }
     },
+    stopBilling() {
+        this.isStopping = true;
+    },
     async startBilling() {
       this.isBilling = true;
+      this.isStopping = false; // Reset stop flag at the beginning
       const rowsToBill = [...this.tableData.filter(row => row.Estado === 'Pendiente')];
 
       for (const row of rowsToBill) {
+        if (this.isStopping) {
+          console.log('Billing process stopped by user.');
+          break; // Exit the loop
+        }
         await this.processSingleInvoice(row);
       }
 
+      // If the process was stopped, revert any rows that were marked as 'Procesando' but didn't finish
+      if (this.isStopping) {
+          this.tableData.forEach(row => {
+              if (row.Estado === 'Procesando') {
+                  this.updateRowStatus(row.id, 'Pendiente');
+              }
+          });
+      }
+
       this.isBilling = false;
+      this.isStopping = false;
+
       if (!this.pollingIntervalId) {
         this.startPolling();
       }

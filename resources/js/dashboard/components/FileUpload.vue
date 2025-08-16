@@ -69,6 +69,8 @@ export default {
       this.fileName = file.name;
       const fileExtension = file.name.split('.').pop().toLowerCase();
 
+      this.$emit('parsing-start');
+
       if (fileExtension === 'xlsx') {
         this.parseExcel(file);
       } else if (fileExtension === 'pdf') {
@@ -76,6 +78,7 @@ export default {
       } else {
         this.error = 'Tipo de archivo no soportado. Por favor, sube un archivo Excel (.xlsx) o PDF (.pdf).';
         this.fileName = '';
+        this.$emit('parsing-complete');
       }
     },
     parseExcel(file) {
@@ -127,10 +130,13 @@ export default {
         } catch (err) {
           this.error = 'Error al procesar el archivo Excel. Asegúrate de que el formato es correcto.';
           console.error(err);
+        } finally {
+            this.$emit('parsing-complete');
         }
       };
       reader.onerror = () => {
         this.error = 'Error al leer el archivo.';
+        this.$emit('parsing-complete');
       };
       reader.readAsArrayBuffer(file);
     },
@@ -167,10 +173,13 @@ export default {
         } catch (err) {
           this.error = 'Error al procesar el archivo PDF.';
           console.error(err);
+        } finally {
+            this.$emit('parsing-complete');
         }
       };
       reader.onerror = () => {
         this.error = 'Error al leer el archivo.';
+        this.$emit('parsing-complete');
       };
       reader.readAsArrayBuffer(file);
     },
