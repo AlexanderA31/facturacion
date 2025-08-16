@@ -65,13 +65,19 @@ export default {
             { text: 'Estado', value: 'estado' },
             { text: 'Fecha', value: 'fecha_emision' },
         ];
+
+        let finalHeaders = [...baseHeaders];
+
         if (this.currentTab === 'unauthorized') {
-            return [...baseHeaders, { text: 'Mensaje de Error', value: 'error_message' }];
+            finalHeaders.push({ text: 'Mensaje de Error', value: 'error_message' });
         }
-        if (this.currentTab === 'authorized') {
-            return [...baseHeaders, { text: 'Acciones', value: 'acciones' }];
+
+        // Show actions on 'all' and 'authorized' tabs
+        if (this.currentTab === 'all' || this.currentTab === 'authorized') {
+            finalHeaders.push({ text: 'Acciones', value: 'acciones' });
         }
-        return baseHeaders;
+
+        return finalHeaders;
     },
     filteredInvoices() {
         switch (this.currentTab) {
