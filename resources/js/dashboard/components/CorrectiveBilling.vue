@@ -186,19 +186,22 @@ export default {
     },
     loadState() {
       this.isLoading = true;
-      try {
-        const savedData = localStorage.getItem('correctiveBillingData');
-        if (savedData) {
-            this.failedRows = JSON.parse(savedData);
-        } else {
-            this.failedRows = [];
-        }
-      } catch (e) {
-          console.error("Error loading state from localStorage", e);
-          this.failedRows = [];
-      } finally {
-          this.isLoading = false;
-      }
+      // Use a short timeout to ensure the loading state is visible for local operations
+      new Promise(resolve => setTimeout(resolve, 200)).then(() => {
+          try {
+            const savedData = localStorage.getItem('correctiveBillingData');
+            if (savedData) {
+                this.failedRows = JSON.parse(savedData);
+            } else {
+                this.failedRows = [];
+            }
+          } catch (e) {
+              console.error("Error loading state from localStorage", e);
+              this.failedRows = [];
+          } finally {
+              this.isLoading = false;
+          }
+      });
     },
     saveState() {
       localStorage.setItem('correctiveBillingData', JSON.stringify(this.failedRows));
@@ -229,7 +232,7 @@ export default {
         if (!keyToFind) return undefined;
         const normalizedKey = keyToFind.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         for (const key in row) {
-          const normalizedObjKey = key.toLowerCase().normalize("NFD").replace(/[\u0000-\u036f]/g, "");
+          const normalizedObjKey = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
           if (normalizedObjKey === normalizedKey) return row[key];
         }
         return undefined;
