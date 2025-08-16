@@ -256,7 +256,8 @@ export default {
     },
     async startBilling() {
       this.isBilling = true;
-      const rowsToBill = this.tableData.filter(row => row.Estado === 'Pendiente');
+      // We operate on a copy to avoid issues with iterating and modifying the same array
+      const rowsToBill = [...this.tableData.filter(row => row.Estado === 'Pendiente')];
 
       for (const row of rowsToBill) {
         try {
@@ -266,12 +267,14 @@ export default {
           await axios.post(`/api/comprobantes/factura/${this.puntoEmisionId}`, payload, {
             headers: { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'application/json' },
           });
-          // The status will be updated by the polling mechanism
+
+          // If successful, remove the row from the main data array
+          this.tableData = this.tableData.filter(item => item.id !== row.id);
+
         } catch (error) {
-            // Check if the error is from createInvoicePayload (incomplete data)
             if (error.message.includes('columnas requeridas')) {
                 console.warn(`Skipping row due to incomplete data: ${error.message}`, row);
-                this.updateRowStatus(row.id, 'Pendiente', 'Datos incompletos'); // Revert status to Pendiente and add info
+                this.updateRowStatus(row.id, 'Pendiente', 'Datos incompletos');
             } else {
                 console.error('Billing error for row:', row, error);
                 this.updateRowStatus(row.id, 'No Facturado', error.response?.data?.message || error.message);
@@ -280,7 +283,8 @@ export default {
       }
 
       this.isBilling = false;
-      this.startPolling(); // Start polling to get final statuses
+      // Polling is still useful for the "My Invoices" tab
+      this.startPolling();
     },
     startPolling() {
       if (this.pollingIntervalId) clearInterval(this.pollingIntervalId);
