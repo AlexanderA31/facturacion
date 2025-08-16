@@ -44,6 +44,7 @@
         :headers="tableHeaders"
         :showEditButton="true"
         @open-edit-modal="openEditModal"
+        @toggle-expansion="toggleRowExpansion"
       />
       <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
     </div>
@@ -144,6 +145,12 @@ export default {
       if (index !== -1) {
         this.failedRows.splice(index, 1, updatedRow);
         this.saveState();
+      }
+    },
+    toggleRowExpansion(rowId) {
+      const row = this.failedRows.find(r => r.id === rowId);
+      if (row) {
+        row.isExpanded = !row.isExpanded;
       }
     },
     updateRowStatus(rowId, status, errorInfo = null) {
