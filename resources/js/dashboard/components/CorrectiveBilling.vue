@@ -86,6 +86,7 @@ export default {
         { text: 'Precio', value: 'Precio' },
         { text: 'Estado', value: 'Estado' },
         { text: 'Error', value: 'errorInfo' },
+        { text: 'Acciones', value: 'acciones' },
       ],
       isBilling: false,
       isPaused: false,
