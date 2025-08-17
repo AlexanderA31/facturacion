@@ -265,6 +265,7 @@ class SriComprobanteService
             $params = (object) ['claveAccesoComprobante' => $claveAcceso];
 
             $result = $client->autorizacionComprobante($params);
+            Log::info("Respuesta completa del SRI: " . print_r($result, true));
 
             $autorizacionAutorizada = $this->findAuthorized($result);
 

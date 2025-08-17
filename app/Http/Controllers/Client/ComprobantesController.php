@@ -155,51 +155,33 @@ class ComprobantesController extends Controller
     {
         try {
             $this->validarClaveAcceso($clave_acceso);
-
-            // Buscar el comprobante por clave de acceso
             $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
 
-            // Validar que el comprobante haya sido autorizado
-            if ($comprobante->estado !== EstadosComprobanteEnum::AUTORIZADO) {
-                return $this->sendError('Comprobante no autorizado', 'No es posible obtener el XML porque el comprobante no ha sido autorizado por el SRI', 409);
+            // 1. Autorizar la acción
+            Gate::authorize('viewXML', $comprobante);
+
+            // 2. Determinar el ambiente
+            $ambiente = strval($comprobante->ambiente);
+            $xml = null;
+
+            // 3. Lógica principal
+            if ($comprobante->estado === EstadosComprobanteEnum::AUTORIZADO) {
+                $xml = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
+            } elseif ($comprobante->estado === EstadosComprobanteEnum::RECHAZADO && $comprobante->error_message === 'ERROR SECUENCIAL REGISTRADO') {
+                // Lógica de fallback para duplicados
+                $xml = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
+            } else {
+                // Para cualquier otro estado, no se permite la descarga.
+                return $this->sendError('Comprobante no autorizado', 'No es posible obtener el XML porque el comprobante no ha sido autorizado por el SRI o es un error no recuperable.', 409);
             }
 
-            // Autorizar la acción
-            Gate::authorize('viewXml', $comprobante);
+            // 4. Devolver respuesta
+            if ($xml) {
+                return response($xml, 200)->header('Content-Type', 'application/xml');
+            }
 
-            // Obtener el ambiente del comprobante
-            $ambiente = strval($comprobante->ambiente);
-
-            // Consultar el XML desde el SRI
-            $xml = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
-
-            return $this->sendResponse(
-                'XML obtenido exitosamente',
-                ['xml' => $xml]
-            );
-        } catch (AuthorizationException $e) {
-            return $this->sendError('Acceso denegado', $e->getMessage() . $e->getTrace(), 403);
-        } catch (ModelNotFoundException $e) {
-            return $this->sendError('Comprobante no encontrado', 'No se encontró el comprobante con la clave de acceso proporcionada.', 404);
-        } catch (SriException $e) {
-            return $this->sendError('Error de consulta en el SRI', $e->getMessage(), 502);
-        } catch (\Exception $e) {
-            return $this->sendError('Error inesperado al consultar el XML', null, 500);
-        }
-    }
-
-    public function consultarXml(string $clave_acceso)
-    {
-        try {
-            $this->validarClaveAcceso($clave_acceso);
-
-            $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
-            Gate::authorize('viewXml', $comprobante);
-
-            $ambiente = strval($comprobante->ambiente);
-            $xml = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
-
-            return response($xml, 200)->header('Content-Type', 'application/xml');
+            // Fallback final si la consulta al SRI no devuelve XML
+            return $this->sendError('Error de consulta en el SRI', 'No se pudo obtener el XML desde el SRI.', 502);
 
         } catch (AuthorizationException $e) {
             return $this->sendError('Acceso denegado', $e->getMessage(), 403);
@@ -211,7 +193,6 @@ class ComprobantesController extends Controller
             return $this->sendError('Error inesperado al consultar el XML', $e->getMessage(), 500);
         }
     }
-
 
     public function generateFactura(FacturaRequest $request, PuntoEmision $puntoEmision)
     {

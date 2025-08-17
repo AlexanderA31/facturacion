@@ -163,40 +163,19 @@ export default {
         link.click();
         document.body.removeChild(link);
     },
-    async forceDownloadXml(claveAcceso) {
-        console.log(`Intentando descarga forzada para ${claveAcceso}`);
-        try {
-            const response = await axios.get(`/api/comprobantes/${claveAcceso}/consultar-xml`, {
-                headers: { 'Authorization': `Bearer ${this.token}` }
-            });
-            // La respuesta ahora es el XML plano
-            const xmlContent = response.data;
-            const blob = new Blob([xmlContent], { type: 'application/xml' });
-            this.downloadBlob(blob, `${claveAcceso}.xml`);
-        } catch (error) {
-            console.error('Error en la descarga forzada de XML:', error);
-            // El error ahora puede no ser JSON, así que manejamos el texto de la respuesta
-            const errorMessage = error.response?.data?.message || error.response?.data || error.message;
-            alert('No se pudo recuperar el XML desde el SRI. Razón: ' + errorMessage);
-        }
-    },
     async downloadXml(claveAcceso) {
       try {
         const response = await axios.get(`/api/comprobantes/${claveAcceso}/xml`, {
           headers: { 'Authorization': `Bearer ${this.token}` }
         });
-
-        const xmlContent = response.data.data.xml;
+        // The backend now returns the raw XML content directly.
+        const xmlContent = response.data;
         const blob = new Blob([xmlContent], { type: 'application/xml' });
         this.downloadBlob(blob, `${claveAcceso}.xml`);
       } catch (error) {
         console.error('Error downloading XML:', error);
-        if (error.response?.status === 409) {
-            console.log('Error 409 detectado, iniciando Plan B: consulta directa al SRI.');
-            this.forceDownloadXml(claveAcceso);
-        } else {
-            alert('No se pudo descargar el archivo XML. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
-        }
+        const errorMessage = error.response?.data?.message || error.response?.data || error.message;
+        alert('No se pudo descargar el archivo XML. Razón: ' + errorMessage);
       }
     },
     async downloadPdf(claveAcceso) {
@@ -205,16 +184,12 @@ export default {
           headers: { 'Authorization': `Bearer ${this.token}` },
           responseType: 'blob',
         });
-
         const blob = new Blob([response.data], { type: 'application/pdf' });
         this.downloadBlob(blob, `${claveAcceso}.pdf`);
       } catch (error) {
         console.error('Error downloading PDF:', error);
-        if (error.response?.status === 409) {
-            alert('Descarga no disponible: Este es un comprobante duplicado. Por favor, busque la factura original en la pestaña de "Autorizados" para descargar el archivo.');
-        } else {
-            alert('No se pudo descargar el archivo PDF. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
-        }
+        const errorMessage = error.response?.data?.message || error.message;
+        alert('No se pudo descargar el archivo PDF. Razón: ' + errorMessage);
       }
     },
   },
