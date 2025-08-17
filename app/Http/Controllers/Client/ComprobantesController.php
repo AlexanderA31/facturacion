@@ -154,40 +154,66 @@ class ComprobantesController extends Controller
     }
 
 
+    private function getComprobanteForDownload(string $clave_acceso): Comprobante
+    {
+        $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
+
+        // First, authorize that the user can view this record at all
+        Gate::authorize('view', $comprobante);
+
+        // If it's already authorized, we are good to go.
+        if ($comprobante->estado === EstadosComprobanteEnum::AUTORIZADO->value) {
+            return $comprobante;
+        }
+
+        // If it's a rejected sequential error, find the original authorized one.
+        if (
+            $comprobante->estado === EstadosComprobanteEnum::RECHAZADO->value &&
+            $comprobante->error_message === 'ERROR SECUENCIAL REGISTRADO'
+        ) {
+            $original = Comprobante::where('user_id', $comprobante->user_id)
+                ->where('establecimiento', $comprobante->establecimiento)
+                ->where('punto_emision', $comprobante->punto_emision)
+                ->where('secuencial', $comprobante->secuencial)
+                ->where('estado', EstadosComprobanteEnum::AUTORIZADO->value)
+                ->first();
+
+            if ($original) {
+                // The user is authorized to see the duplicate, so they are authorized to see the original.
+                return $original;
+            }
+        }
+
+        // For all other cases, throw an exception.
+        throw new AuthorizationException('Este comprobante no está autorizado para descarga.');
+    }
+
+
     public function getXml(string $clave_acceso)
     {
         try {
             $this->validarClaveAcceso($clave_acceso);
 
-            // Buscar el comprobante por clave de acceso
-            $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
+            $comprobante = $this->getComprobanteForDownload($clave_acceso);
 
-            // Validar que el comprobante haya sido autorizado
-            if ($comprobante->estado !== EstadosComprobanteEnum::AUTORIZADO) {
-                return $this->sendError('Comprobante no autorizado', 'No es posible obtener el XML porque el comprobante no ha sido autorizado por el SRI', 409);
-            }
+            // The method returns a guaranteed authorized comprobante, so we use its clave_acceso
+            $authorized_clave_acceso = $comprobante->clave_acceso;
 
-            // Autorizar la acción
-            Gate::authorize('viewXml', $comprobante);
-
-            // Obtener el ambiente del comprobante
             $ambiente = strval($comprobante->ambiente);
-
-            // Consultar el XML desde el SRI
-            $xml = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
+            $xml = $this->sriService->consultarXmlAutorizado($authorized_clave_acceso, $ambiente);
 
             return $this->sendResponse(
                 'XML obtenido exitosamente',
                 ['xml' => $xml]
             );
         } catch (AuthorizationException $e) {
-            return $this->sendError('Acceso denegado', $e->getMessage() . $e->getTrace(), 403);
+            return $this->sendError('Acceso denegado', $e->getMessage(), 403);
         } catch (ModelNotFoundException $e) {
             return $this->sendError('Comprobante no encontrado', 'No se encontró el comprobante con la clave de acceso proporcionada.', 404);
         } catch (SriException $e) {
             return $this->sendError('Error de consulta en el SRI', $e->getMessage(), 502);
         } catch (\Exception $e) {
-            return $this->sendError('Error inesperado al consultar el XML', null, 500);
+            return $this->sendError('Error inesperado al consultar el XML', $e->getMessage(), 500);
         }
     }
 
@@ -196,14 +222,13 @@ class ComprobantesController extends Controller
     {
         try {
             $this->validarClaveAcceso($clave_acceso);
-            $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
-            Gate::authorize('view', $comprobante);
 
-            if ($comprobante->estado !== EstadosComprobanteEnum::AUTORIZADO->value) {
-                return $this->sendError('Comprobante no autorizado', 'No es posible generar el PDF porque el comprobante no ha sido autorizado.', 409);
-            }
+            $comprobante = $this->getComprobanteForDownload($clave_acceso);
 
-            $xmlString = $this->sriService->consultarXmlAutorizado($clave_acceso, $comprobante->ambiente);
+            // The method returns a guaranteed authorized comprobante, so we use its clave_acceso
+            $authorized_clave_acceso = $comprobante->clave_acceso;
+
+            $xmlString = $this->sriService->consultarXmlAutorizado($authorized_clave_acceso, $comprobante->ambiente);
             $xml = simplexml_load_string($xmlString);
 
             if ($xml === false) {
