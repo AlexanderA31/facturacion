@@ -188,6 +188,38 @@ class ComprobantesController extends Controller
         }
     }
 
+    public function consultarXml(string $clave_acceso)
+    {
+        try {
+            $this->validarClaveAcceso($clave_acceso);
+
+            // Buscar el comprobante por clave de acceso
+            $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
+
+            // Autorizar la acción
+            Gate::authorize('viewXml', $comprobante);
+
+            // Obtener el ambiente del comprobante
+            $ambiente = strval($comprobante->ambiente);
+
+            // Consultar el XML desde el SRI
+            $xml = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
+
+            return $this->sendResponse(
+                'XML consultado exitosamente',
+                ['xml' => $xml]
+            );
+        } catch (AuthorizationException $e) {
+            return $this->sendError('Acceso denegado', $e->getMessage() . $e->getTrace(), 403);
+        } catch (ModelNotFoundException $e) {
+            return $this->sendError('Comprobante no encontrado', 'No se encontró el comprobante con la clave de acceso proporcionada.', 404);
+        } catch (SriException $e) {
+            return $this->sendError('Error de consulta en el SRI', $e->getMessage(), 502);
+        } catch (\Exception $e) {
+            return $this->sendError('Error inesperado al consultar el XML', null, 500);
+        }
+    }
+
 
     public function generateFactura(FacturaRequest $request, PuntoEmision $puntoEmision)
     {
