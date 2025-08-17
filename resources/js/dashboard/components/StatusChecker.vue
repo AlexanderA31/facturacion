@@ -106,7 +106,7 @@ export default {
             document.body.removeChild(a);
 
         } catch (error) {
-            alert('Error al descargar el XML. Por favor, revisa la consola.');
+            this.$emitter.emit('show-alert', { type: 'error', message: 'Error al descargar el XML. Por favor, revisa la consola.' });
             console.error('XML download error:', error);
         }
     },

@@ -172,9 +172,10 @@ export default {
       } catch (error) {
         console.error('Error downloading XML:', error);
         if (error.response?.status === 409 && error.response?.data?.message?.includes('Comprobante no autorizado')) {
-            alert('Descarga no disponible: Este es un comprobante duplicado. Por favor, busque la factura original en la pestaña de "Autorizados" para descargar el archivo.');
+            this.$emitter.emit('show-alert', { type: 'error', message: 'Descarga no disponible: Comprobante duplicado.' });
         } else {
-            alert('No se pudo descargar el archivo XML. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
+            const message = error.response?.data?.message || 'Error desconocido';
+            this.$emitter.emit('show-alert', { type: 'error', message: `No se pudo descargar el XML: ${message}` });
         }
       }
     },
@@ -195,9 +196,10 @@ export default {
       } catch (error) {
         console.error('Error downloading PDF:', error);
         if (error.response?.status === 409 && error.response?.data?.message?.includes('Comprobante no autorizado')) {
-            alert('Descarga no disponible: Este es un comprobante duplicado. Por favor, busque la factura original en la pestaña de "Autorizados" para descargar el archivo.');
+            this.$emitter.emit('show-alert', { type: 'error', message: 'Descarga no disponible: Comprobante duplicado.' });
         } else {
-            alert('No se pudo descargar el archivo PDF. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
+            const message = error.response?.data?.message || 'Error desconocido';
+            this.$emitter.emit('show-alert', { type: 'error', message: `No se pudo descargar el PDF: ${message}` });
         }
       }
     },

@@ -1,5 +1,6 @@
 <template>
   <div>
+    <BaseAlert />
     <!-- Sidebar -->
     <div :class="['fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 text-white transform transition duration-300 ease-in-out', isSidebarOpen ? 'translate-x-0' : '-translate-x-full']">
       <div class="px-8 py-6 text-center">
@@ -177,6 +178,7 @@ import CorrectiveBilling from './CorrectiveBilling.vue';
 import Pagination from './Pagination.vue';
 import BaseButton from './BaseButton.vue';
 import Configuration from './Configuration.vue';
+import BaseAlert from './BaseAlert.vue';
 import axios from 'axios';
 
 export default {
@@ -191,6 +193,7 @@ export default {
     Pagination,
     BaseButton,
     Configuration,
+    BaseAlert,
   },
   props: {
     token: {

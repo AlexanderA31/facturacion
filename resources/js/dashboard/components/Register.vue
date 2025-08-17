@@ -94,18 +94,20 @@ export default {
       this.errors = {};
       try {
         await axios.post('/api/register', this.form);
-        alert('Registro exitoso. Ahora puedes iniciar sesión.');
+        this.$emitter.emit('show-alert', { type: 'success', message: 'Registro exitoso. Ahora puedes iniciar sesión.' });
         this.$emit('show-login');
       } catch (error) {
         if (error.response && (error.response.status === 422 || error.response.status === 400)) {
           if (error.response.data.errors) {
             this.errors = error.response.data.errors;
           } else {
-            alert('Error en el registro: ' + (error.response.data.message || 'Por favor, verifique los datos ingresados.'));
+            const message = error.response.data.message || 'Por favor, verifique los datos ingresados.';
+            this.$emitter.emit('show-alert', { type: 'error', message: `Error en el registro: ${message}` });
           }
         } else {
           console.error('Error during registration:', error);
-          alert('Error en el registro: ' + (error.response?.data?.message || error.message));
+          const message = error.response?.data?.message || error.message;
+          this.$emitter.emit('show-alert', { type: 'error', message: `Error en el registro: ${message}` });
         }
       }
     },

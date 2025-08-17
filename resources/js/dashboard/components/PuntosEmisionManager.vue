@@ -167,8 +167,10 @@ export default {
                         headers: { 'Authorization': `Bearer ${this.token}` }
                     });
                     await this.fetchPuntosEmision();
+                    this.$emitter.emit('show-alert', { type: 'success', message: 'Punto de emisión eliminado exitosamente.' });
                 } catch (error) {
                     console.error('Error deleting punto de emision:', error);
+                    this.$emitter.emit('show-alert', { type: 'error', message: 'Error al eliminar el punto de emisión.' });
                 }
             }
         },
@@ -178,10 +180,10 @@ export default {
                     await axios.post(`/api/puntos-emision/reset/${puntoEmision.id}`, {}, {
                         headers: { 'Authorization': `Bearer ${this.token}` }
                     });
-                    alert('El secuencial ha sido reiniciado.');
+                    this.$emitter.emit('show-alert', { type: 'success', message: 'El secuencial ha sido reiniciado.' });
                 } catch (error) {
                     console.error('Error resetting punto de emision:', error);
-                    alert('Error al reiniciar el secuencial.');
+                    this.$emitter.emit('show-alert', { type: 'error', message: 'Error al reiniciar el secuencial.' });
                 }
             }
         },

@@ -22,22 +22,23 @@
       <!-- Billing controls will go here -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-              <label for="corr-establecimiento-select" class="block text-sm font-medium text-gray-700">Establecimiento</label>
-              <select id="corr-establecimiento-select" v-model="selectedEstablecimientoId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                  <option :value="null" disabled>Seleccione un establecimiento</option>
-                  <option v-for="est in establecimientos" :key="est.id" :value="est.id">
-                      {{ est.codigo }} - {{ est.nombre }}
-                  </option>
-              </select>
+              <BaseSelect
+                id="corr-establecimiento-select"
+                label="Establecimiento"
+                v-model="selectedEstablecimientoId"
+                :options="establecimientoOptions"
+                placeholder="Seleccione un establecimiento"
+              />
           </div>
           <div>
-              <label for="corr-punto-emision-select" class="block text-sm font-medium text-gray-700">Punto de Emisión</label>
-              <select id="corr-punto-emision-select" v-model="selectedPuntoEmisionId" :disabled="!selectedEstablecimientoId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md disabled:bg-gray-200">
-                  <option :value="null" disabled>Seleccione un punto de emisión</option>
-                  <option v-for="pto in availablePuntosEmision" :key="pto.id" :value="pto.id">
-                      {{ pto.codigo }} - {{ pto.nombre }}
-                  </option>
-              </select>
+              <BaseSelect
+                id="corr-punto-emision-select"
+                label="Punto de Emisión"
+                v-model="selectedPuntoEmisionId"
+                :options="puntoEmisionOptions"
+                :disabled="!selectedEstablecimientoId"
+                placeholder="Seleccione un punto de emisión"
+              />
           </div>
       </div>
       <div class="mb-4 flex justify-end">
@@ -92,6 +93,7 @@ import Pagination from './Pagination.vue';
 import BaseButton from './BaseButton.vue';
 import EditInvoiceModal from './EditInvoiceModal.vue';
 import RefreshButton from './RefreshButton.vue';
+import BaseSelect from './BaseSelect.vue';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 
@@ -103,6 +105,7 @@ export default {
     BaseButton,
     EditInvoiceModal,
     RefreshButton,
+    BaseSelect,
   },
   data() {
     return {
@@ -141,11 +144,22 @@ export default {
       const end = start + this.itemsPerPage;
       return this.failedRows.slice(start, end);
     },
-    availablePuntosEmision() {
-        if (!this.selectedEstablecimientoId) {
-            return [];
-        }
-        return this.puntosEmision.filter(p => p.establecimiento_id === this.selectedEstablecimientoId);
+    establecimientoOptions() {
+      return this.establecimientos.map(est => ({
+        value: est.id,
+        text: `${est.codigo} - ${est.nombre}`,
+      }));
+    },
+    puntoEmisionOptions() {
+      if (!this.selectedEstablecimientoId) {
+        return [];
+      }
+      return this.puntosEmision
+        .filter(p => p.establecimiento_id === this.selectedEstablecimientoId)
+        .map(pto => ({
+          value: pto.id,
+          text: `${pto.codigo} - ${pto.nombre}`,
+        }));
     },
   },
   watch: {
@@ -353,7 +367,7 @@ export default {
     },
     exportToExcel() {
         if (this.failedRows.length === 0) {
-            alert("No hay datos para exportar.");
+            this.$emitter.emit('show-alert', { type: 'error', message: 'No hay datos para exportar.' });
             return;
         }
         const worksheet = XLSX.utils.json_to_sheet(this.failedRows);

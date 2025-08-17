@@ -24,11 +24,12 @@
             <form @submit.prevent="saveConfiguration">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="ambiente-select" class="block text-sm font-medium text-gray-700">Ambiente de Facturación</label>
-                        <select id="ambiente-select" v-model="form.ambiente" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                            <option value="1">Pruebas</option>
-                            <option value="2">Producción</option>
-                        </select>
+                        <BaseSelect
+                            id="ambiente-select"
+                            label="Ambiente de Facturación"
+                            v-model="form.ambiente"
+                            :options="ambienteOptions"
+                        />
                         <p class="mt-2 text-sm text-gray-500">Seleccione el ambiente para la emisión de comprobantes.</p>
                     </div>
                 </div>
@@ -53,6 +54,7 @@
 <script>
 import EstablecimientosManager from './EstablecimientosManager.vue';
 import PuntosEmisionManager from './PuntosEmisionManager.vue';
+import BaseSelect from './BaseSelect.vue';
 import axios from 'axios';
 
 export default {
@@ -60,6 +62,7 @@ export default {
   components: {
     EstablecimientosManager,
     PuntosEmisionManager,
+    BaseSelect,
   },
   data() {
     return {
@@ -67,6 +70,10 @@ export default {
       form: {
         ambiente: '1',
       },
+      ambienteOptions: [
+        { value: '1', text: 'Pruebas' },
+        { value: '2', text: 'Producción' },
+      ],
       token: localStorage.getItem('jwt_token'),
     };
   },
@@ -83,7 +90,7 @@ export default {
         this.form.ambiente = profile.ambiente;
       } catch (error) {
         console.error('Error al cargar la configuración:', error);
-        alert('No se pudo cargar la configuración del perfil.');
+        this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo cargar la configuración del perfil.' });
       }
     },
     async saveConfiguration() {
@@ -91,10 +98,10 @@ export default {
         await axios.put('/api/profile', this.form, {
           headers: { 'Authorization': `Bearer ${this.token}` },
         });
-        alert('Configuración guardada exitosamente.');
+        this.$emitter.emit('show-alert', { type: 'success', message: 'Configuración guardada exitosamente.' });
       } catch (error) {
         console.error('Error al guardar la configuración:', error);
-        alert('No se pudo guardar la configuración.');
+        this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo guardar la configuración.' });
       }
     },
   },
