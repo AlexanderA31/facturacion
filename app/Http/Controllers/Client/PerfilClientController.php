@@ -55,7 +55,7 @@ class PerfilClientController extends Controller implements HasMiddleware
                 'dirMatriz' => 'sometimes|string|nullable',
                 'contribuyenteEspecial' => 'sometimes|string|nullable',
                 'obligadoContabilidad' => 'sometimes|boolean',
-                'ambiente' => ['sometimes', 'string', 'nullable', Rule::in(AmbientesEnum::values())],
+                'ambiente' => ['sometimes', 'nullable', Rule::in(AmbientesEnum::values())],
                 'enviar_factura_por_correo' => 'sometimes|boolean',
             ]);
 

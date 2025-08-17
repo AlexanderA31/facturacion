@@ -135,9 +135,7 @@ export default {
       } catch (error) {
         console.error('Error al guardar la configuración:', error);
         if (error.response && error.response.status === 422) {
-            const errors = error.response.data.errors;
-            const errorMessages = Object.values(errors).flat().join(' ');
-            this.$emitter.emit('show-alert', { type: 'error', message: `Error de validación: ${errorMessages}` });
+            this.$emitter.emit('show-alert', { type: 'error', message: 'Error de validación. Revise los datos e intente de nuevo.' });
         } else {
             this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo guardar la configuración.' });
         }
