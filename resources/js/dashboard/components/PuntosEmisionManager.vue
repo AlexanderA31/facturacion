@@ -83,7 +83,9 @@ export default {
     async created() {
         this.isLoading = true;
         await this.fetchEstablecimientos();
-        await this.fetchPuntosEmision();
+        if (this.establecimientos.length > 0) {
+            await this.fetchPuntosEmision();
+        }
         this.isLoading = false;
     },
     methods: {
