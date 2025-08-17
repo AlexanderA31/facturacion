@@ -134,28 +134,40 @@ class SriComprobanteService
 
                     Log::info("🔁 Intento {$intentos} autorización: " . json_encode($result));
 
-                    $autorizaciones = $result->RespuestaAutorizacionComprobante->autorizaciones->autorizacion ?? null;
+                    $autorizacionesNode = $result->RespuestaAutorizacionComprobante->autorizaciones ?? null;
 
-                    if ($autorizaciones) {
-                        $autorizacion = is_array($autorizaciones) ? $autorizaciones[0] : $autorizaciones;
+                    if ($autorizacionesNode && isset($autorizacionesNode->autorizacion)) {
+                        $autorizaciones = is_array($autorizacionesNode->autorizacion) ? $autorizacionesNode->autorizacion : [$autorizacionesNode->autorizacion];
 
-                        if ($autorizacion->estado === 'AUTORIZADO') {
+                        $autorizacionAutorizada = null;
+                        foreach ($autorizaciones as $auth) {
+                            if (isset($auth->estado) && $auth->estado === 'AUTORIZADO') {
+                                $autorizacionAutorizada = $auth;
+                                break;
+                            }
+                        }
+
+                        if ($autorizacionAutorizada) {
                             return [
                                 'success' => true,
-                                'autorizacion' => $autorizacion,
-                                'mensajes' => $autorizacion->mensajes ?? null
+                                'autorizacion' => $autorizacionAutorizada,
+                                'mensajes' => $autorizacionAutorizada->mensajes ?? null
                             ];
                         }
 
-                        $mensaje = $autorizacion->mensajes->mensaje ?? null;
-                        $codigo = $mensaje->identificador ?? '0';
-                        $descripcion = $mensaje->mensaje ?? 'Comprobante no autorizado';
-                        $infoAdicional = $mensaje->informacionAdicional ?? null;
+                        // Si no hay ninguna autorizada, lanzar excepción con la info de la primera.
+                        $primeraAutorizacion = $autorizaciones[0] ?? null;
+                        if ($primeraAutorizacion) {
+                            $mensaje = $primeraAutorizacion->mensajes->mensaje ?? null;
+                            $codigo = $mensaje->identificador ?? '0';
+                            $descripcion = $mensaje->mensaje ?? 'Comprobante no autorizado';
+                            $infoAdicional = $mensaje->informacionAdicional ?? null;
 
-                        throw new SriException($codigo, $descripcion, [
-                            'info_adicional' => $infoAdicional,
-                            'estado_sri' => $autorizacion->estado,
-                        ]);
+                            throw new SriException($codigo, $descripcion, [
+                                'info_adicional' => $infoAdicional,
+                                'estado_sri' => $primeraAutorizacion->estado,
+                            ]);
+                        }
                     }
 
                     sleep(1); // Espera antes del siguiente intento
