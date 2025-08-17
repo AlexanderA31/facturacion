@@ -41,6 +41,7 @@ export default {
         console.error('Error during logout:', error);
       } finally {
         localStorage.removeItem('jwt_token');
+        localStorage.removeItem('correctiveBillingData');
         this.token = null;
       }
     },

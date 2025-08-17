@@ -8,36 +8,43 @@
             <label for="name" class="block text-sm font-medium text-gray-700">Nombre</label>
             <input v-model="form.name" id="name" name="name" type="text" required
                    class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <span v-if="errors.name" class="text-sm text-red-600">{{ errors.name[0] }}</span>
           </div>
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
             <input v-model="form.email" id="email" name="email" type="email" autocomplete="email" required
                    class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <span v-if="errors.email" class="text-sm text-red-600">{{ errors.email[0] }}</span>
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
             <input v-model="form.password" id="password" name="password" type="password" autocomplete="new-password" required
                    class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <span v-if="errors.password" class="text-sm text-red-600">{{ errors.password[0] }}</span>
           </div>
           <div>
             <label for="ruc" class="block text-sm font-medium text-gray-700">RUC</label>
             <input v-model="form.ruc" id="ruc" name="ruc" type="text" required
                    class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <span v-if="errors.ruc" class="text-sm text-red-600">{{ errors.ruc[0] }}</span>
           </div>
           <div class="md:col-span-2">
             <label for="razonSocial" class="block text-sm font-medium text-gray-700">Razón Social</label>
             <input v-model="form.razonSocial" id="razonSocial" name="razonSocial" type="text" required
                    class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <span v-if="errors.razonSocial" class="text-sm text-red-600">{{ errors.razonSocial[0] }}</span>
           </div>
           <div class="md:col-span-2">
             <label for="nombreComercial" class="block text-sm font-medium text-gray-700">Nombre Comercial</label>
             <input v-model="form.nombreComercial" id="nombreComercial" name="nombreComercial" type="text"
                    class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <span v-if="errors.nombreComercial" class="text-sm text-red-600">{{ errors.nombreComercial[0] }}</span>
           </div>
           <div class="md:col-span-2">
             <label for="dirMatriz" class="block text-sm font-medium text-gray-700">Dirección Matriz</label>
             <input v-model="form.dirMatriz" id="dirMatriz" name="dirMatriz" type="text" required
                    class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <span v-if="errors.dirMatriz" class="text-sm text-red-600">{{ errors.dirMatriz[0] }}</span>
           </div>
           <div class="md:col-span-2 flex items-center">
             <input v-model="form.obligadoContabilidad" id="obligadoContabilidad" name="obligadoContabilidad" type="checkbox"
@@ -79,17 +86,23 @@ export default {
         dirMatriz: '',
         obligadoContabilidad: false,
       },
+      errors: {},
     };
   },
   methods: {
     async handleRegister() {
+      this.errors = {};
       try {
         await axios.post('/api/register', this.form);
         alert('Registro exitoso. Ahora puedes iniciar sesión.');
         this.$emit('show-login');
       } catch (error) {
-        console.error('Error during registration:', error);
-        alert('Error en el registro: ' + (error.response?.data?.message || error.message));
+        if (error.response && error.response.status === 422) {
+          this.errors = error.response.data.errors;
+        } else {
+          console.error('Error during registration:', error);
+          alert('Error en el registro: ' + (error.response?.data?.message || error.message));
+        }
       }
     },
   },
