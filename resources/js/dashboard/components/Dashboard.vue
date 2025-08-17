@@ -4,39 +4,39 @@
     <!-- Sidebar -->
     <div :class="['fixed inset-y-0 left-0 z-30 bg-gray-800 text-white transition-all duration-300 ease-in-out flex flex-col h-full', isSidebarOpen ? 'w-64' : 'w-20']">
       <div class="px-8 py-6 text-center">
-        <h2 :class="['text-2xl font-semibold whitespace-nowrap transition-opacity duration-200', {'opacity-0': !isSidebarOpen}]">Dashboard</h2>
+        <h2 v-show="isSidebarOpen" class="text-2xl font-semibold">Dashboard</h2>
       </div>
-      <nav class="flex-grow px-4 py-2 space-y-2">
+      <nav class="px-4 py-2 space-y-2">
         <a href="#" @click.prevent="currentDashboardView = 'billing'"
-           :class="['flex items-center px-4 py-2 rounded-md transition-colors overflow-hidden', currentDashboardView === 'billing' ? 'bg-gray-700' : 'hover:bg-gray-700']">
+           :class="['flex items-center px-4 py-2 rounded-md transition-colors', currentDashboardView === 'billing' ? 'bg-gray-700' : 'hover:bg-gray-700']">
           <svg :class="['w-6 h-6', isSidebarOpen ? 'mr-3' : 'mx-auto']" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          <span :class="['whitespace-nowrap transition-opacity duration-200', {'opacity-0': !isSidebarOpen}]">Facturación Masiva</span>
+          <span v-show="isSidebarOpen">Facturación Masiva</span>
         </a>
         <a href="#" @click.prevent="currentDashboardView = 'status'"
-           :class="['flex items-center px-4 py-2 rounded-md transition-colors overflow-hidden', currentDashboardView === 'status' ? 'bg-gray-700' : 'hover:bg-gray-700']">
+           :class="['flex items-center px-4 py-2 rounded-md transition-colors', currentDashboardView === 'status' ? 'bg-gray-700' : 'hover:bg-gray-700']">
           <svg :class="['w-6 h-6', isSidebarOpen ? 'mr-3' : 'mx-auto']" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          <span :class="['whitespace-nowrap transition-opacity duration-200', {'opacity-0': !isSidebarOpen}]">Estado del Sistema</span>
+          <span v-show="isSidebarOpen">Estado del Sistema</span>
         </a>
         <a href="#" @click.prevent="currentDashboardView = 'my-invoices'"
-           :class="['flex items-center px-4 py-2 rounded-md transition-colors overflow-hidden', currentDashboardView === 'my-invoices' ? 'bg-gray-700' : 'hover:bg-gray-700']">
+           :class="['flex items-center px-4 py-2 rounded-md transition-colors', currentDashboardView === 'my-invoices' ? 'bg-gray-700' : 'hover:bg-gray-700']">
           <svg :class="['w-6 h-6', isSidebarOpen ? 'mr-3' : 'mx-auto']" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-          <span :class="['whitespace-nowrap transition-opacity duration-200', {'opacity-0': !isSidebarOpen}]">Mis Comprobantes</span>
+          <span v-show="isSidebarOpen">Mis Comprobantes</span>
         </a>
         <a href="#" @click.prevent="currentDashboardView = 'corrective'"
-            :class="['flex items-center px-4 py-2 rounded-md transition-colors overflow-hidden', currentDashboardView === 'corrective' ? 'bg-gray-700' : 'hover:bg-gray-700']">
+            :class="['flex items-center px-4 py-2 rounded-md transition-colors', currentDashboardView === 'corrective' ? 'bg-gray-700' : 'hover:bg-gray-700']">
             <svg :class="['w-6 h-6', isSidebarOpen ? 'mr-3' : 'mx-auto']" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            <span :class="['whitespace-nowrap transition-opacity duration-200', {'opacity-0': !isSidebarOpen}]">Facturación Correctiva</span>
+            <span v-show="isSidebarOpen">Facturación Correctiva</span>
         </a>
         <a href="#" @click.prevent="currentDashboardView = 'configuration'"
-            :class="['flex items-center px-4 py-2 rounded-md transition-colors overflow-hidden', currentDashboardView === 'configuration' ? 'bg-gray-700' : 'hover:bg-gray-700']">
+            :class="['flex items-center px-4 py-2 rounded-md transition-colors', currentDashboardView === 'configuration' ? 'bg-gray-700' : 'hover:bg-gray-700']">
             <svg :class="['w-6 h-6', isSidebarOpen ? 'mr-3' : 'mx-auto']" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            <span :class="['whitespace-nowrap transition-opacity duration-200', {'opacity-0': !isSidebarOpen}]">Configuración</span>
+            <span v-show="isSidebarOpen">Configuración</span>
         </a>
       </nav>
-      <div class="px-4 py-4">
-        <button @click="handleLogout" class="w-full flex items-center justify-center px-4 py-2 font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200 overflow-hidden">
+      <div class="px-4 py-4 mt-auto">
+        <button @click="handleLogout" class="w-full flex items-center justify-center px-4 py-2 font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200">
           <svg :class="['w-5 h-5', isSidebarOpen ? 'mr-2' : 'mx-auto']" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-          <span :class="['whitespace-nowrap transition-opacity duration-200', {'opacity-0': !isSidebarOpen}]">Cerrar Sesión</span>
+          <span v-show="isSidebarOpen">Cerrar Sesión</span>
         </button>
       </div>
     </div>
