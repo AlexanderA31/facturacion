@@ -85,6 +85,11 @@ export default {
     return {
       activeTab: 'general',
       form: {
+        razonSocial: '',
+        nombreComercial: '',
+        dirMatriz: '',
+        contribuyenteEspecial: '',
+        obligadoContabilidad: false,
         ambiente: '1',
         enviar_factura_por_correo: true,
       },
@@ -104,9 +109,18 @@ export default {
         const response = await axios.get('/api/profile', {
           headers: { 'Authorization': `Bearer ${this.token}` },
         });
+        // Assign all relevant profile data to the form
         const profile = response.data.data;
-        this.form.ambiente = profile.ambiente;
-        this.form.enviar_factura_por_correo = profile.enviar_factura_por_correo;
+        this.form = {
+            ...this.form, // Keep defaults for fields not in profile
+            razonSocial: profile.razonSocial,
+            nombreComercial: profile.nombreComercial,
+            dirMatriz: profile.dirMatriz,
+            contribuyenteEspecial: profile.contribuyenteEspecial,
+            obligadoContabilidad: profile.obligadoContabilidad,
+            ambiente: profile.ambiente,
+            enviar_factura_por_correo: profile.enviar_factura_por_correo,
+        };
       } catch (error) {
         console.error('Error al cargar la configuración:', error);
         this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo cargar la configuración del perfil.' });
@@ -120,7 +134,13 @@ export default {
         this.$emitter.emit('show-alert', { type: 'success', message: 'Configuración guardada exitosamente.' });
       } catch (error) {
         console.error('Error al guardar la configuración:', error);
-        this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo guardar la configuración.' });
+        if (error.response && error.response.status === 422) {
+            const errors = error.response.data.errors;
+            const errorMessages = Object.values(errors).flat().join(' ');
+            this.$emitter.emit('show-alert', { type: 'error', message: `Error de validación: ${errorMessages}` });
+        } else {
+            this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo guardar la configuración.' });
+        }
       }
     },
   },
