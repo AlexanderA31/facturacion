@@ -155,10 +155,10 @@ export default {
         return [];
       }
       return this.puntosEmision
-        .filter(p => p.establecimiento_id === this.selectedEstablecimientoId)
+        .filter(p => p.establecimiento_id == this.selectedEstablecimientoId)
         .map(pto => ({
           value: pto.id,
-          text: `${pto.codigo} - ${pto.nombre}`,
+          text: `${pto.numero} - ${pto.nombre}`,
         }));
     },
   },
@@ -188,19 +188,23 @@ export default {
             const response = await axios.get('/api/establecimientos', {
                 headers: { 'Authorization': `Bearer ${this.token}` }
             });
+            // The API returns a paginated response, the items are in the `data` property
             this.establecimientos = response.data.data.data;
         } catch (error) {
             console.error('Error fetching establecimientos:', error);
+            this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudieron cargar los establecimientos.' });
         }
     },
     async fetchPuntosEmision() {
         try {
-            const response = await axios.get('api/puntos-emision', {
+            const response = await axios.get('/api/puntos-emision', {
                 headers: { 'Authorization': `Bearer ${this.token}` }
             });
+            // The API returns a paginated response, the items are in the `data` property
             this.puntosEmision = response.data.data.data;
         } catch (error) {
             console.error('Error fetching puntos de emision:', error);
+            this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudieron cargar los puntos de emisión.' });
         }
     },
     openEditModal(row) {
