@@ -12,6 +12,8 @@ use Illuminate\Routing\Controllers\Middleware;
 use App\Enums\RolesEnum;
 use App\Services\CertificadoFirma;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use App\Enums\AmbientesEnum;
 
 class PerfilClientController extends Controller implements HasMiddleware
 {
@@ -53,6 +55,7 @@ class PerfilClientController extends Controller implements HasMiddleware
                 'dirMatriz' => 'sometimes|string',
                 'contribuyenteEspecial' => 'sometimes|string|nullable',
                 'obligadoContabilidad' => 'sometimes|boolean',
+                'ambiente' => ['sometimes', 'string', Rule::in(AmbientesEnum::values())],
             ]);
 
             if ($validator->fails()) {
