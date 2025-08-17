@@ -108,6 +108,8 @@ export default {
             return 'bg-indigo-100 text-indigo-800';
         case 'procesando':
           return 'bg-blue-100 text-blue-800';
+        case 'pago pendiente':
+            return 'bg-orange-100 text-orange-800';
         case 'pendiente':
         default:
           return 'bg-yellow-100 text-yellow-800';

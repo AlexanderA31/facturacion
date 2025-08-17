@@ -99,6 +99,7 @@
                   <select id="status-filter" v-model="filterStatus" class="appearance-none mt-4 sm:mt-0 block w-full sm:w-auto pl-4 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
                     <option value="Todos">Todos los Estados</option>
                     <option value="Pendiente">Pendiente</option>
+                    <option value="Pago Pendiente">Pago Pendiente</option>
                     <option value="Procesando">Procesando</option>
                     <option value="Facturado">Facturado</option>
                     <option value="No Facturado">No Facturado</option>
@@ -324,14 +325,25 @@ export default {
     },
     handleFileParsed(data) {
       this.clearState(); // Clear any old state before loading new data
-      this.tableData = data.map(row => ({
-        ...row,
-        id: Math.random().toString(36).substr(2, 9),
-        Estado: 'Pendiente',
-        clave_acceso: null,
-        errorInfo: null,
-        isExpanded: false,
-      }));
+      this.tableData = data.map(row => {
+        // Check for the 'estado' column, case-insensitive
+        const estadoKey = Object.keys(row).find(key => key.toLowerCase().trim() === 'estado');
+        const estadoValue = estadoKey ? String(row[estadoKey]).toLowerCase().trim() : '';
+
+        let internalStatus = 'Pendiente'; // Default status, ready for billing
+        if (estadoValue === 'pendiente') {
+            internalStatus = 'Pago Pendiente'; // New status, will be skipped
+        }
+
+        return {
+            ...row,
+            id: Math.random().toString(36).substr(2, 9),
+            Estado: internalStatus,
+            clave_acceso: null,
+            errorInfo: null,
+            isExpanded: false,
+        };
+      });
     },
     createInvoicePayload(row) {
       const findValue = (keyToFind) => {
