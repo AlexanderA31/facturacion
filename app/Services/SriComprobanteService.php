@@ -109,68 +109,75 @@ class SriComprobanteService
      * @return array
      * @throws SriException
      */
+    private function findAuthorized(object $response)
+    {
+        $autorizacionesNode = data_get($response, 'RespuestaAutorizacionComprobante.autorizaciones');
+
+        if (!$autorizacionesNode || !isset($autorizacionesNode->autorizacion)) {
+            return null;
+        }
+
+        $autorizaciones = is_array($autorizacionesNode->autorizacion)
+            ? $autorizacionesNode->autorizacion
+            : [$autorizacionesNode->autorizacion];
+
+        foreach ($autorizaciones as $auth) {
+            if (data_get($auth, 'estado') === 'AUTORIZADO') {
+                return $auth;
+            }
+        }
+
+        // Si no se encuentra ninguna autorización 'AUTORIZADO', se puede lanzar una excepción
+        // con el mensaje de la primera autorización encontrada, si existe.
+        $primeraAutorizacion = $autorizaciones[0] ?? null;
+        if ($primeraAutorizacion) {
+            $mensaje = data_get($primeraAutorizacion, 'mensajes.mensaje');
+            $codigo = data_get($mensaje, 'identificador', '0');
+            $descripcion = data_get($mensaje, 'mensaje', 'Comprobante no autorizado');
+            $infoAdicional = data_get($mensaje, 'informacionAdicional');
+
+            throw new SriException($codigo, $descripcion, [
+                'info_adicional' => $infoAdicional,
+                'estado_sri' => data_get($primeraAutorizacion, 'estado'),
+            ]);
+        }
+
+        return null;
+    }
+
     public function enviarComprobanteAutorizacion(string $claveAcceso, string $ambiente = '1')
     {
         Log::info('⏳ Enviando comprobante para autorización');
         $wsdl = $ambiente === '1' ? self::AUTORIZACION_PRUEBAS : self::AUTORIZACION_PRODUCCION;
 
-        // Verificar disponibilidad del SRI
         if (!$this->checkSriDisponible($wsdl)) {
             throw new SriException('0', 'El servicio del SRI no está disponible en este momento.');
         }
 
         try {
             $client = new SoapClient($wsdl);
-
             $params = (object) ['claveAccesoComprobante' => $claveAcceso];
-
             $maxIntentos = 5;
-            $intentos = 0;
 
-            while ($intentos < $maxIntentos) {
+            for ($intentos = 1; $intentos <= $maxIntentos; $intentos++) {
                 try {
-                    $intentos++;
                     $result = $client->autorizacionComprobante($params);
-
                     Log::info("🔁 Intento {$intentos} autorización: " . json_encode($result));
 
-                    $autorizacionesNode = $result->RespuestaAutorizacionComprobante->autorizaciones ?? null;
+                    $autorizacionAutorizada = $this->findAuthorized($result);
 
-                    if ($autorizacionesNode && isset($autorizacionesNode->autorizacion)) {
-                        $autorizaciones = is_array($autorizacionesNode->autorizacion) ? $autorizacionesNode->autorizacion : [$autorizacionesNode->autorizacion];
-
-                        $autorizacionAutorizada = null;
-                        foreach ($autorizaciones as $auth) {
-                            if (isset($auth->estado) && $auth->estado === 'AUTORIZADO') {
-                                $autorizacionAutorizada = $auth;
-                                break;
-                            }
-                        }
-
-                        if ($autorizacionAutorizada) {
-                            return [
-                                'success' => true,
-                                'autorizacion' => $autorizacionAutorizada,
-                                'mensajes' => $autorizacionAutorizada->mensajes ?? null
-                            ];
-                        }
-
-                        // Si no hay ninguna autorizada, lanzar excepción con la info de la primera.
-                        $primeraAutorizacion = $autorizaciones[0] ?? null;
-                        if ($primeraAutorizacion) {
-                            $mensaje = $primeraAutorizacion->mensajes->mensaje ?? null;
-                            $codigo = $mensaje->identificador ?? '0';
-                            $descripcion = $mensaje->mensaje ?? 'Comprobante no autorizado';
-                            $infoAdicional = $mensaje->informacionAdicional ?? null;
-
-                            throw new SriException($codigo, $descripcion, [
-                                'info_adicional' => $infoAdicional,
-                                'estado_sri' => $primeraAutorizacion->estado,
-                            ]);
-                        }
+                    if ($autorizacionAutorizada) {
+                        return [
+                            'success' => true,
+                            'autorizacion' => $autorizacionAutorizada,
+                            'mensajes' => data_get($autorizacionAutorizada, 'mensajes'),
+                        ];
                     }
 
                     sleep(1); // Espera antes del siguiente intento
+                } catch (SriException $e) {
+                    // La excepción ya fue lanzada por findAuthorized con los detalles correctos
+                    throw $e;
                 } catch (SoapFault $e) {
                     throw new SriException('0', 'Error de conexión con el SRI: ' . $e->getMessage());
                 } catch (\Exception $e) {
@@ -249,7 +256,6 @@ class SriComprobanteService
 
         $wsdl = ($ambiente === '1') ? self::AUTORIZACION_PRUEBAS : self::AUTORIZACION_PRODUCCION;
 
-        // Verificar disponibilidad del SRI
         if (!$this->checkSriDisponible($wsdl)) {
             throw new SriException('0', 'El servicio del SRI no está disponible en este momento.');
         }
@@ -260,40 +266,20 @@ class SriComprobanteService
 
             $result = $client->autorizacionComprobante($params);
 
-            $autorizacionesNode = $result->RespuestaAutorizacionComprobante->autorizaciones ?? null;
+            $autorizacionAutorizada = $this->findAuthorized($result);
 
-            if ($autorizacionesNode && isset($autorizacionesNode->autorizacion)) {
-                $autorizaciones = is_array($autorizacionesNode->autorizacion) ? $autorizacionesNode->autorizacion : [$autorizacionesNode->autorizacion];
-
-                $autorizacionAutorizada = null;
-                foreach ($autorizaciones as $auth) {
-                    if (isset($auth->estado) && $auth->estado === 'AUTORIZADO') {
-                        $autorizacionAutorizada = $auth;
-                        break;
-                    }
-                }
-
-                if ($autorizacionAutorizada) {
-                    return $autorizacionAutorizada->comprobante; // Devolver el XML autorizado
-                }
-
-                // Si no se encuentra ninguna autorización 'AUTORIZADO', se puede lanzar una excepción
-                // con el mensaje de la primera autorización encontrada, si existe.
-                $primeraAutorizacion = $autorizaciones[0] ?? null;
-                if ($primeraAutorizacion) {
-                    $mensaje = $primeraAutorizacion->mensajes->mensaje ?? null;
-                    $codigo = $mensaje->identificador ?? '0';
-                    $descripcion = $mensaje->mensaje ?? 'Comprobante no autorizado';
-                    $infoAdicional = $mensaje->informacionAdicional ?? null;
-
-                    throw new SriException($codigo, $descripcion, [
-                        'info_adicional' => $infoAdicional,
-                        'estado_sri' => $primeraAutorizacion->estado,
-                    ]);
+            if ($autorizacionAutorizada) {
+                // El campo 'comprobante' es un string CDATA que contiene el XML
+                $xmlString = data_get($autorizacionAutorizada, 'comprobante');
+                if (is_string($xmlString)) {
+                    return $xmlString;
                 }
             }
 
-            throw new SriException('0', 'No se encontró el comprobante en el SRI.');
+            throw new SriException('0', 'No se encontró un comprobante autorizado en la respuesta del SRI.');
+        } catch (SriException $e) {
+            // Re-lanzar la excepción de findAuthorized
+            throw $e;
         } catch (SoapFault $e) {
             throw new SriException('0', 'Error de conexión con el SRI: ' . $e->getMessage());
         } catch (\Exception $e) {

@@ -169,12 +169,15 @@ export default {
             const response = await axios.get(`/api/comprobantes/${claveAcceso}/consultar-xml`, {
                 headers: { 'Authorization': `Bearer ${this.token}` }
             });
-            const xmlContent = response.data.data.xml;
+            // La respuesta ahora es el XML plano
+            const xmlContent = response.data;
             const blob = new Blob([xmlContent], { type: 'application/xml' });
             this.downloadBlob(blob, `${claveAcceso}.xml`);
         } catch (error) {
             console.error('Error en la descarga forzada de XML:', error);
-            alert('No se pudo recuperar el XML desde el SRI. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
+            // El error ahora puede no ser JSON, así que manejamos el texto de la respuesta
+            const errorMessage = error.response?.data?.message || error.response?.data || error.message;
+            alert('No se pudo recuperar el XML desde el SRI. Razón: ' + errorMessage);
         }
     },
     async downloadXml(claveAcceso) {
