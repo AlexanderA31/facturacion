@@ -181,7 +181,7 @@ export default {
     },
     async fetchPuntosEmision() {
         try {
-            const response = await axios.get('/api/puntos-emision', {
+            const response = await axios.get('api/puntos-emision', {
                 headers: { 'Authorization': `Bearer ${this.token}` }
             });
             this.puntosEmision = response.data.data.data;

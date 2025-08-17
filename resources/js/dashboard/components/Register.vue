@@ -97,8 +97,12 @@ export default {
         alert('Registro exitoso. Ahora puedes iniciar sesión.');
         this.$emit('show-login');
       } catch (error) {
-        if (error.response && error.response.status === 422) {
-          this.errors = error.response.data.errors;
+        if (error.response && (error.response.status === 422 || error.response.status === 400)) {
+          if (error.response.data.errors) {
+            this.errors = error.response.data.errors;
+          } else {
+            alert('Error en el registro: ' + (error.response.data.message || 'Por favor, verifique los datos ingresados.'));
+          }
         } else {
           console.error('Error during registration:', error);
           alert('Error en el registro: ' + (error.response?.data?.message || error.message));
