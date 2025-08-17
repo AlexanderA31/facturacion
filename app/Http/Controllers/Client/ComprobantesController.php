@@ -158,8 +158,8 @@ class ComprobantesController extends Controller
     {
         $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
 
-        // First, authorize that the user can view this record at all
-        Gate::authorize('view', $comprobante);
+        // First, authorize that the user can perform a download action on this record.
+        Gate::authorize('viewXml', $comprobante);
 
         // If it's already authorized, we are good to go.
         if ($comprobante->estado === EstadosComprobanteEnum::AUTORIZADO->value) {
