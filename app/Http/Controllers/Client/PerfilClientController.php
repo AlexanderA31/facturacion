@@ -50,12 +50,12 @@ class PerfilClientController extends Controller implements HasMiddleware
             $user = auth()->user();
 
             $validator = Validator::make($request->all(), [
-                'razonSocial' => 'sometimes|string',
-                'nombreComercial' => 'sometimes|string',
-                'dirMatriz' => 'sometimes|string',
+                'razonSocial' => 'sometimes|string|nullable',
+                'nombreComercial' => 'sometimes|string|nullable',
+                'dirMatriz' => 'sometimes|string|nullable',
                 'contribuyenteEspecial' => 'sometimes|string|nullable',
                 'obligadoContabilidad' => 'sometimes|boolean',
-                'ambiente' => ['sometimes', 'string', Rule::in(AmbientesEnum::values())],
+                'ambiente' => ['sometimes', 'string', 'nullable', Rule::in(AmbientesEnum::values())],
                 'enviar_factura_por_correo' => 'sometimes|boolean',
             ]);
 
