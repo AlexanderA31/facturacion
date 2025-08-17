@@ -147,7 +147,7 @@ export default {
     establecimientoOptions() {
       return this.establecimientos.map(est => ({
         value: est.id,
-        text: `${est.codigo} - ${est.nombre}`,
+        text: `${est.numero} - ${est.nombre}`,
       }));
     },
     puntoEmisionOptions() {

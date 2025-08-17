@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="show"
-    class="fixed top-5 right-5 w-full max-w-sm rounded-lg shadow-lg pointer-events-auto"
+    class="fixed top-5 right-5 w-full max-w-sm rounded-lg shadow-lg pointer-events-auto z-50"
     :class="alertClasses"
   >
     <div class="rounded-lg shadow-xs overflow-hidden">
