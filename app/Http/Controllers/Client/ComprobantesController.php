@@ -165,9 +165,9 @@ class ComprobantesController extends Controller
             $xml = null;
 
             // 3. Lógica principal
-            if ($comprobante->estado === EstadosComprobanteEnum::AUTORIZADO) {
+            if ($comprobante->estado === EstadosComprobanteEnum::AUTORIZADO->value) {
                 $xml = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
-            } elseif ($comprobante->estado === EstadosComprobanteEnum::RECHAZADO && $comprobante->error_message === 'ERROR SECUENCIAL REGISTRADO') {
+            } elseif ($comprobante->estado === EstadosComprobanteEnum::RECHAZADO->value && $comprobante->error_message === 'ERROR SECUENCIAL REGISTRADO') {
                 // Lógica de fallback para duplicados
                 $xml = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
             } else {
