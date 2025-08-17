@@ -29,9 +29,9 @@ class ComprobantePolicy
             return Response::deny('No tienes permiso para ver este comprobante.');
         }
 
-        // Verificar si el comprobante tiene un error registrado
-        if ($comprobante->error_code) {
-            return Response::deny('El comprobante tiene un error registrado.');
+        // Permitir la consulta si es un error de duplicado, para poder intentar el fallback.
+        if ($comprobante->error_code && $comprobante->error_message !== 'ERROR SECUENCIAL REGISTRADO') {
+            return Response::deny('El comprobante tiene un error que no permite la consulta directa.');
         }
 
         return Response::allow();
