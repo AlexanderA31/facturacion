@@ -155,6 +155,28 @@ export default {
         invoice.isErrorExpanded = !invoice.isErrorExpanded;
       }
     },
+    downloadBlob(blob, fileName) {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    },
+    async forceDownloadXml(claveAcceso) {
+        console.log(`Intentando descarga forzada para ${claveAcceso}`);
+        try {
+            const response = await axios.get(`/api/comprobantes/${claveAcceso}/consultar-xml`, {
+                headers: { 'Authorization': `Bearer ${this.token}` }
+            });
+            const xmlContent = response.data.data.xml;
+            const blob = new Blob([xmlContent], { type: 'application/xml' });
+            this.downloadBlob(blob, `${claveAcceso}.xml`);
+        } catch (error) {
+            console.error('Error en la descarga forzada de XML:', error);
+            alert('No se pudo recuperar el XML desde el SRI. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
+        }
+    },
     async downloadXml(claveAcceso) {
       try {
         const response = await axios.get(`/api/comprobantes/${claveAcceso}/xml`, {
@@ -163,16 +185,12 @@ export default {
 
         const xmlContent = response.data.data.xml;
         const blob = new Blob([xmlContent], { type: 'application/xml' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `${claveAcceso}.xml`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        this.downloadBlob(blob, `${claveAcceso}.xml`);
       } catch (error) {
         console.error('Error downloading XML:', error);
-        if (error.response?.status === 409 && error.response?.data?.message?.includes('Comprobante no autorizado')) {
-            alert('Descarga no disponible: Este es un comprobante duplicado. Por favor, busque la factura original en la pestaña de "Autorizados" para descargar el archivo.');
+        if (error.response?.status === 409) {
+            console.log('Error 409 detectado, iniciando Plan B: consulta directa al SRI.');
+            this.forceDownloadXml(claveAcceso);
         } else {
             alert('No se pudo descargar el archivo XML. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
         }
@@ -186,15 +204,10 @@ export default {
         });
 
         const blob = new Blob([response.data], { type: 'application/pdf' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `${claveAcceso}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        this.downloadBlob(blob, `${claveAcceso}.pdf`);
       } catch (error) {
         console.error('Error downloading PDF:', error);
-        if (error.response?.status === 409 && error.response?.data?.message?.includes('Comprobante no autorizado')) {
+        if (error.response?.status === 409) {
             alert('Descarga no disponible: Este es un comprobante duplicado. Por favor, busque la factura original en la pestaña de "Autorizados" para descargar el archivo.');
         } else {
             alert('No se pudo descargar el archivo PDF. Razón: ' + (error.response?.data?.message || 'Error desconocido'));
