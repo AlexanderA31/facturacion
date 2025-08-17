@@ -136,7 +136,7 @@ export default {
           headers: { 'Authorization': `Bearer ${this.token}` },
           params: { per_page: 100 } // Fetch a good number of invoices
         });
-        console.log('Invoices received from API:', response.data.data.data);
+      
         this.invoices = response.data.data.data.map(invoice => ({
           ...invoice,
           isErrorExpanded: false,
