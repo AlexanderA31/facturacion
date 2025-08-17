@@ -143,8 +143,8 @@
         <!-- Status Section -->
         <div v-if="currentDashboardView === 'status'">
           <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-3">Estado del Sistema</h3>
-            <p class="text-gray-600 mb-4">Verifique el estado de los servicios del SRI y la configuración de su cuenta.</p>
+            <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-3">Estado de Factura</h3>
+            <p class="text-gray-600 mb-4">Verifique el estado de los servicios del SRI.</p>
             <StatusChecker :token="token" />
           </div>
         </div>
