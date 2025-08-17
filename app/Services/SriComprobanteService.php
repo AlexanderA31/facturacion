@@ -248,24 +248,37 @@ class SriComprobanteService
 
             $result = $client->autorizacionComprobante($params);
 
-            $autorizaciones = $result->RespuestaAutorizacionComprobante->autorizaciones->autorizacion ?? null;
+            $autorizacionesNode = $result->RespuestaAutorizacionComprobante->autorizaciones ?? null;
 
-            if ($autorizaciones) {
-                $autorizacion = is_array($autorizaciones) ? $autorizaciones[0] : $autorizaciones;
+            if ($autorizacionesNode && isset($autorizacionesNode->autorizacion)) {
+                $autorizaciones = is_array($autorizacionesNode->autorizacion) ? $autorizacionesNode->autorizacion : [$autorizacionesNode->autorizacion];
 
-                if ($autorizacion->estado === 'AUTORIZADO') {
-                    return $autorizacion->comprobante; // Devolver el XML autorizado
+                $autorizacionAutorizada = null;
+                foreach ($autorizaciones as $auth) {
+                    if (isset($auth->estado) && $auth->estado === 'AUTORIZADO') {
+                        $autorizacionAutorizada = $auth;
+                        break;
+                    }
                 }
 
-                $mensaje = $autorizacion->mensajes->mensaje ?? null;
-                $codigo = $mensaje->identificador ?? '0';
-                $descripcion = $mensaje->mensaje ?? 'Comprobante no autorizado';
-                $infoAdicional = $mensaje->informacionAdicional ?? null;
+                if ($autorizacionAutorizada) {
+                    return $autorizacionAutorizada->comprobante; // Devolver el XML autorizado
+                }
 
-                throw new SriException($codigo, $descripcion, [
-                    'info_adicional' => $infoAdicional,
-                    'estado_sri' => $autorizacion->estado,
-                ]);
+                // Si no se encuentra ninguna autorización 'AUTORIZADO', se puede lanzar una excepción
+                // con el mensaje de la primera autorización encontrada, si existe.
+                $primeraAutorizacion = $autorizaciones[0] ?? null;
+                if ($primeraAutorizacion) {
+                    $mensaje = $primeraAutorizacion->mensajes->mensaje ?? null;
+                    $codigo = $mensaje->identificador ?? '0';
+                    $descripcion = $mensaje->mensaje ?? 'Comprobante no autorizado';
+                    $infoAdicional = $mensaje->informacionAdicional ?? null;
+
+                    throw new SriException($codigo, $descripcion, [
+                        'info_adicional' => $infoAdicional,
+                        'estado_sri' => $primeraAutorizacion->estado,
+                    ]);
+                }
             }
 
             throw new SriException('0', 'No se encontró el comprobante en el SRI.');
