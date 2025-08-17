@@ -56,6 +56,7 @@ class PerfilClientController extends Controller implements HasMiddleware
                 'contribuyenteEspecial' => 'sometimes|string|nullable',
                 'obligadoContabilidad' => 'sometimes|boolean',
                 'ambiente' => ['sometimes', 'string', Rule::in(AmbientesEnum::values())],
+                'enviar_factura_por_correo' => 'sometimes|boolean',
             ]);
 
             if ($validator->fails()) {

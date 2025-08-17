@@ -32,6 +32,23 @@
                         />
                         <p class="mt-2 text-sm text-gray-500">Seleccione el ambiente para la emisión de comprobantes.</p>
                     </div>
+                    <div>
+                        <label for="send-email-toggle" class="block text-sm font-medium text-gray-700">Enviar Factura por Correo</label>
+                        <button
+                            type="button"
+                            @click="form.enviar_factura_por_correo = !form.enviar_factura_por_correo"
+                            :class="[form.enviar_factura_por_correo ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mt-1']"
+                            role="switch"
+                            :aria-checked="form.enviar_factura_por_correo"
+                        >
+                            <span class="sr-only">Use setting</span>
+                            <span
+                                aria-hidden="true"
+                                :class="[form.enviar_factura_por_correo ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"
+                            ></span>
+                        </button>
+                        <p class="mt-2 text-sm text-gray-500">Si se activa, se enviará una copia de la factura al correo del cliente.</p>
+                    </div>
                 </div>
                 <div class="mt-6 flex justify-end">
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -69,6 +86,7 @@ export default {
       activeTab: 'general',
       form: {
         ambiente: '1',
+        enviar_factura_por_correo: true,
       },
       ambienteOptions: [
         { value: '1', text: 'Pruebas' },
@@ -88,6 +106,7 @@ export default {
         });
         const profile = response.data.data;
         this.form.ambiente = profile.ambiente;
+        this.form.enviar_factura_por_correo = profile.enviar_factura_por_correo;
       } catch (error) {
         console.error('Error al cargar la configuración:', error);
         this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo cargar la configuración del perfil.' });

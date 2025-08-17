@@ -67,6 +67,7 @@ class User extends Authenticatable implements JWTSubject
         'dirMatriz',
         'contribuyenteEspecial',
         'obligadoContabilidad',
+        'enviar_factura_por_correo',
     ];
 
     /**
@@ -94,6 +95,7 @@ class User extends Authenticatable implements JWTSubject
             'clave_firma' => 'hashed',
             'ambiente' => 'integer',
             'obligadoContabilidad' => 'boolean',
+            'enviar_factura_por_correo' => 'boolean',
         ];
     }
 

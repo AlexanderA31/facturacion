@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'emitto' => [
+        'secret' => env('EMITTO_SECRET_KEY'),
+        'base_url' => env('EMITTO_BASE_URL', 'https://api-emitto.softecsa.com'),
+    ],
+
 ];
