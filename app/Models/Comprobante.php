@@ -19,7 +19,8 @@ class Comprobante extends Model
         'ambiente' => 'integer',
         'fecha_emision' => 'datetime',
         'procesado_en' => 'datetime',
-        'fecha_autorizacion' => 'datetime'
+        'fecha_autorizacion' => 'datetime',
+        'payload' => 'array',
     ];
 
     protected $fillable = [
@@ -49,7 +50,6 @@ class Comprobante extends Model
      */
     protected $hidden = [
         'user_id',
-        'payload',
         'intentos',
     ];
 
