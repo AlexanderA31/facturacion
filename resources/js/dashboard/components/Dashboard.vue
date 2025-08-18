@@ -365,11 +365,6 @@ export default {
       };
 
       const cedula = findValue('Cédula');
-
-      if (String(cedula || '').length === 9) {
-        throw new Error('Cédula de 9 dígitos');
-      }
-
       const nombres = findValue('Nombres');
       const direccion = findValue('Dirección');
       const codigo = findValue('Código');
@@ -378,8 +373,18 @@ export default {
       const telefono = findValue('Teléfono');
       const precio = formatToNumber(findValue('Precio'));
 
-      if (!cedula || !nombres || !precio || !codigo || !evento) {
-        throw new Error('Una o más columnas requeridas (Cédula, Nombres, Precio, Código, Evento) no se encontraron o están vacías en el archivo.');
+      // Validations
+      if (!cedula || (String(cedula).length !== 10 && String(cedula).length !== 13)) {
+        throw new Error('Cédula no válida');
+      }
+      if (!telefono) {
+        throw new Error('Teléfono no válido');
+      }
+      if (!precio || precio <= 0) {
+        throw new Error('Precio no válido');
+      }
+      if (!nombres || !codigo || !evento) {
+        throw new Error('Una o más columnas requeridas (Nombres, Código, Evento) no se encontraron o están vacías en el archivo.');
       }
 
       // Use 6 decimal places for intermediate calculations to maintain precision
@@ -439,8 +444,12 @@ export default {
 
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
-        if (error.message === 'Cédula de 9 dígitos') {
-          this.addFailedRowToCorrective(row, 'Cédula tiene 9 dígitos. Requiere revisión manual.');
+        if (error.message === 'Cédula no válida') {
+          this.addFailedRowToCorrective(row, 'Cédula debe tener 10 o 13 dígitos.');
+        } else if (error.message === 'Teléfono no válido') {
+          this.addFailedRowToCorrective(row, 'El campo Teléfono es obligatorio.');
+        } else if (error.message === 'Precio no válido') {
+          this.addFailedRowToCorrective(row, 'El Precio debe ser un número mayor a 0.');
         } else if (error.message.includes('columnas requeridas')) {
           this.addFailedRowToCorrective(row, 'Datos incompletos en la fila.');
         } else if (errorMessage.includes('ERROR SECUENCIAL REGISTRADO')) {
