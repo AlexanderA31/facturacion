@@ -32,6 +32,7 @@
 
 <script>
 import axios from 'axios';
+import { decodeJwt } from '../../utils/jwt';
 
 export default {
   name: 'Login',
@@ -52,7 +53,9 @@ export default {
       try {
         const response = await axios.post('/api/login', this.loginForm);
         const token = response.data.data.token;
-        this.$emit('login-success', token);
+        const decodedToken = decodeJwt(token);
+        const role = decodedToken.role; // Assuming role is in the payload
+        this.$emit('login-success', { token, role });
       } catch (error) {
         if (error.response && error.response.data && error.response.data.message) {
           this.loginError = error.response.data.message;
