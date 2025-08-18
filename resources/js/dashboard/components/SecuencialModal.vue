@@ -1,5 +1,5 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center" @click.self="close">
+  <div v-if="show" class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center p-4" :style="{ paddingLeft: isSidebarOpen ? '16rem' : '5rem' }" @click.self="close">
     <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
       <div class="mt-3">
         <div class="flex justify-between items-center mb-4">
@@ -45,6 +45,10 @@ export default {
     show: Boolean,
     puntoEmision: Object,
     isLoading: Boolean,
+    isSidebarOpen: {
+        type: Boolean,
+        default: false,
+    }
   },
   data() {
     return {

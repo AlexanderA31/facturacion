@@ -59,10 +59,10 @@
         </div>
       </div>
       <div v-if="activeTab === 'establecimientos'">
-        <EstablecimientosManager />
+        <EstablecimientosManager :is-sidebar-open="isSidebarOpen" />
       </div>
       <div v-if="activeTab === 'puntos_emision'">
-        <PuntosEmisionManager />
+        <PuntosEmisionManager :is-sidebar-open="isSidebarOpen" />
       </div>
     </div>
   </div>
@@ -76,6 +76,12 @@ import axios from 'axios';
 
 export default {
   name: 'Configuration',
+  props: {
+    isSidebarOpen: {
+      type: Boolean,
+      default: false,
+    }
+  },
   components: {
     EstablecimientosManager,
     PuntosEmisionManager,

@@ -92,6 +92,7 @@
     <EditInvoiceModal
         :show="isModalVisible"
         :rowData="selectedRowForEdit"
+        :is-sidebar-open="isSidebarOpen"
         @close="closeEditModal"
         @save="saveEditedRow"
     />
@@ -110,6 +111,12 @@ import * as XLSX from 'xlsx';
 
 export default {
   name: 'CorrectiveBilling',
+  props: {
+    isSidebarOpen: {
+      type: Boolean,
+      default: false,
+    }
+  },
   components: {
     DataTable,
     Pagination,

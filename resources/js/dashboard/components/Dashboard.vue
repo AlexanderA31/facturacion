@@ -157,12 +157,12 @@
 
         <!-- Corrective Billing Section -->
         <div v-if="currentDashboardView === 'corrective'">
-          <CorrectiveBilling />
+          <CorrectiveBilling :is-sidebar-open="isSidebarOpen" />
         </div>
 
         <!-- Configuration Section -->
         <div v-if="currentDashboardView === 'configuration'">
-          <Configuration />
+          <Configuration :is-sidebar-open="isSidebarOpen" />
         </div>
       </main>
     </div>

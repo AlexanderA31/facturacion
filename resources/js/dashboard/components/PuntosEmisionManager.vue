@@ -43,6 +43,7 @@
             :punto-emision="selectedPuntoEmision"
             :establecimientos="establecimientos"
             :is-loading="isSubmitting"
+            :is-sidebar-open="isSidebarOpen"
             @close="closeModal"
             @save="handleSave"
         />
@@ -51,6 +52,7 @@
             :show="isSecuencialModalOpen"
             :punto-emision="selectedPuntoEmisionForSecuencial"
             :is-loading="isSubmitting"
+            :is-sidebar-open="isSidebarOpen"
             @close="closeSecuencialModal"
             @save="handleSaveSecuencial"
         />
@@ -68,6 +70,12 @@ import TableSkeleton from './TableSkeleton.vue';
 
 export default {
     name: 'PuntosEmisionManager',
+    props: {
+        isSidebarOpen: {
+            type: Boolean,
+            default: false,
+        }
+    },
     components: {
         DataTable,
         BaseButton,

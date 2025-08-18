@@ -33,6 +33,7 @@
             :show="isModalOpen"
             :establecimiento="selectedEstablecimiento"
             :is-loading="isSubmitting"
+            :is-sidebar-open="isSidebarOpen"
             @close="closeModal"
             @save="handleSave"
         />
@@ -49,6 +50,12 @@ import TableSkeleton from './TableSkeleton.vue';
 
 export default {
     name: 'EstablecimientosManager',
+    props: {
+        isSidebarOpen: {
+            type: Boolean,
+            default: false,
+        }
+    },
     components: {
         DataTable,
         BaseButton,
