@@ -13,30 +13,17 @@ class DocumentData
             // Bloqueo y actualización del secuencial
             $puntoEmision->refresh();
 
-            $ultimoSecuencial = (int) $puntoEmision->ultimoSecuencial;
-            $nuevoSecuencial = null;
-            $maxIntentos = 5000; // Límite para evitar bucles infinitos
+            // Obtener el último secuencial usado desde la tabla de comprobantes para este punto de emisión
+            $ultimoSecuencialComprobantes = \App\Models\Comprobante::where('establecimiento', $puntoEmision->establecimiento->numero)
+                ->where('punto_emision', $puntoEmision->numero)
+                ->where('ambiente', $user->ambiente)
+                ->max('secuencial');
 
-            for ($i = 0; $i < $maxIntentos; $i++) {
-                $ultimoSecuencial++;
-                $secuencialCandidato = str_pad($ultimoSecuencial, 9, '0', STR_PAD_LEFT);
+            // Comparar con el último secuencial del punto de emisión y tomar el mayor
+            $ultimoSecuencialBase = max((int)$ultimoSecuencialComprobantes, (int)$puntoEmision->ultimoSecuencial);
 
-                $comprobanteExistente = \App\Models\Comprobante::where('establecimiento', $puntoEmision->establecimiento->numero)
-                    ->where('punto_emision', $puntoEmision->numero)
-                    ->where('secuencial', $secuencialCandidato)
-                    ->where('ambiente', $user->ambiente)
-                    ->whereIn('estado', [\App\Enums\EstadosComprobanteEnum::AUTORIZADO->value, \App\Enums\EstadosComprobanteEnum::FIRMADO->value])
-                    ->exists();
-
-                if (!$comprobanteExistente) {
-                    $nuevoSecuencial = $secuencialCandidato;
-                    break;
-                }
-            }
-
-            if (is_null($nuevoSecuencial)) {
-                throw new \Exception("No se pudo encontrar un secuencial disponible después de {$maxIntentos} intentos.");
-            }
+            // Generar el nuevo secuencial
+            $nuevoSecuencial = str_pad($ultimoSecuencialBase + 1, 9, '0', STR_PAD_LEFT);
 
             $validatedData['secuencial'] = $nuevoSecuencial;
             $validatedData['estab'] = $puntoEmision->establecimiento->numero;
