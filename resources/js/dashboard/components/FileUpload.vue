@@ -116,49 +116,17 @@ export default {
           }
 
           const dataRows = sheetData.slice(headerRowIndex + 1);
-          const validRows = [];
-          const invalidRows = [];
-
-          const findHeader = (possibleNames) => {
-            for (const name of possibleNames) {
-              const normalizedName = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-              const headerIndex = headers.findIndex(h => h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === normalizedName);
-              if (headerIndex !== -1) return headers[headerIndex];
-            }
-            return null;
-          };
-
-          const cedulaHeader = findHeader(['cedula', 'cédula', 'identificacion', 'identificación']);
-
-          if (!cedulaHeader) {
-            this.error = 'No se pudo encontrar la columna "Cédula" o "Identificación" en el archivo Excel.';
-            this.$emit('parsing-complete');
-            return;
-          }
-
-          dataRows.forEach(row => {
+          const jsonData = dataRows.map(row => {
             let rowData = {};
-            let hasValue = false;
             headers.forEach((header, index) => {
-              if (header) {
+              if (header) { // Only add if header is not empty
                 rowData[header] = row[index];
-                if(row[index]) hasValue = true;
               }
             });
+            return rowData;
+          }).filter(row => Object.values(row).some(val => val)); // Filter out completely empty rows
 
-            if (!hasValue) return; // Skip completely empty rows
-
-            const cedula = String(rowData[cedulaHeader] || '');
-            if (cedula.length === 9) {
-              rowData.errorInfo = 'Cédula tiene 9 dígitos. Requiere revisión manual.';
-              rowData.Estado = 'Pendiente de Corrección';
-              invalidRows.push(rowData);
-            } else {
-              validRows.push(rowData);
-            }
-          });
-
-          this.$emit('file-parsed', { validRows, invalidRows });
+          this.$emit('file-parsed', jsonData);
         } catch (err) {
           this.error = 'Error al procesar el archivo Excel. Asegúrate de que el formato es correcto.';
           console.error(err);

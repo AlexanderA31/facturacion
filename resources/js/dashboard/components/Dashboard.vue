@@ -326,17 +326,18 @@ export default {
         this.clearState();
         this.$emit('logout');
     },
-    handleFileParsed({ validRows, invalidRows }) {
+    handleFileParsed(data) {
       this.clearState(); // Clear any old state before loading new data
-
-      // Process valid rows for mass billing
-      this.tableData = validRows.map(row => {
+      this.tableData = data.map(row => {
+        // Check for the 'estado' column, case-insensitive
         const estadoKey = Object.keys(row).find(key => key.toLowerCase().trim() === 'estado');
         const estadoValue = estadoKey ? String(row[estadoKey]).toLowerCase().trim() : '';
-        let internalStatus = 'Pendiente';
+
+        let internalStatus = 'Pendiente'; // Default status, ready for billing
         if (estadoValue === 'pendiente') {
-            internalStatus = 'Pago Pendiente';
+            internalStatus = 'Pago Pendiente'; // New status, will be skipped
         }
+
         return {
             ...row,
             id: Math.random().toString(36).substr(2, 9),
@@ -346,21 +347,6 @@ export default {
             isExpanded: false,
         };
       });
-
-      // Process invalid rows and send them to corrective billing
-      if (invalidRows.length > 0) {
-        const correctiveData = JSON.parse(localStorage.getItem('correctiveBillingData') || '[]');
-        const newFailedRows = invalidRows.map(row => ({
-            ...row,
-            id: Math.random().toString(36).substr(2, 9),
-        }));
-        const updatedCorrectiveData = correctiveData.concat(newFailedRows);
-        localStorage.setItem('correctiveBillingData', JSON.stringify(updatedCorrectiveData));
-        window.dispatchEvent(new Event('corrective-billing-update'));
-
-        // Notify user
-        this.$emitter.emit('show-alert', { type: 'warning', message: `${invalidRows.length} fila(s) con errores han sido enviadas a Facturación Correctiva.` });
-      }
     },
     createInvoicePayload(row) {
       const findValue = (keyToFind) => {
@@ -379,6 +365,11 @@ export default {
       };
 
       const cedula = findValue('Cédula');
+
+      if (String(cedula || '').length === 9) {
+        throw new Error('Cédula de 9 dígitos');
+      }
+
       const nombres = findValue('Nombres');
       const direccion = findValue('Dirección');
       const codigo = findValue('Código');
@@ -448,7 +439,9 @@ export default {
 
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
-        if (error.message.includes('columnas requeridas')) {
+        if (error.message === 'Cédula de 9 dígitos') {
+          this.addFailedRowToCorrective(row, 'Cédula tiene 9 dígitos. Requiere revisión manual.');
+        } else if (error.message.includes('columnas requeridas')) {
           this.addFailedRowToCorrective(row, 'Datos incompletos en la fila.');
         } else if (errorMessage.includes('ERROR SECUENCIAL REGISTRADO')) {
           // This error means the invoice was already processed successfully. Remove it.
