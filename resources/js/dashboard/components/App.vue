@@ -17,7 +17,7 @@ import Register from './Register.vue';
 import Dashboard from './Dashboard.vue';
 import AdminDashboard from './AdminDashboard.vue'; // Will be created
 import axios from 'axios';
-import { decodeJwt } from '../utils/jwt';
+import { decodeJwt } from '../../utils/jwt';
 
 export default {
   name: 'App',

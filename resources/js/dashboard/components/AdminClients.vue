@@ -13,12 +13,19 @@
       </template>
     </DataTable>
 
+    <Pagination
+      :currentPage="pagination.currentPage"
+      :totalPages="pagination.totalPages"
+      @prev-page="handlePrevPage"
+      @next-page="handleNextPage"
+    />
+
     <ClientModal
       v-if="showClientModal"
       :client="selectedClient"
       :token="token"
       @close="closeClientModal"
-      @client-saved="fetchClients"
+      @client-saved="fetchClients(1)"
     />
 
     <SignatureUploadModal
@@ -26,7 +33,7 @@
       :client="selectedClient"
       :token="token"
       @close="closeSignatureModal"
-      @signature-uploaded="fetchClients"
+      @signature-uploaded="fetchClients(pagination.currentPage)"
     />
   </div>
 </template>
@@ -37,6 +44,7 @@ import DataTable from './DataTable.vue';
 import BaseButton from './BaseButton.vue';
 import ClientModal from './ClientModal.vue';
 import SignatureUploadModal from './SignatureUploadModal.vue';
+import Pagination from './Pagination.vue';
 
 export default {
   name: 'AdminClients',
@@ -45,6 +53,7 @@ export default {
     BaseButton,
     ClientModal,
     SignatureUploadModal,
+    Pagination,
   },
   props: {
     token: {
@@ -64,18 +73,24 @@ export default {
       showClientModal: false,
       showSignatureModal: false,
       selectedClient: null,
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+      },
     };
   },
   mounted() {
-    this.fetchClients();
+    this.fetchClients(1);
   },
   methods: {
-    async fetchClients() {
+    async fetchClients(page) {
       try {
-        const response = await axios.get('/api/admin/clients', {
+        const response = await axios.get(`/api/admin/clients?page=${page}`, {
           headers: { Authorization: `Bearer ${this.token}` },
         });
         this.clients = response.data.data;
+        this.pagination.currentPage = response.data.meta.current_page;
+        this.pagination.totalPages = response.data.meta.last_page;
       } catch (error) {
         console.error('Error fetching clients:', error);
       }
@@ -90,7 +105,7 @@ export default {
           await axios.delete(`/api/admin/clients/${client.id}`, {
             headers: { Authorization: `Bearer ${this.token}` },
           });
-          this.fetchClients();
+          this.fetchClients(this.pagination.currentPage);
         } catch (error) {
           console.error('Error deleting client:', error);
           alert('Failed to delete client.');
@@ -108,6 +123,16 @@ export default {
     closeSignatureModal() {
       this.showSignatureModal = false;
       this.selectedClient = null;
+    },
+    handlePrevPage() {
+      if (this.pagination.currentPage > 1) {
+        this.fetchClients(this.pagination.currentPage - 1);
+      }
+    },
+    handleNextPage() {
+      if (this.pagination.currentPage < this.pagination.totalPages) {
+        this.fetchClients(this.pagination.currentPage + 1);
+      }
     },
   },
 };
