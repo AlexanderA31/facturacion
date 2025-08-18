@@ -31,9 +31,6 @@
                             <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
                         </svg>
                     </button>
-                    <button @click="confirmReset(row)" title="Reiniciar Secuencial" class="p-1 text-blue-600 hover:text-blue-800 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l16 16"></path></svg>
-                    </button>
                     <button @click="confirmDelete(row)" title="Eliminar" class="p-1 text-red-600 hover:text-red-800 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
@@ -217,19 +214,6 @@ export default {
                 } catch (error) {
                     console.error('Error deleting punto de emision:', error);
                     this.$emitter.emit('show-alert', { type: 'error', message: 'Error al eliminar el punto de emisión.' });
-                }
-            }
-        },
-        async confirmReset(puntoEmision) {
-            if (window.confirm(`¿Está seguro de que desea reiniciar el secuencial del punto de emisión "${puntoEmision.nombre}"? Esta acción no se puede deshacer.`)) {
-                try {
-                    await axios.post(`/api/puntos-emision/reset/${puntoEmision.id}`, {}, {
-                        headers: { 'Authorization': `Bearer ${this.token}` }
-                    });
-                    this.$emitter.emit('show-alert', { type: 'success', message: 'El secuencial ha sido reiniciado.' });
-                } catch (error) {
-                    console.error('Error resetting punto de emision:', error);
-                    this.$emitter.emit('show-alert', { type: 'error', message: 'Error al reiniciar el secuencial.' });
                 }
             }
         },
