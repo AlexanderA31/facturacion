@@ -393,7 +393,7 @@ class AdminClientsDocs
         responses: [
             new OA\Response(
                 response: 200,
-                ref: "#/components/responses/SignatureLoaded"
+                 ref: "#/components/responses/SignatureLoadedResponse"
             ),
             new OA\Response(
                 response: 401,
