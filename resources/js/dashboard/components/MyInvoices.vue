@@ -69,9 +69,11 @@ export default {
   computed: {
     headers() {
         const baseHeaders = [
-            { text: 'Clave de Acceso', value: 'clave_acceso' },
+            { text: 'Número de Factura', value: 'numero_factura' },
+            { text: 'Cliente', value: 'cliente' },
+            { text: 'Fecha de Emisión', value: 'fecha_emision' },
+            { text: 'Valor', value: 'valor' },
             { text: 'Estado', value: 'estado' },
-            { text: 'Fecha', value: 'fecha_emision' },
         ];
 
         let finalHeaders = [...baseHeaders];
@@ -80,10 +82,7 @@ export default {
             finalHeaders.push({ text: 'Mensaje de Error', value: 'error_message' });
         }
 
-        // Show actions on 'all', 'authorized', and 'duplicates' tabs
-        if (this.currentTab === 'all' || this.currentTab === 'authorized' || this.currentTab === 'duplicates') {
-            finalHeaders.push({ text: 'Acciones', value: 'acciones' });
-        }
+        finalHeaders.push({ text: 'Acciones', value: 'acciones' });
 
         return finalHeaders;
     },
@@ -137,10 +136,23 @@ export default {
           params: { per_page: 100 } // Fetch a good number of invoices
         });
       
-        this.invoices = response.data.data.data.map(invoice => ({
-          ...invoice,
-          isErrorExpanded: false,
-        }));
+        this.invoices = response.data.data.data.map(invoice => {
+          let payload = {};
+          try {
+            // The payload is already an object from the backend, no need to parse
+            payload = invoice.payload || {};
+          } catch (e) {
+            console.error('Error processing invoice payload:', e);
+          }
+
+          return {
+            ...invoice,
+            numero_factura: `${invoice.establecimiento}-${invoice.punto_emision}-${invoice.secuencial}`,
+            cliente: payload.razonSocialComprador || 'N/A',
+            valor: payload.importeTotal || 0,
+            isErrorExpanded: false,
+          };
+        });
       } catch (error) {
         console.error('Error fetching invoices:', error);
       } finally {
