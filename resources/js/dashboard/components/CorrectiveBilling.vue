@@ -296,16 +296,22 @@ export default {
       const codigo = findValue('Código');
       const evento = findValue('Evento');
       const email = findValue('Email');
-      const telefono = findValue('Teléfono');
+      let telefono = findValue('Teléfono');
       const precio = formatToNumber(findValue('Precio'));
 
       // Validations
       if (!cedula || (String(cedula).length !== 10 && String(cedula).length !== 13)) {
         throw new Error('Cédula no válida');
       }
-      if (!telefono) {
+
+      telefono = String(telefono || '').replace(/\s+/g, ''); // Clean up spaces
+      if (telefono.length === 9) {
+        telefono = '0' + telefono;
+      }
+      if (telefono.length !== 10) {
         throw new Error('Teléfono no válido');
       }
+
       if (!precio || precio <= 0) {
         throw new Error('Precio no válido');
       }
@@ -352,7 +358,7 @@ export default {
         if (error.message === 'Cédula no válida') {
           friendlyMessage = 'Cédula debe tener 10 o 13 dígitos.';
         } else if (error.message === 'Teléfono no válido') {
-          friendlyMessage = 'El campo Teléfono es obligatorio.';
+          friendlyMessage = 'Teléfono debe tener 10 dígitos (o 9 para corrección).';
         } else if (error.message === 'Precio no válido') {
           friendlyMessage = 'El Precio debe ser un número mayor a 0.';
         } else if (error.message.includes('columnas requeridas')) {
