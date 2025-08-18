@@ -326,18 +326,17 @@ export default {
         this.clearState();
         this.$emit('logout');
     },
-    handleFileParsed(data) {
+    handleFileParsed({ validRows, invalidRows }) {
       this.clearState(); // Clear any old state before loading new data
-      this.tableData = data.map(row => {
-        // Check for the 'estado' column, case-insensitive
+
+      // Process valid rows for mass billing
+      this.tableData = validRows.map(row => {
         const estadoKey = Object.keys(row).find(key => key.toLowerCase().trim() === 'estado');
         const estadoValue = estadoKey ? String(row[estadoKey]).toLowerCase().trim() : '';
-
-        let internalStatus = 'Pendiente'; // Default status, ready for billing
+        let internalStatus = 'Pendiente';
         if (estadoValue === 'pendiente') {
-            internalStatus = 'Pago Pendiente'; // New status, will be skipped
+            internalStatus = 'Pago Pendiente';
         }
-
         return {
             ...row,
             id: Math.random().toString(36).substr(2, 9),
@@ -347,6 +346,21 @@ export default {
             isExpanded: false,
         };
       });
+
+      // Process invalid rows and send them to corrective billing
+      if (invalidRows.length > 0) {
+        const correctiveData = JSON.parse(localStorage.getItem('correctiveBillingData') || '[]');
+        const newFailedRows = invalidRows.map(row => ({
+            ...row,
+            id: Math.random().toString(36).substr(2, 9),
+        }));
+        const updatedCorrectiveData = correctiveData.concat(newFailedRows);
+        localStorage.setItem('correctiveBillingData', JSON.stringify(updatedCorrectiveData));
+        window.dispatchEvent(new Event('corrective-billing-update'));
+
+        // Notify user
+        this.$emitter.emit('show-alert', { type: 'warning', message: `${invalidRows.length} fila(s) con errores han sido enviadas a Facturación Correctiva.` });
+      }
     },
     createInvoicePayload(row) {
       const findValue = (keyToFind) => {
