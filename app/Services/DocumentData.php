@@ -15,7 +15,7 @@ class DocumentData
 
             $ultimoSecuencial = (int) $puntoEmision->ultimoSecuencial;
             $nuevoSecuencial = null;
-            $maxIntentos = 100; // Límite para evitar bucles infinitos
+            $maxIntentos = 5000; // Límite para evitar bucles infinitos
 
             for ($i = 0; $i < $maxIntentos; $i++) {
                 $ultimoSecuencial++;
