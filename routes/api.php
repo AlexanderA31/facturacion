@@ -65,6 +65,7 @@ Route::group(['middleware' => ['json.response']], function () {
         Route::get('/puntos-emision/{punto_emision}', [PuntoEmisionController::class, 'show']);
         Route::put('/puntos-emision/{punto_emision}', [PuntoEmisionController::class, 'update']);
         Route::delete('/puntos-emision/{punto_emision}', [PuntoEmisionController::class, 'destroy']);
+        Route::put('/puntos-emision/{punto_emision}/secuencial', [PuntoEmisionController::class, 'updateSecuencial']);
         /* --------------------------- Rutas para Reseteo --------------------------- */
         Route::post('/puntos-emision/reset/{punto_emision}', [PuntoEmisionController::class, 'reset']);
     });

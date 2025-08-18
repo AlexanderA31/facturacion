@@ -118,7 +118,13 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 
     private function actualizarSecuencial(PuntoEmision $puntoEmision, string $secuencial): void
     {
+        // Guardar el secuencial que se acaba de usar
         $puntoEmision->ultimoSecuencial = $secuencial;
+
+        // Incrementar el próximo secuencial para el siguiente comprobante
+        $proximo = (int)$puntoEmision->proximo_secuencial + 1;
+        $puntoEmision->proximo_secuencial = str_pad($proximo, 9, '0', STR_PAD_LEFT);
+
         $puntoEmision->save();
     }
 

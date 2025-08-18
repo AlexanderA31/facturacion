@@ -25,6 +25,12 @@
                     <button @click="openEditModal(row)" title="Editar" class="p-1 text-yellow-600 hover:text-yellow-800 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     </button>
+                    <button @click="openSecuencialModal(row)" title="Editar Secuencial" class="p-1 text-green-600 hover:text-green-800 transition-colors">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                            <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
                     <button @click="confirmReset(row)" title="Reiniciar Secuencial" class="p-1 text-blue-600 hover:text-blue-800 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l16 16"></path></svg>
                     </button>
@@ -43,6 +49,14 @@
             @close="closeModal"
             @save="handleSave"
         />
+
+        <SecuencialModal
+            :show="isSecuencialModalOpen"
+            :punto-emision="selectedPuntoEmisionForSecuencial"
+            :is-loading="isSubmitting"
+            @close="closeSecuencialModal"
+            @save="handleSaveSecuencial"
+        />
     </div>
 </template>
 
@@ -51,6 +65,7 @@ import axios from 'axios';
 import DataTable from './DataTable.vue';
 import BaseButton from './BaseButton.vue';
 import PuntoEmisionModal from './PuntoEmisionModal.vue';
+import SecuencialModal from './SecuencialModal.vue';
 import RefreshButton from './RefreshButton.vue';
 import TableSkeleton from './TableSkeleton.vue';
 
@@ -60,6 +75,7 @@ export default {
         DataTable,
         BaseButton,
         PuntoEmisionModal,
+        SecuencialModal,
         RefreshButton,
         TableSkeleton,
     },
@@ -71,12 +87,15 @@ export default {
                 { text: 'Establecimiento', value: 'establecimiento_codigo' },
                 { text: 'Número', value: 'numero' },
                 { text: 'Nombre', value: 'nombre' },
+                { text: 'Próximo Secuencial', value: 'proximo_secuencial' },
                 { text: 'Acciones', value: 'actions' },
             ],
             isLoading: false,
             isSubmitting: false,
             isModalOpen: false,
             selectedPuntoEmision: null,
+            isSecuencialModalOpen: false,
+            selectedPuntoEmisionForSecuencial: null,
             token: localStorage.getItem('jwt_token'),
         };
     },
@@ -126,6 +145,31 @@ export default {
         closeModal() {
             this.isModalOpen = false;
             this.selectedPuntoEmision = null;
+        },
+        openSecuencialModal(puntoEmision) {
+            this.selectedPuntoEmisionForSecuencial = puntoEmision;
+            this.isSecuencialModalOpen = true;
+        },
+        closeSecuencialModal() {
+            this.isSecuencialModalOpen = false;
+            this.selectedPuntoEmisionForSecuencial = null;
+        },
+        async handleSaveSecuencial(data) {
+            this.isSubmitting = true;
+            try {
+                await axios.put(`/api/puntos-emision/${this.selectedPuntoEmisionForSecuencial.id}/secuencial`, data, {
+                    headers: { 'Authorization': `Bearer ${this.token}` }
+                });
+                this.closeSecuencialModal();
+                await this.fetchPuntosEmision();
+                this.$emitter.emit('show-alert', { type: 'success', message: 'Secuencial actualizado exitosamente.' });
+            } catch (error) {
+                console.error('Error updating secuencial:', error);
+                const errorMessage = error.response?.data?.message || 'Error al actualizar el secuencial.';
+                this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
+            } finally {
+                this.isSubmitting = false;
+            }
         },
         async handleSave(data) {
             if (this.selectedPuntoEmision) {

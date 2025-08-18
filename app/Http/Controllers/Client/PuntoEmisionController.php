@@ -164,6 +164,32 @@ class PuntoEmisionController extends Controller
     }
 
 
+    public function updateSecuencial(Request $request, PuntoEmision $punto_emision)
+    {
+        try {
+            Gate::authorize('update', $punto_emision);
+
+            $validator = \Validator::make($request->all(), [
+                'proximo_secuencial' => ['required', 'string', 'digits:9']
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Datos no válidos', $validator->errors(), 422);
+            }
+
+            $punto_emision->proximo_secuencial = $request->proximo_secuencial;
+            $punto_emision->save();
+
+            return $this->sendResponse('Secuencial actualizado correctamente.', $punto_emision);
+
+        } catch (AuthorizationException $e) {
+            return $this->sendError('Acceso denegado', $e->getMessage(), 403);
+        } catch (\Exception $e) {
+            return $this->sendError('Error al actualizar el secuencial', $e->getMessage(), 500);
+        }
+    }
+
+
     public function destroy(PuntoEmision $puntoEmision)
     {
         try {

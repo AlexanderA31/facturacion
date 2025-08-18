@@ -13,17 +13,8 @@ class DocumentData
             // Bloqueo y actualización del secuencial
             $puntoEmision->refresh();
 
-            // Obtener el último secuencial usado desde la tabla de comprobantes para este punto de emisión
-            $ultimoSecuencialComprobantes = \App\Models\Comprobante::where('establecimiento', $puntoEmision->establecimiento->numero)
-                ->where('punto_emision', $puntoEmision->numero)
-                ->where('ambiente', $user->ambiente)
-                ->max('secuencial');
-
-            // Comparar con el último secuencial del punto de emisión y tomar el mayor
-            $ultimoSecuencialBase = max((int)$ultimoSecuencialComprobantes, (int)$puntoEmision->ultimoSecuencial);
-
-            // Generar el nuevo secuencial
-            $nuevoSecuencial = str_pad($ultimoSecuencialBase + 1, 9, '0', STR_PAD_LEFT);
+            // Usar el próximo secuencial configurado en el punto de emisión
+            $nuevoSecuencial = $puntoEmision->proximo_secuencial;
 
             $validatedData['secuencial'] = $nuevoSecuencial;
             $validatedData['estab'] = $puntoEmision->establecimiento->numero;
