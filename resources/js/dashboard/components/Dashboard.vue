@@ -237,7 +237,7 @@ export default {
         if (!this.selectedEstablecimientoId) {
             return [];
         }
-        return this.puntosEmision.filter(p => p.establecimiento_id === this.selectedEstablecimientoId);
+        return this.puntosEmision.filter(p => p.establecimiento_id == this.selectedEstablecimientoId);
     },
     pendingRows() {
         return this.tableData.filter(row => row.Estado === 'Pendiente' || row.Estado === 'Procesando');
