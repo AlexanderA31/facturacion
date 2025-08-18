@@ -15,9 +15,8 @@
 import Login from './Login.vue';
 import Register from './Register.vue';
 import Dashboard from './Dashboard.vue';
-import AdminDashboard from './AdminDashboard.vue'; // Will be created
+import AdminDashboard from './AdminDashboard.vue';
 import axios from 'axios';
-import { decodeJwt } from '../../utils/jwt';
 
 export default {
   name: 'App',
@@ -36,21 +35,40 @@ export default {
   },
   created() {
     if (this.token) {
-      const decodedToken = decodeJwt(this.token);
-      this.userRole = decodedToken ? decodedToken.role : null;
+      this.fetchUserProfile();
     }
   },
   methods: {
-    handleLoginSuccess({ token, role }) {
+    async handleLoginSuccess(token) {
       localStorage.setItem('jwt_token', token);
       this.token = token;
-      this.userRole = role;
+      await this.fetchUserProfile();
+    },
+    async fetchUserProfile() {
+      try {
+        const response = await axios.get('/api/me', {
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+        const user = response.data.data;
+        // The 'me' endpoint returns roles as an array of names
+        if (user.roles && user.roles.includes('admin')) {
+          this.userRole = 'admin';
+        } else {
+          this.userRole = 'client';
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        // Handle token expiration or other errors by logging out
+        this.handleLogout();
+      }
     },
     async handleLogout() {
       try {
-        await axios.post('/api/logout', {}, {
-            headers: { 'Authorization': `Bearer ${this.token}` }
-        });
+        if (this.token) {
+            await axios.post('/api/logout', {}, {
+                headers: { 'Authorization': `Bearer ${this.token}` }
+            });
+        }
       } catch (error) {
         console.error('Error during logout:', error);
       } finally {
