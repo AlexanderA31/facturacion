@@ -128,10 +128,11 @@ export default {
           await axios.delete(`/api/admin/users/${user.id}`, {
             headers: { Authorization: `Bearer ${this.token}` },
           });
+          this.$emitter.emit('show-alert', { type: 'success', message: 'Usuario eliminado con éxito.' });
           this.fetchUsers(this.pagination.currentPage);
         } catch (error) {
           console.error('Error deleting user:', error);
-          alert('Failed to delete user.');
+          this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo eliminar el usuario.' });
         }
       }
     },

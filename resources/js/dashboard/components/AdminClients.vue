@@ -141,10 +141,11 @@ export default {
           await axios.delete(`/api/admin/clients/${client.id}`, {
             headers: { Authorization: `Bearer ${this.token}` },
           });
+          this.$emitter.emit('show-alert', { type: 'success', message: 'Cliente eliminado con éxito.' });
           this.fetchClients(this.pagination.currentPage);
         } catch (error) {
           console.error('Error deleting client:', error);
-          alert('Failed to delete client.');
+          this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo eliminar el cliente.' });
         }
       }
     },
