@@ -52,7 +52,7 @@
                 <p><span class="bold">Clave de Acceso:</span></p>
                 <p style="font-size: 9px; word-wrap: break-word;">{{ $infoTributaria->claveAcceso }}</p>
                 <div style="text-align: center; margin-top: 10px;">
-                    <img src="{{ $barcode_url }}" alt="barcode" />
+                    <img src="{{ $barcode_path }}" alt="barcode" />
                 </div>
             </div>
         </div>

@@ -235,7 +235,7 @@ class ComprobantesController extends Controller
                 'infoAdicional' => $xmlObject->infoAdicional ?? null,
                 'logo_path' => $comprobante->user->logo_path ?? null,
                 'user' => $comprobante->user,
-                'barcode_url' => Storage::url($barcodePath),
+                'barcode_path' => storage_path('app/public/' . $barcodePath),
             ];
 
             // Generar y descargar el PDF
