@@ -40,7 +40,7 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Contraseña</label>
-                <input type="password" v-model="form.password" :required="!isEditMode" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Dejar en blanco para no cambiar">
+                <input type="password" v-model="form.password" :required="!isEditMode" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="">
                 <p v-if="formErrors.password" class="text-red-500 text-xs mt-1">{{ formErrors.password[0] }}</p>
               </div>
               <div>
