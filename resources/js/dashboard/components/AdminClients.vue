@@ -71,6 +71,7 @@ export default {
     ClientModal,
     Pagination,
     TableSkeleton,
+    RefreshButton,
   },
   props: {
     token: {
