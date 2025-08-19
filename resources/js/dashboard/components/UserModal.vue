@@ -7,14 +7,17 @@
           <div>
             <label for="name" class="block text-sm font-medium text-gray-700 text-left">Nombre</label>
             <input type="text" v-model="form.name" id="name" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm">
+            <p v-if="formErrors.name" class="text-red-500 text-xs mt-1 text-left">{{ formErrors.name[0] }}</p>
           </div>
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700 text-left">Correo</label>
             <input type="email" v-model="form.email" id="email" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm">
+            <p v-if="formErrors.email" class="text-red-500 text-xs mt-1 text-left">{{ formErrors.email[0] }}</p>
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700 text-left">Contraseña</label>
             <input type="password" v-model="form.password" id="password" :required="!isEditMode" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm" placeholder="Dejar en blanco para no cambiar">
+            <p v-if="formErrors.password" class="text-red-500 text-xs mt-1 text-left">{{ formErrors.password[0] }}</p>
           </div>
           <div class="items-center px-4 py-3">
             <button type="submit" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
@@ -54,6 +57,7 @@ export default {
         email: '',
         password: '',
       },
+      formErrors: {},
     };
   },
   computed: {
@@ -72,12 +76,13 @@ export default {
   },
   methods: {
     async saveUser() {
+      this.formErrors = {};
       const method = this.isEditMode ? 'put' : 'post';
       const url = this.isEditMode ? `/api/admin/users/${this.user.id}` : '/api/admin/users';
 
       const payload = { ...this.form };
       if (this.isEditMode && !payload.password) {
-        delete payload.password; // Don't send empty password on update
+        delete payload.password;
       }
 
       try {
@@ -86,8 +91,12 @@ export default {
         });
         this.$emit('user-saved');
       } catch (error) {
-        console.error('Error saving user:', error);
-        alert('Failed to save user. Check console for details.');
+        if (error.response && (error.response.status === 400 || error.response.status === 422) && error.response.data.errors) {
+            this.formErrors = error.response.data.errors;
+        } else {
+            console.error('Error saving user:', error);
+            alert('No se pudo guardar el usuario.');
+        }
       }
     },
   },

@@ -5,13 +5,40 @@
         <h3 class="text-lg leading-6 font-medium text-gray-900 text-center">{{ formTitle }}</h3>
         <form @submit.prevent="saveClient" class="mt-2 space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" v-model="form.name" placeholder="Nombre" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <input type="email" v-model="form.email" placeholder="Correo" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <input type="text" v-model="form.ruc" placeholder="RUC" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <input type="text" v-model="form.razonSocial" placeholder="Razón Social" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+            <div>
+              <input type="text" v-model="form.name" placeholder="Nombre" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+              <p v-if="formErrors.name" class="text-red-500 text-xs mt-1">{{ formErrors.name[0] }}</p>
+            </div>
+            <div>
+              <input type="email" v-model="form.email" placeholder="Correo" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+              <p v-if="formErrors.email" class="text-red-500 text-xs mt-1">{{ formErrors.email[0] }}</p>
+            </div>
+            <div>
+              <input type="text" v-model="form.ruc" placeholder="RUC" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+              <p v-if="formErrors.ruc" class="text-red-500 text-xs mt-1">{{ formErrors.ruc[0] }}</p>
+            </div>
+            <div>
+              <input type="text" v-model="form.razonSocial" placeholder="Razón Social" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+              <p v-if="formErrors.razonSocial" class="text-red-500 text-xs mt-1">{{ formErrors.razonSocial[0] }}</p>
+            </div>
             <input type="text" v-model="form.nombreComercial" placeholder="Nombre Comercial" class="w-full px-3 py-2 border border-gray-300 rounded-md">
             <input type="text" v-model="form.dirMatriz" placeholder="Dirección Matriz" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <input type="password" v-model="form.password" placeholder="Contraseña" :required="!isEditMode" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+            <div>
+              <input type="password" v-model="form.password" placeholder="Contraseña" :required="!isEditMode" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+              <p v-if="formErrors.password" class="text-red-500 text-xs mt-1">{{ formErrors.password[0] }}</p>
+            </div>
+            <div>
+                <select v-model="form.tarifa" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="comprobante">Tarifa por Comprobante</option>
+                    <option value="establecimiento">Tarifa por Establecimiento</option>
+                </select>
+            </div>
+            <div>
+                <select v-model="form.ambiente" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="1">Pruebas</option>
+                    <option value="2">Producción</option>
+                </select>
+            </div>
             <div class="flex items-center">
               <input type="checkbox" v-model="form.obligadoContabilidad" id="obligadoContabilidad" class="h-4 w-4 text-blue-600 border-gray-300 rounded">
               <label for="obligadoContabilidad" class="ml-2 block text-sm text-gray-900">Obligado Contabilidad</label>
@@ -59,7 +86,10 @@ export default {
         nombreComercial: '',
         dirMatriz: '',
         obligadoContabilidad: false,
+        tarifa: 'comprobante',
+        ambiente: '1',
       },
+      formErrors: {},
     };
   },
   computed: {
@@ -77,6 +107,7 @@ export default {
   },
   methods: {
     async saveClient() {
+      this.formErrors = {};
       const method = this.isEditMode ? 'put' : 'post';
       const url = this.isEditMode ? `/api/admin/clients/${this.client.id}` : '/api/admin/clients';
 
@@ -92,8 +123,12 @@ export default {
         this.$emit('client-saved');
         this.$emit('close');
       } catch (error) {
-        console.error('Error saving client:', error);
-        alert('Failed to save client.');
+        if (error.response && (error.response.status === 400 || error.response.status === 422) && error.response.data.errors) {
+            this.formErrors = error.response.data.errors;
+        } else {
+            console.error('Error saving client:', error);
+            alert('No se pudo guardar el cliente.');
+        }
       }
     },
   },
