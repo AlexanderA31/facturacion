@@ -56,6 +56,27 @@
                     </button>
                 </div>
             </form>
+
+            <div class="mt-8 border-t border-gray-200 pt-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Logo de la Empresa</h3>
+                <div class="flex items-center">
+                    <div class="mr-4">
+                        <img v-if="logoPreview" :src="logoPreview" alt="Vista previa del logo" class="h-20 w-20 rounded-full object-cover">
+                        <div v-else class="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span class="text-gray-500">Sin logo</span>
+                        </div>
+                    </div>
+                    <div>
+                        <input type="file" @change="handleFileChange" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"/>
+                        <p class="mt-1 text-sm text-gray-500">PNG, JPG, GIF hasta 2MB.</p>
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button @click="uploadLogo" :disabled="!logoFile" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        Subir Logo
+                    </button>
+                </div>
+            </div>
         </div>
       </div>
       <div v-if="activeTab === 'establecimientos'">
@@ -98,7 +119,10 @@ export default {
         obligadoContabilidad: false,
         ambiente: '1',
         enviar_factura_por_correo: true,
+        logo_path: '',
       },
+      logoFile: null,
+      logoPreview: null,
       ambienteOptions: [
         { value: '1', text: 'Pruebas' },
         { value: '2', text: 'Producción' },
@@ -115,10 +139,9 @@ export default {
         const response = await axios.get('/api/profile', {
           headers: { 'Authorization': `Bearer ${this.token}` },
         });
-        // Assign all relevant profile data to the form
         const profile = response.data.data;
         this.form = {
-            ...this.form, // Keep defaults for fields not in profile
+            ...this.form,
             razonSocial: profile.razonSocial,
             nombreComercial: profile.nombreComercial,
             dirMatriz: profile.dirMatriz,
@@ -126,7 +149,11 @@ export default {
             obligadoContabilidad: profile.obligadoContabilidad,
             ambiente: profile.ambiente,
             enviar_factura_por_correo: profile.enviar_factura_por_correo,
+            logo_path: profile.logo_path,
         };
+        if (profile.logo_path) {
+            this.logoPreview = `/storage/${profile.logo_path}`;
+        }
       } catch (error) {
         console.error('Error al cargar la configuración:', error);
         this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo cargar la configuración del perfil.' });
@@ -145,6 +172,39 @@ export default {
         } else {
             this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo guardar la configuración.' });
         }
+      }
+    },
+    handleFileChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.logoFile = file;
+        this.logoPreview = URL.createObjectURL(file);
+      }
+    },
+    async uploadLogo() {
+      if (!this.logoFile) {
+        this.$emitter.emit('show-alert', { type: 'error', message: 'Por favor, seleccione un archivo de logo.' });
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('logo', this.logoFile);
+
+      try {
+        const response = await axios.post('/api/profile/logo', formData, {
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        this.form.logo_path = response.data.data.logo_path;
+        this.logoPreview = `/storage/${response.data.data.logo_path}`;
+        this.logoFile = null; // Reset file input
+        this.$emitter.emit('show-alert', { type: 'success', message: 'Logo actualizado exitosamente.' });
+      } catch (error) {
+        console.error('Error al subir el logo:', error);
+        const errorMessage = error.response?.data?.errors?.logo?.[0] || 'No se pudo subir el logo.';
+        this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
       }
     },
   },

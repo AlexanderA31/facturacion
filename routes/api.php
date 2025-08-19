@@ -47,6 +47,7 @@ Route::group(['middleware' => ['json.response']], function () {
         Route::put('profile', [PerfilClientController::class, 'update']);
         Route::put('profile/password', [PerfilClientController::class, 'updatePassword']);
         Route::post('profile/signature', [PerfilClientController::class, 'updateSignature']);
+        Route::post('profile/logo', [PerfilClientController::class, 'updateLogo']);
     });
 
     /* ---------------------------------- Rutas Establecimientos ---------------------------------- */

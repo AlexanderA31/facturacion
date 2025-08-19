@@ -68,6 +68,7 @@ class User extends Authenticatable implements JWTSubject
         'contribuyenteEspecial',
         'obligadoContabilidad',
         'enviar_factura_por_correo',
+        'logo_path',
     ];
 
     /**
@@ -133,5 +134,10 @@ class User extends Authenticatable implements JWTSubject
     public function establecimientos()
     {
         return $this->hasMany(Establecimiento::class);
+    }
+
+    public function comprobantes()
+    {
+        return $this->hasMany(Comprobante::class);
     }
 }

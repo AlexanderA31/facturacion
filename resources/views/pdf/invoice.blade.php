@@ -18,6 +18,9 @@
 <body>
     <div class="container">
         <div class="header">
+            @if(isset($logo_path))
+                <img src="{{ public_path('storage/' . $logo_path) }}" alt="Logo" style="max-width: 150px; max-height: 100px;"/>
+            @endif
             <h1>Factura</h1>
         </div>
         <div class="content">

@@ -220,6 +220,7 @@ class ComprobantesController extends Controller
                 'infoTributaria' => $xmlObject->infoTributaria,
                 'infoFactura' => $xmlObject->infoFactura,
                 'detalles' => $xmlObject->detalles->detalle,
+                'logo_path' => $comprobante->user->logo_path ?? null,
             ];
 
             // Generar y descargar el PDF

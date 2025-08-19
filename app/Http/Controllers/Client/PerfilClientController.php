@@ -14,6 +14,7 @@ use App\Services\CertificadoFirma;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use App\Enums\AmbientesEnum;
+use Illuminate\Support\Facades\Storage;
 
 class PerfilClientController extends Controller implements HasMiddleware
 {
@@ -129,6 +130,38 @@ class PerfilClientController extends Controller implements HasMiddleware
             ]);
         } catch(\Exception $e) {
             return $this->sendError($e->getMessage(), null, 500);
+        }
+    }
+
+    /* --------------- Actualizar logo de la empresa --------------- */
+    public function updateLogo(Request $request)
+    {
+        try {
+            $user = auth()->user();
+
+            $validator = Validator::make($request->all(), [
+                'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Datos no válidos', $validator->errors(), 422);
+            }
+
+            // Eliminar logo anterior si existe
+            if ($user->logo_path) {
+                Storage::disk('public')->delete($user->logo_path);
+            }
+
+            $path = $request->file('logo')->store('logos', 'public');
+
+            $user->update(['logo_path' => $path]);
+
+            return $this->sendResponse('Logo actualizado exitosamente', [
+                'logo_path' => $path
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->sendError('Error al actualizar el logo', $e->getMessage(), 500);
         }
     }
 }

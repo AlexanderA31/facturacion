@@ -69,6 +69,11 @@ class Comprobante extends Model
         return $this->belongsTo(PuntoEmision::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public static function findByClaveAcceso($claveAcceso)
     {
         return self::where('clave_acceso', $claveAcceso)->firstOrFail();
