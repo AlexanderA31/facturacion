@@ -48,6 +48,7 @@
       v-if="showClientModal"
       :client="selectedClient"
       :token="token"
+      :is-sidebar-open="isSidebarOpen"
       @close="closeClientModal"
       @client-saved="fetchClients(1)"
     />
@@ -56,6 +57,7 @@
       v-if="showSignatureModal"
       :client="selectedClient"
       :token="token"
+      :is-sidebar-open="isSidebarOpen"
       @close="closeSignatureModal"
       @signature-uploaded="fetchClients(pagination.currentPage)"
     />
@@ -84,6 +86,10 @@ export default {
   props: {
     token: {
       type: String,
+      required: true,
+    },
+    isSidebarOpen: {
+      type: Boolean,
       required: true,
     },
   },
