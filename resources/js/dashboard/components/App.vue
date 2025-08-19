@@ -50,8 +50,8 @@ export default {
           headers: { Authorization: `Bearer ${this.token}` },
         });
         const user = response.data.data;
-        // The 'me' endpoint returns roles as an array of names
-        if (user.roles && user.roles.includes('admin')) {
+        // The 'me' endpoint returns roles as an array of objects
+        if (user.roles && user.roles.some(role => role.name === 'admin')) {
           this.userRole = 'admin';
         } else {
           this.userRole = 'client';
