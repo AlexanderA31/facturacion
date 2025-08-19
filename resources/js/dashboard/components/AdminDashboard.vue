@@ -2,13 +2,15 @@
   <AppLayout
     :navigation="navigation"
     :current-view="currentView"
+    :is-sidebar-open="isSidebarOpen"
     header-title="Panel de Administración"
     sidebar-title="Admin"
     @navigate="currentView = $event"
     @logout="$emit('logout')"
+    @toggle-sidebar="isSidebarOpen = !isSidebarOpen"
   >
-    <AdminUsers v-if="currentView === 'users'" :token="token" />
-    <AdminClients v-if="currentView === 'clients'" :token="token" />
+    <AdminUsers v-if="currentView === 'users'" :token="token" :is-sidebar-open="isSidebarOpen" />
+    <AdminClients v-if="currentView === 'clients'" :token="token" :is-sidebar-open="isSidebarOpen" />
   </AppLayout>
 </template>
 
@@ -40,6 +42,7 @@ export default {
   },
   data() {
     return {
+      isSidebarOpen: false,
       currentView: 'users',
       navigation: [
         { name: 'Gestionar Usuarios', view: 'users', icon: IconUsers },

@@ -1,28 +1,27 @@
 <template>
   <Teleport to="body">
-    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-      <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-        <div class="mt-3 text-center">
-          <h3 class="text-lg leading-6 font-medium text-gray-900">Cargar Firma para {{ client.name }}</h3>
-          <form @submit.prevent="uploadSignature" class="mt-2 space-y-4">
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center p-4" :style="{ paddingLeft: isSidebarOpen ? '16rem' : '5rem' }" @click.self="$emit('close')">
+      <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl leading-6 font-medium text-gray-900">Cargar Firma para {{ client.name }}</h3>
+            <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <form @submit.prevent="uploadSignature" class="space-y-4">
             <div>
-              <label for="signatureFile" class="block text-sm font-medium text-gray-700 text-left">Archivo de Firma (.p12)</label>
-              <input type="file" @change="handleFileChange" id="signatureFile" required accept=".p12" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm">
+              <label for="signatureFile" class="block text-sm font-medium text-gray-700">Archivo de Firma (.p12)</label>
+              <input type="file" @change="handleFileChange" id="signatureFile" required accept=".p12" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
             </div>
             <div>
-              <label for="signaturePassword" class="block text-sm font-medium text-gray-700 text-left">Contraseña de la Firma</label>
-              <input type="password" v-model="password" id="signaturePassword" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm">
-            </div>
-            <div class="items-center px-4 py-3">
-              <button type="submit" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700">
-                Cargar
-              </button>
+              <label for="signaturePassword" class="block text-sm font-medium text-gray-700">Contraseña de la Firma</label>
+              <input type="password" v-model="password" id="signaturePassword" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
             </div>
           </form>
-          <div class="items-center px-4 py-3">
-            <button @click="$emit('close')" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">
-              Cancelar
-            </button>
+          <div class="mt-6 flex justify-end space-x-4">
+            <BaseButton @click="$emit('close')" variant="secondary">Cancelar</BaseButton>
+            <BaseButton @click="uploadSignature" variant="primary">Cargar Firma</BaseButton>
           </div>
         </div>
       </div>
@@ -32,9 +31,11 @@
 
 <script>
 import axios from 'axios';
+import BaseButton from './BaseButton.vue';
 
 export default {
   name: 'SignatureUploadModal',
+  components: { BaseButton },
   props: {
     client: {
       type: Object,
@@ -44,6 +45,10 @@ export default {
       type: String,
       required: true,
     },
+    isSidebarOpen: {
+      type: Boolean,
+      default: false,
+    }
   },
   data() {
     return {

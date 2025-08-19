@@ -1,41 +1,59 @@
 <template>
   <Teleport to="body">
-    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center p-4" :style="{ paddingLeft: isSidebarOpen ? '16rem' : '5rem' }" @click.self="$emit('close')">
       <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
         <div class="mt-3">
-          <h3 class="text-lg leading-6 font-medium text-gray-900 text-center">{{ formTitle }}</h3>
-          <form @submit.prevent="saveClient" class="mt-2 space-y-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl leading-6 font-medium text-gray-900">{{ formTitle }}</h3>
+            <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <form @submit.prevent="saveClient" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <input type="text" v-model="form.name" placeholder="Nombre" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                <input type="text" v-model="form.name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                 <p v-if="formErrors.name" class="text-red-500 text-xs mt-1">{{ formErrors.name[0] }}</p>
               </div>
               <div>
-                <input type="email" v-model="form.email" placeholder="Correo" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <label class="block text-sm font-medium text-gray-700">Correo</label>
+                <input type="email" v-model="form.email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                 <p v-if="formErrors.email" class="text-red-500 text-xs mt-1">{{ formErrors.email[0] }}</p>
               </div>
               <div>
-                <input type="text" v-model="form.ruc" placeholder="RUC" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <label class="block text-sm font-medium text-gray-700">RUC</label>
+                <input type="text" v-model="form.ruc" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                 <p v-if="formErrors.ruc" class="text-red-500 text-xs mt-1">{{ formErrors.ruc[0] }}</p>
               </div>
               <div>
-                <input type="text" v-model="form.razonSocial" placeholder="Razón Social" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <label class="block text-sm font-medium text-gray-700">Razón Social</label>
+                <input type="text" v-model="form.razonSocial" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                 <p v-if="formErrors.razonSocial" class="text-red-500 text-xs mt-1">{{ formErrors.razonSocial[0] }}</p>
               </div>
-              <input type="text" v-model="form.nombreComercial" placeholder="Nombre Comercial" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-              <input type="text" v-model="form.dirMatriz" placeholder="Dirección Matriz" class="w-full px-3 py-2 border border-gray-300 rounded-md">
               <div>
-                <input type="password" v-model="form.password" placeholder="Contraseña" :required="!isEditMode" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <label class="block text-sm font-medium text-gray-700">Nombre Comercial</label>
+                <input type="text" v-model="form.nombreComercial" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Dirección Matriz</label>
+                <input type="text" v-model="form.dirMatriz" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+                <input type="password" v-model="form.password" :required="!isEditMode" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Dejar en blanco para no cambiar">
                 <p v-if="formErrors.password" class="text-red-500 text-xs mt-1">{{ formErrors.password[0] }}</p>
               </div>
               <div>
-                  <select v-model="form.tarifa" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                  <label class="block text-sm font-medium text-gray-700">Tarifa</label>
+                  <select v-model="form.tarifa" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                       <option value="comprobante">Tarifa por Comprobante</option>
                       <option value="establecimiento">Tarifa por Establecimiento</option>
                   </select>
               </div>
               <div>
-                  <select v-model="form.ambiente" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                  <label class="block text-sm font-medium text-gray-700">Ambiente</label>
+                  <select v-model="form.ambiente" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                       <option value="1">Pruebas</option>
                       <option value="2">Producción</option>
                   </select>
@@ -45,16 +63,10 @@
                 <label for="obligadoContabilidad" class="ml-2 block text-sm text-gray-900">Obligado Contabilidad</label>
               </div>
             </div>
-            <div class="items-center px-4 py-3">
-              <button type="submit" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700">
-                Guardar Cliente
-              </button>
-            </div>
           </form>
-          <div class="items-center px-4 py-3">
-            <button @click="$emit('close')" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">
-              Cancelar
-            </button>
+          <div class="mt-6 flex justify-end space-x-4">
+            <BaseButton @click="$emit('close')" variant="secondary">Cancelar</BaseButton>
+            <BaseButton @click="saveClient" variant="primary">{{ isEditMode ? 'Guardar Cambios' : 'Crear Cliente' }}</BaseButton>
           </div>
         </div>
       </div>
@@ -64,9 +76,11 @@
 
 <script>
 import axios from 'axios';
+import BaseButton from './BaseButton.vue';
 
 export default {
   name: 'ClientModal',
+  components: { BaseButton },
   props: {
     client: {
       type: Object,
@@ -76,6 +90,10 @@ export default {
       type: String,
       required: true,
     },
+    isSidebarOpen: {
+      type: Boolean,
+      default: false,
+    }
   },
   data() {
     return {
@@ -102,12 +120,34 @@ export default {
       return this.isEditMode ? 'Editar Cliente' : 'Crear Cliente';
     },
   },
-  created() {
-    if (this.client) {
-      this.form = { ...this.client };
-    }
+  watch: {
+    client: {
+      handler(newVal) {
+        this.formErrors = {};
+        if (newVal) {
+          this.form = { ...this.form, ...newVal };
+        } else {
+          this.resetForm();
+        }
+      },
+      immediate: true,
+    },
   },
   methods: {
+    resetForm() {
+      this.form = {
+        name: '',
+        email: '',
+        password: '',
+        ruc: '',
+        razonSocial: '',
+        nombreComercial: '',
+        dirMatriz: '',
+        obligadoContabilidad: false,
+        tarifa: 'comprobante',
+        ambiente: '1',
+      };
+    },
     async saveClient() {
       this.formErrors = {};
       const method = this.isEditMode ? 'put' : 'post';
