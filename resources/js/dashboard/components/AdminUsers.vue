@@ -73,10 +73,6 @@ export default {
       type: String,
       required: true,
     },
-    isSidebarOpen: {
-      type: Boolean,
-      required: true,
-    },
   },
   data() {
     return {

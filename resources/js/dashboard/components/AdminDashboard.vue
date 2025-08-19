@@ -9,8 +9,8 @@
     @logout="$emit('logout')"
     @toggle-sidebar="isSidebarOpen = !isSidebarOpen"
   >
-    <AdminUsers v-if="currentView === 'users'" :token="token" :is-sidebar-open="isSidebarOpen" />
-    <AdminClients v-if="currentView === 'clients'" :token="token" :is-sidebar-open="isSidebarOpen" />
+    <AdminUsers v-if="currentView === 'users'" :token="token" />
+    <AdminClients v-if="currentView === 'clients'" :token="token" />
   </AppLayout>
 </template>
 
