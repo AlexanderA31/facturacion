@@ -224,6 +224,7 @@ class ComprobantesController extends Controller
                 'detalles' => $xmlObject->detalles->detalle,
                 'infoAdicional' => $xmlObject->infoAdicional ?? null,
                 'logo_path' => $comprobante->user->logo_path ?? null,
+                'user' => $comprobante->user, // Pasar el objeto de usuario
             ];
 
             // Generar y descargar el PDF

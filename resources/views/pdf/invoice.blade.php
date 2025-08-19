@@ -35,22 +35,8 @@
                 <p><span class="bold">Emisor:</span> {{ $infoTributaria->razonSocial }}</p>
                 <p><span class="bold">RUC:</span> {{ $infoTributaria->ruc }}</p>
                 <p><span class="bold">Matriz:</span> {{ $infoTributaria->dirMatriz }}</p>
-                @php
-                    $email = '';
-                    $telefono = '';
-                    if (isset($infoAdicional) && $infoAdicional->campoAdicional) {
-                        foreach ($infoAdicional->campoAdicional as $campo) {
-                            if ((string)$campo['nombre'] === 'email') {
-                                $email = (string)$campo;
-                            }
-                            if ((string)$campo['nombre'] === 'telefono') {
-                                $telefono = (string)$campo;
-                            }
-                        }
-                    }
-                @endphp
-                <p><span class="bold">Correo:</span> {{ $email }}</p>
-                <p><span class="bold">Teléfono:</span> {{ $telefono }}</p>
+                <p><span class="bold">Correo:</span> {{ $user->email }}</p>
+                {{-- No hay campo de telefono en la tabla de usuarios --}}
                 <p><span class="bold">Obligado a llevar contabilidad:</span> {{ $infoFactura->obligadoContabilidad }}</p>
                 @if(isset($infoTributaria->regimenMicroempresas))
                 <p><span class="bold">CONTRIBUYENTE RÉGIMEN RIMPE</span></p>
@@ -68,21 +54,26 @@
             </div>
         </div>
 
-        <div class="client-info-container">
-             @php
-                $clientEmail = '';
-                $clientTelefono = '';
-                if (isset($infoAdicional) && $infoAdicional->campoAdicional) {
-                    foreach ($infoAdicional->campoAdicional as $campo) {
-                        if ((string)$campo['nombre'] === 'Email') { // Case-sensitive
-                            $clientEmail = (string)$campo;
-                        }
-                         if ((string)$campo['nombre'] === 'Telefono') {
-                            $clientTelefono = (string)$campo;
-                        }
+        @php
+            $clientEmail = '';
+            $clientTelefono = '';
+            $infoAdicionalCampos = [];
+            if (isset($infoAdicional) && $infoAdicional->campoAdicional) {
+                foreach ($infoAdicional->campoAdicional as $campo) {
+                    $nombre = strtolower((string)$campo['nombre']);
+                    $valor = (string)$campo;
+                    if ($nombre === 'email' || $nombre === 'correo') {
+                        $clientEmail = $valor;
+                    } elseif ($nombre === 'telefono' || $nombre === 'teléfono') {
+                        $clientTelefono = $valor;
+                    } else {
+                        $infoAdicionalCampos[] = ['nombre' => (string)$campo['nombre'], 'valor' => $valor];
                     }
                 }
-            @endphp
+            }
+        @endphp
+
+        <div class="client-info-container">
             <p><span class="bold">Razón Social:</span> {{ $infoFactura->razonSocialComprador }}</p>
             <p><span class="bold">RUC/CI:</span> {{ $infoFactura->identificacionComprador }}</p>
             <p><span class="bold">Dirección:</span> {{ $infoFactura->direccionComprador ?? 'N/A' }}</p>
@@ -121,9 +112,9 @@
         <div class="totals-container">
             <div class="additional-info-container">
                 <p class="bold">Información Adicional</p>
-                @if(isset($infoAdicional) && $infoAdicional->campoAdicional)
-                    @foreach($infoAdicional->campoAdicional as $campo)
-                        <p><span class="bold">{{ (string)$campo['nombre'] }}:</span> {{ (string)$campo }}</p>
+                @if(count($infoAdicionalCampos) > 0)
+                    @foreach($infoAdicionalCampos as $campo)
+                        <p><span class="bold">{{ $campo['nombre'] }}:</span> {{ $campo['valor'] }}</p>
                     @endforeach
                 @else
                     <p>No hay información adicional.</p>
