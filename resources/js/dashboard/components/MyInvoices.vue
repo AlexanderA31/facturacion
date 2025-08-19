@@ -139,10 +139,14 @@ export default {
         this.invoices = response.data.data.data.map(invoice => {
           let payload = {};
           try {
-            // The payload is already an object from the backend, no need to parse
-            payload = invoice.payload || {};
+            if (typeof invoice.payload === 'string') {
+                payload = JSON.parse(invoice.payload);
+            } else {
+                payload = invoice.payload || {};
+            }
           } catch (e) {
-            console.error('Error processing invoice payload:', e);
+            console.error('Error parsing invoice payload:', e);
+            payload = {}; // Ensure payload is an object on error
           }
 
           return {
