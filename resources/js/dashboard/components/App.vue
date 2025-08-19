@@ -5,8 +5,13 @@
       <Register v-else @register-success="currentAuthView = 'login'" @show-login="currentAuthView = 'login'" />
     </div>
     <div v-else>
-      <AdminDashboard v-if="userRole === 'admin'" :token="token" @logout="handleLogout" />
-      <Dashboard v-else :token="token" @logout="handleLogout" />
+      <div v-if="isLoading" class="flex items-center justify-center min-h-screen">
+        <p class="text-xl">Loading...</p> <!-- Or a spinner component -->
+      </div>
+      <div v-else>
+        <AdminDashboard v-if="userRole === 'admin'" :token="token" @logout="handleLogout" />
+        <Dashboard v-else :token="token" @logout="handleLogout" />
+      </div>
     </div>
   </div>
 </template>
@@ -30,16 +35,20 @@ export default {
     return {
       token: localStorage.getItem('jwt_token') || null,
       userRole: null,
+      isLoading: true,
       currentAuthView: 'login',
     };
   },
   created() {
     if (this.token) {
       this.fetchUserProfile();
+    } else {
+      this.isLoading = false;
     }
   },
   methods: {
     async handleLoginSuccess(token) {
+      this.isLoading = true;
       localStorage.setItem('jwt_token', token);
       this.token = token;
       await this.fetchUserProfile();
@@ -50,7 +59,6 @@ export default {
           headers: { Authorization: `Bearer ${this.token}` },
         });
         const user = response.data.data;
-        // The 'me' endpoint returns roles as an array of objects
         if (user.roles && user.roles.some(role => role.name === 'admin')) {
           this.userRole = 'admin';
         } else {
@@ -58,8 +66,9 @@ export default {
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
-        // Handle token expiration or other errors by logging out
         this.handleLogout();
+      } finally {
+        this.isLoading = false;
       }
     },
     async handleLogout() {
