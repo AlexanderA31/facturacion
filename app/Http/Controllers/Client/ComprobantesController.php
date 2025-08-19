@@ -240,7 +240,9 @@ class ComprobantesController extends Controller
 
             // Generar y descargar el PDF
             $pdf = PDF::loadView('pdf.invoice', $data);
-            return $pdf->download($clave_acceso . '.pdf');
+            $facturaNumero = $xmlObject->infoTributaria->estab . '-' . $xmlObject->infoTributaria->ptoEmi . '-' . $xmlObject->infoTributaria->secuencial;
+            $fileName = 'FAC-' . $facturaNumero . '.pdf';
+            return $pdf->download($fileName);
 
         } catch (AuthorizationException $e) {
             return $this->sendError('Acceso denegado', $e->getMessage(), 403);
