@@ -205,7 +205,17 @@ export default {
         const blob = new Blob([response.data], { type: 'application/pdf' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `${claveAcceso}.pdf`;
+
+        // Get filename from Content-Disposition header
+        const contentDisposition = response.headers['content-disposition'];
+        let fileName = `${claveAcceso}.pdf`; // Default filename
+        if (contentDisposition) {
+            const fileNameMatch = contentDisposition.match(/filename="(.+)"/);
+            if (fileNameMatch && fileNameMatch.length === 2)
+                fileName = fileNameMatch[1];
+        }
+        link.download = fileName;
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
