@@ -154,7 +154,8 @@ class PerfilClientController extends Controller implements HasMiddleware
 
             $path = $request->file('logo')->store('logos', 'public');
 
-            $user->update(['logo_path' => $path]);
+            $user->logo_path = $path;
+            $user->save();
 
             return $this->sendResponse('Logo actualizado exitosamente', [
                 'logo_path' => $path
