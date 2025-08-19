@@ -133,6 +133,7 @@ class AdminClientsController extends Controller implements HasMiddleware
                 'dirMatriz' => 'sometimes|string',
                 'contribuyenteEspecial' => 'sometimes|string|nullable',
                 'obligadoContabilidad' => 'sometimes|boolean',
+                'active_account' => 'sometimes|boolean',
             ]);
 
             if ($validator->fails()) {
