@@ -67,7 +67,7 @@
                         </div>
                     </div>
                     <div>
-                        <input type="file" @change="handleFileChange" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"/>
+                        <input type="file" ref="logoInput" @change="handleFileChange" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"/>
                         <p class="mt-1 text-sm text-gray-500">PNG, JPG, GIF hasta 2MB.</p>
                     </div>
                 </div>
@@ -199,7 +199,8 @@ export default {
         });
         this.form.logo_path = response.data.data.logo_path;
         this.logoPreview = `/storage/${response.data.data.logo_path}`;
-        this.logoFile = null; // Reset file input
+        this.logoFile = null;
+        this.$refs.logoInput.value = ''; // Reset file input element
         this.$emitter.emit('show-alert', { type: 'success', message: 'Logo actualizado exitosamente.' });
       } catch (error) {
         console.error('Error al subir el logo:', error);
