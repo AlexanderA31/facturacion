@@ -60,7 +60,7 @@ export default {
     },
     async uploadSignature() {
       if (!this.file) {
-        alert('Please select a signature file.');
+        this.$emitter.emit('show-alert', { type: 'error', message: 'Por favor seleccione un archivo.' });
         return;
       }
 
