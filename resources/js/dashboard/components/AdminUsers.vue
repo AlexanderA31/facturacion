@@ -75,9 +75,10 @@ export default {
         const response = await axios.get(`/api/admin/users?page=${page}`, {
           headers: { Authorization: `Bearer ${this.token}` },
         });
-        this.users = response.data.data;
-        this.pagination.currentPage = response.data.meta.current_page;
-        this.pagination.totalPages = response.data.meta.last_page;
+        const paginatedData = response.data.data;
+        this.users = paginatedData.data;
+        this.pagination.currentPage = paginatedData.current_page;
+        this.pagination.totalPages = paginatedData.last_page;
         this.showUserModal = false;
         this.selectedUser = null;
       } catch (error) {

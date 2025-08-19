@@ -88,9 +88,10 @@ export default {
         const response = await axios.get(`/api/admin/clients?page=${page}`, {
           headers: { Authorization: `Bearer ${this.token}` },
         });
-        this.clients = response.data.data;
-        this.pagination.currentPage = response.data.meta.current_page;
-        this.pagination.totalPages = response.data.meta.last_page;
+        const paginatedData = response.data.data;
+        this.clients = paginatedData.data;
+        this.pagination.currentPage = paginatedData.current_page;
+        this.pagination.totalPages = paginatedData.last_page;
       } catch (error) {
         console.error('Error fetching clients:', error);
       }
