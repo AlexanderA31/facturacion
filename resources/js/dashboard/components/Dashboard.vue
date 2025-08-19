@@ -2,10 +2,12 @@
   <AppLayout
     :navigation="navigation"
     :current-view="currentDashboardView"
+    :is-sidebar-open="isSidebarOpen"
     header-title="Facturación de Clientes"
     sidebar-title="Cliente"
     @navigate="currentDashboardView = $event"
     @logout="handleLogout"
+    @toggle-sidebar="isSidebarOpen = !isSidebarOpen"
   >
     <BaseAlert />
     <!-- Billing Section -->
@@ -178,6 +180,7 @@ export default {
   },
   data() {
     return {
+      isSidebarOpen: false,
       currentDashboardView: 'billing',
       tableData: [],
       tableHeaders: [
@@ -216,10 +219,6 @@ export default {
             return [];
         }
         return this.puntosEmision.filter(p => p.establecimiento_id == this.selectedEstablecimientoId);
-    },
-    isSidebarOpen() {
-        // This is a dummy computed property to avoid breaking CorrectiveBilling
-        return false;
     },
     pendingRows() {
         return this.tableData.filter(row => row.Estado === 'Pendiente' || row.Estado === 'Procesando');
