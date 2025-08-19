@@ -2,15 +2,21 @@
   <div>
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-bold">Gestionar Usuarios Clientes</h2>
-      <BaseButton @click="showClientModal = true">
-        <template #icon>
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        </template>
-        Crear Cliente
-      </BaseButton>
+      <div class="flex space-x-2">
+        <BaseButton @click="fetchClients(1)" title="Refrescar">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9a9 9 0 0114.65-4.65l-2.12 2.12a5 5 0 00-9.4 3.53"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 15a9 9 0 01-14.65 4.65l2.12-2.12a5 5 0 009.4-3.53"></path></svg>
+        </BaseButton>
+        <BaseButton @click="showClientModal = true">
+            <template #icon>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </template>
+            Crear Cliente
+        </BaseButton>
+      </div>
     </div>
 
-    <DataTable :headers="headers" :data="clients">
+    <TableSkeleton v-if="isLoading" />
+    <DataTable v-else :headers="headers" :data="clients">
       <template #cell(actions)="{ row }">
         <div class="flex items-center space-x-2">
             <button @click="editClient(row)" title="Editar" class="p-1 text-yellow-600 hover:text-yellow-800 transition-colors">
@@ -58,6 +64,7 @@ import BaseButton from './BaseButton.vue';
 import ClientModal from './ClientModal.vue';
 import SignatureUploadModal from './SignatureUploadModal.vue';
 import Pagination from './Pagination.vue';
+import TableSkeleton from './TableSkeleton.vue';
 
 export default {
   name: 'AdminClients',
@@ -67,6 +74,7 @@ export default {
     ClientModal,
     SignatureUploadModal,
     Pagination,
+    TableSkeleton,
   },
   props: {
     token: {
@@ -86,6 +94,7 @@ export default {
       showClientModal: false,
       showSignatureModal: false,
       selectedClient: null,
+      isLoading: false,
       pagination: {
         currentPage: 1,
         totalPages: 1,
@@ -102,6 +111,7 @@ export default {
   },
   methods: {
     async fetchClients(page) {
+      this.isLoading = true;
       try {
         const response = await axios.get(`/api/admin/clients?page=${page}`, {
           headers: { Authorization: `Bearer ${this.token}` },
@@ -112,6 +122,8 @@ export default {
         this.pagination.totalPages = paginatedData.last_page;
       } catch (error) {
         console.error('Error fetching clients:', error);
+      } finally {
+        this.isLoading = false;
       }
     },
     editClient(client) {
