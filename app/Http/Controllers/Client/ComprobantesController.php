@@ -11,11 +11,13 @@ use App\Models\Comprobante;
 use App\Models\PuntoEmision;
 use App\Http\Requests\FacturaRequest;
 use App\Jobs\GenerarComprobanteJob;
+use App\Services\ClaveAccesoBarcode;
 use App\Services\SriComprobanteService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use PDF;
 
 
@@ -206,6 +208,14 @@ class ComprobantesController extends Controller
             // Autorizar la acción
             Gate::authorize('view', $comprobante);
 
+            // Generar y guardar el código de barras si no existe
+            $barcodePath = "barcodes/{$clave_acceso}.png";
+            if (!Storage::disk('public')->exists($barcodePath)) {
+                $pngBase64 = ClaveAccesoBarcode::makeBase64($clave_acceso);
+                $pngBinary = base64_decode($pngBase64);
+                Storage::disk('public')->put($barcodePath, $pngBinary);
+            }
+
             // Obtener el ambiente del comprobante
             $ambiente = strval($comprobante->ambiente);
 
@@ -224,7 +234,8 @@ class ComprobantesController extends Controller
                 'detalles' => $xmlObject->detalles->detalle,
                 'infoAdicional' => $xmlObject->infoAdicional ?? null,
                 'logo_path' => $comprobante->user->logo_path ?? null,
-                'user' => $comprobante->user, // Pasar el objeto de usuario
+                'user' => $comprobante->user,
+                'barcode_url' => Storage::url($barcodePath),
             ];
 
             // Generar y descargar el PDF
