@@ -61,12 +61,6 @@ export default {
         });
         const user = response.data.data;
 
-        if (!user.active_account) {
-            this.$emitter.emit('show-alert', { type: 'error', message: 'Su cuenta está desactivada. Por favor, contacte a un administrador.' });
-            this.handleLogout();
-            return;
-        }
-
         this.userId = user.id;
         if (user.roles && user.roles.some(role => role.name === 'admin')) {
           this.userRole = 'admin';

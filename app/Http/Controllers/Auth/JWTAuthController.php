@@ -62,6 +62,11 @@ class JWTAuthController extends Controller
             // Get the authenticated user.
             $user = auth()->user();
 
+            // Verify if the account is active
+            if (!$user->active_account) {
+                return $this->sendError('Usuario desactivado', null, 403);
+            }
+
             // Genera un nuevo token con claims personalizados
             $token = JWTAuth::claims(['role' => $user->role])->fromUser($user);
 
