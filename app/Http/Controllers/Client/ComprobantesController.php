@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use PDF;
 
 
 class ComprobantesController extends Controller
@@ -185,6 +186,54 @@ class ComprobantesController extends Controller
             return $this->sendError('Error de consulta en el SRI', $e->getMessage(), 502);
         } catch (\Exception $e) {
             return $this->sendError('Error inesperado al consultar el XML', null, 500);
+        }
+    }
+
+
+    public function getPdf(string $clave_acceso)
+    {
+        try {
+            $this->validarClaveAcceso($clave_acceso);
+
+            // Buscar el comprobante por clave de acceso
+            $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
+
+            // Validar que el comprobante haya sido autorizado
+            if (trim(strtolower($comprobante->estado)) !== EstadosComprobanteEnum::AUTORIZADO->value) {
+                return $this->sendError('Comprobante no autorizado', 'No es posible generar el PDF porque el comprobante no ha sido autorizado por el SRI', 409);
+            }
+
+            // Autorizar la acción
+            Gate::authorize('view', $comprobante);
+
+            // Obtener el ambiente del comprobante
+            $ambiente = strval($comprobante->ambiente);
+
+            // Consultar el XML desde el SRI
+            $xmlString = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
+
+            // Parsear el XML
+            $xmlObject = simplexml_load_string($xmlString);
+
+            // Extraer los datos para la vista
+            $data = [
+                'infoTributaria' => $xmlObject->infoTributaria,
+                'infoFactura' => $xmlObject->infoFactura,
+                'detalles' => $xmlObject->detalles->detalle,
+            ];
+
+            // Generar y descargar el PDF
+            $pdf = PDF::loadView('pdf.invoice', $data);
+            return $pdf->download($clave_acceso . '.pdf');
+
+        } catch (AuthorizationException $e) {
+            return $this->sendError('Acceso denegado', $e->getMessage(), 403);
+        } catch (ModelNotFoundException $e) {
+            return $this->sendError('Comprobante no encontrado', 'No se encontró el comprobante con la clave de acceso proporcionada.', 404);
+        } catch (SriException $e) {
+            return $this->sendError('Error de consulta en el SRI', $e->getMessage(), 502);
+        } catch (\Exception $e) {
+            return $this->sendError('Error inesperado al generar el PDF', $e->getMessage(), 500);
         }
     }
 
