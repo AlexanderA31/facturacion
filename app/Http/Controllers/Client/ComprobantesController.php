@@ -212,21 +212,17 @@ class ComprobantesController extends Controller
             // Consultar el XML desde el SRI
             $xmlString = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
 
-            // Parsear el XML de autorización
-            $autorizacionXml = simplexml_load_string($xmlString);
-
-            // Extraer el comprobante (factura) del CDATA
-            $facturaXmlString = (string) $autorizacionXml->comprobante;
-            $facturaXml = simplexml_load_string($facturaXmlString);
+            // Parsear el XML
+            $xmlObject = simplexml_load_string($xmlString);
 
             // Extraer los datos para la vista
             $data = [
-                'numeroAutorizacion' => (string) $autorizacionXml->numeroAutorizacion,
-                'fechaAutorizacion' => (string) $autorizacionXml->fechaAutorizacion,
-                'infoTributaria' => $facturaXml->infoTributaria,
-                'infoFactura' => $facturaXml->infoFactura,
-                'detalles' => $facturaXml->detalles->detalle,
-                'infoAdicional' => $facturaXml->infoAdicional ?? null,
+                'numeroAutorizacion' => $comprobante->clave_acceso,
+                'fechaAutorizacion' => $comprobante->fecha_autorizacion,
+                'infoTributaria' => $xmlObject->infoTributaria,
+                'infoFactura' => $xmlObject->infoFactura,
+                'detalles' => $xmlObject->detalles->detalle,
+                'infoAdicional' => $xmlObject->infoAdicional ?? null,
                 'logo_path' => $comprobante->user->logo_path ?? null,
             ];
 
