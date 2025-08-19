@@ -89,10 +89,7 @@ export default {
     filteredInvoices() {
         switch (this.currentTab) {
             case 'authorized':
-                return this.invoices.filter(i =>
-                    i.estado === 'autorizado' ||
-                    (i.estado === 'rechazado' && i.error_message && i.error_message.toUpperCase().includes('SECUENCIAL REGISTRADO'))
-                );
+                return this.invoices.filter(i => i.estado === 'autorizado');
             case 'pending':
                 return this.invoices.filter(i => ['pendiente', 'procesando', 'firmado'].includes(i.estado));
             case 'unauthorized':
@@ -190,8 +187,12 @@ export default {
         document.body.removeChild(link);
       } catch (error) {
         console.error('Error downloading XML:', error);
-        const message = error.response?.data?.message || 'Error desconocido';
-        this.$emitter.emit('show-alert', { type: 'error', message: `No se pudo descargar el XML: ${message}` });
+        if (error.response?.status === 409 && error.response?.data?.message?.includes('Comprobante no autorizado')) {
+            this.$emitter.emit('show-alert', { type: 'error', message: 'Descarga no disponible: Comprobante duplicado.' });
+        } else {
+            const message = error.response?.data?.message || 'Error desconocido';
+            this.$emitter.emit('show-alert', { type: 'error', message: `No se pudo descargar el XML: ${message}` });
+        }
       }
     },
     async downloadPdf(claveAcceso) {

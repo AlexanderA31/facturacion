@@ -159,13 +159,8 @@ class ComprobantesController extends Controller
             // Buscar el comprobante por clave de acceso
             $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
 
-            // Validar que el comprobante haya sido autorizado o sea un duplicado
-            $isAutorizado = $comprobante->estado === EstadosComprobanteEnum::AUTORIZADO;
-            $isDuplicado = $comprobante->estado === EstadosComprobanteEnum::RECHAZADO &&
-                $comprobante->error_message &&
-                stripos($comprobante->error_message, 'SECUENCIAL REGISTRADO') !== false;
-
-            if (!$isAutorizado && !$isDuplicado) {
+            // Validar que el comprobante haya sido autorizado
+            if (trim(strtolower($comprobante->estado)) !== EstadosComprobanteEnum::AUTORIZADO->value) {
                 return $this->sendError('Comprobante no autorizado', 'No es posible obtener el XML porque el comprobante no ha sido autorizado por el SRI', 409);
             }
 
