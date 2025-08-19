@@ -11,31 +11,57 @@
           <form @submit.prevent="saveUser" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label for="name" class="block text-sm font-medium text-gray-700">Nombre</label>
-                <input type="text" v-model="form.name" id="name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                <input type="text" v-model="form.name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                 <p v-if="formErrors.name" class="text-red-500 text-xs mt-1">{{ formErrors.name[0] }}</p>
               </div>
               <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Correo</label>
-                <input type="email" v-model="form.email" id="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                <label class="block text-sm font-medium text-gray-700">Correo</label>
+                <input type="email" v-model="form.email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                 <p v-if="formErrors.email" class="text-red-500 text-xs mt-1">{{ formErrors.email[0] }}</p>
               </div>
               <div>
-                <label for="ruc" class="block text-sm font-medium text-gray-700">RUC</label>
-                <input type="text" v-model="form.ruc" id="ruc" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                <label class="block text-sm font-medium text-gray-700">RUC</label>
+                <input type="text" v-model="form.ruc" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                 <p v-if="formErrors.ruc" class="text-red-500 text-xs mt-1">{{ formErrors.ruc[0] }}</p>
               </div>
               <div>
-                <label for="razonSocial" class="block text-sm font-medium text-gray-700">Razón Social</label>
-                <input type="text" v-model="form.razonSocial" id="razonSocial" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                <label class="block text-sm font-medium text-gray-700">Razón Social</label>
+                <input type="text" v-model="form.razonSocial" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                 <p v-if="formErrors.razonSocial" class="text-red-500 text-xs mt-1">{{ formErrors.razonSocial[0] }}</p>
               </div>
               <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                <input type="password" v-model="form.password" id="password" :required="!isEditMode" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Dejar en blanco para no cambiar">
+                <label class="block text-sm font-medium text-gray-700">Nombre Comercial</label>
+                <input type="text" v-model="form.nombreComercial" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Dirección Matriz</label>
+                <input type="text" v-model="form.dirMatriz" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+                <input type="password" v-model="form.password" :required="!isEditMode" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Dejar en blanco para no cambiar">
                 <p v-if="formErrors.password" class="text-red-500 text-xs mt-1">{{ formErrors.password[0] }}</p>
               </div>
-            </div>
+              <div>
+                  <label class="block text-sm font-medium text-gray-700">Tarifa</label>
+                  <select v-model="form.tarifa" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                      <option value="comprobante">Tarifa por Comprobante</option>
+                      <option value="establecimiento">Tarifa por Establecimiento</option>
+                  </select>
+              </div>
+              <div>
+                  <label class="block text-sm font-medium text-gray-700">Ambiente</label>
+                  <select v-model="form.ambiente" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                      <option value="1">Pruebas</option>
+                      <option value="2">Producción</option>
+                  </select>
+              </div>
+              <div class="flex items-center">
+                <input type="checkbox" v-model="form.obligadoContabilidad" id="obligadoContabilidadUser" class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                <label for="obligadoContabilidadUser" class="ml-2 block text-sm text-gray-900">Obligado Contabilidad</label>
+              </div>
+              </div>
           </form>
           <div class="mt-6 flex justify-end space-x-4">
             <BaseButton @click="$emit('close')" variant="secondary">Cancelar</BaseButton>
