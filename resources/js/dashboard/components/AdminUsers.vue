@@ -3,8 +3,11 @@
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-bold">Gestionar Usuarios Administradores</h2>
       <div class="flex space-x-2">
-        <BaseButton @click="fetchUsers(1)" title="Refrescar">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9a9 9 0 0114.65-4.65l-2.12 2.12a5 5 0 00-9.4 3.53"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 15a9 9 0 01-14.65 4.65l2.12-2.12a5 5 0 009.4-3.53"></path></svg>
+        <BaseButton @click="fetchUsers(1)" variant="secondary">
+            <template #icon>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9a9 9 0 0114.65-4.65l-2.12 2.12a5 5 0 00-9.4 3.53"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 15a9 9 0 01-14.65 4.65l2.12-2.12a5 5 0 009.4-3.53"></path></svg>
+            </template>
+            Refrescar
         </BaseButton>
         <BaseButton @click="showUserModal = true">
             <template #icon>
