@@ -28,6 +28,7 @@ class UserResource extends JsonResource
             'contribuyenteEspecial' => $this->contribuyenteEspecial,
             'obligadoContabilidad' => $this->obligadoContabilidad,
             'enviar_factura_por_correo' => $this->enviar_factura_por_correo,
+            'logo_path' => $this->logo_path,
             'signature_expires_at' => $this->signature_expires_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
