@@ -191,6 +191,7 @@ class AdminClientsController extends Controller implements HasMiddleware
             $result = $this->certificadoFirmaService->handleCertificate(
                 $certificateFile,
                 $certificateKey,
+                $client->ruc,
                 $existingCertificatePath
             );
 
