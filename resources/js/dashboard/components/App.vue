@@ -6,11 +6,11 @@
     </div>
     <div v-else>
       <div v-if="isLoading" class="flex items-center justify-center min-h-screen">
-        <p class="text-xl">Loading...</p> <!-- Or a spinner component -->
+        <p class="text-xl">Cargando...</p>
       </div>
       <div v-else>
-        <AdminDashboard v-if="userRole === 'admin'" :token="token" @logout="handleLogout" />
-        <Dashboard v-else :token="token" @logout="handleLogout" />
+        <AdminDashboard v-if="userRole === 'admin'" :key="userId" :token="token" @logout="handleLogout" />
+        <Dashboard v-else :key="userId" :token="token" @logout="handleLogout" />
       </div>
     </div>
   </div>
@@ -35,6 +35,7 @@ export default {
     return {
       token: localStorage.getItem('jwt_token') || null,
       userRole: null,
+      userId: null,
       isLoading: true,
       currentAuthView: 'login',
     };
@@ -59,6 +60,7 @@ export default {
           headers: { Authorization: `Bearer ${this.token}` },
         });
         const user = response.data.data;
+        this.userId = user.id;
         if (user.roles && user.roles.some(role => role.name === 'admin')) {
           this.userRole = 'admin';
         } else {
@@ -85,6 +87,7 @@ export default {
         localStorage.removeItem('correctiveBillingData');
         this.token = null;
         this.userRole = null;
+        this.userId = null;
       }
     },
   },
