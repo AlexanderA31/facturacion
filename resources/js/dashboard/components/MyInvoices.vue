@@ -91,7 +91,7 @@ export default {
             case 'authorized':
                 return this.invoices.filter(i =>
                     i.estado === 'autorizado' ||
-                    (i.estado === 'rechazado' && i.error_message === 'ERROR SECUENCIAL REGISTRADO')
+                    (i.estado === 'rechazado' && i.error_message && i.error_message.toUpperCase().includes('SECUENCIAL REGISTRADO'))
                 );
             case 'pending':
                 return this.invoices.filter(i => ['pendiente', 'procesando', 'firmado'].includes(i.estado));

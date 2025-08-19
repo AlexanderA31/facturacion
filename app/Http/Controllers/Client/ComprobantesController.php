@@ -161,7 +161,9 @@ class ComprobantesController extends Controller
 
             // Validar que el comprobante haya sido autorizado o sea un duplicado
             $isAutorizado = $comprobante->estado === EstadosComprobanteEnum::AUTORIZADO;
-            $isDuplicado = $comprobante->estado === EstadosComprobanteEnum::RECHAZADO && $comprobante->error_message === 'ERROR SECUENCIAL REGISTRADO';
+            $isDuplicado = $comprobante->estado === EstadosComprobanteEnum::RECHAZADO &&
+                $comprobante->error_message &&
+                stripos($comprobante->error_message, 'SECUENCIAL REGISTRADO') !== false;
 
             if (!$isAutorizado && !$isDuplicado) {
                 return $this->sendError('Comprobante no autorizado', 'No es posible obtener el XML porque el comprobante no ha sido autorizado por el SRI', 409);
