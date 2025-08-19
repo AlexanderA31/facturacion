@@ -80,6 +80,11 @@ export default {
   mounted() {
     this.fetchUsers(this.pagination.currentPage);
   },
+  unmounted() {
+    this.users = [];
+    this.pagination.currentPage = 1;
+    this.pagination.totalPages = 1;
+  },
   methods: {
     async fetchUsers(page) {
       try {

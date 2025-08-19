@@ -95,6 +95,11 @@ export default {
   mounted() {
     this.fetchClients(1);
   },
+  unmounted() {
+    this.clients = [];
+    this.pagination.currentPage = 1;
+    this.pagination.totalPages = 1;
+  },
   methods: {
     async fetchClients(page) {
       try {
