@@ -22,19 +22,27 @@
 
     <TableSkeleton v-if="isLoading" />
     <DataTable v-else :headers="headers" :data="clients">
-      <template #cell(actions)="{ row }">
-        <div class="flex items-center space-x-2">
-            <button @click="editClient(row)" title="Editar" class="p-1 text-yellow-600 hover:text-yellow-800 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            </button>
-            <button @click="deleteClient(row)" title="Eliminar" class="p-1 text-red-600 hover:text-red-800 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            </button>
-            <button @click="openSignatureModal(row)" title="Cargar Firma" class="p-1 text-green-600 hover:text-green-800 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-            </button>
-        </div>
-      </template>
+        <template #cell(status)="{ row }">
+            <span :class="row.active_account ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                {{ row.active_account ? 'Activo' : 'Inactivo' }}
+            </span>
+        </template>
+        <template #cell(actions)="{ row }">
+            <div class="flex items-center space-x-2">
+                <button @click="toggleClientStatus(row)" :title="row.active_account ? 'Desactivar' : 'Activar'" class="p-1 transition-colors" :class="row.active_account ? 'text-gray-500 hover:text-red-600' : 'text-gray-500 hover:text-green-600'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                </button>
+                <button @click="editClient(row)" title="Editar" class="p-1 text-yellow-600 hover:text-yellow-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </button>
+                <button @click="deleteClient(row)" title="Eliminar" class="p-1 text-red-600 hover:text-red-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+                <button @click="openSignatureModal(row)" title="Cargar Firma" class="p-1 text-green-600 hover:text-green-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                </button>
+            </div>
+        </template>
     </DataTable>
 
     <Pagination
@@ -100,6 +108,7 @@ export default {
         { text: 'Nombre', value: 'name' },
         { text: 'Correo', value: 'email' },
         { text: 'RUC', value: 'ruc' },
+        { text: 'Estado', value: 'status' },
         { text: 'Acciones', value: 'actions' },
       ],
       showClientModal: false,
@@ -140,6 +149,23 @@ export default {
     editClient(client) {
       this.selectedClient = { ...client };
       this.showClientModal = true;
+    },
+    async toggleClientStatus(client) {
+        const newStatus = !client.active_account;
+        const action = newStatus ? 'activar' : 'desactivar';
+        if (confirm(`¿Está seguro de que desea ${action} a ${client.name}?`)) {
+            try {
+                await axios.put(`/api/admin/clients/${client.id}`,
+                    { active_account: newStatus },
+                    { headers: { Authorization: `Bearer ${this.token}` } }
+                );
+                this.$emitter.emit('show-alert', { type: 'success', message: `Cliente ${action} con éxito.` });
+                this.fetchClients(this.pagination.currentPage);
+            } catch (error) {
+                console.error(`Error toggling client status:`, error);
+                this.$emitter.emit('show-alert', { type: 'error', message: `No se pudo ${action} el cliente.` });
+            }
+        }
     },
     async deleteClient(client) {
       if (confirm(`¿Está seguro de que desea eliminar a ${client.name}?`)) {

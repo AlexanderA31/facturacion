@@ -22,8 +22,16 @@
 
     <TableSkeleton v-if="isLoading" />
     <DataTable v-else :headers="headers" :data="users">
+      <template #cell(status)="{ row }">
+        <span :class="row.active_account ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+            {{ row.active_account ? 'Activo' : 'Inactivo' }}
+        </span>
+      </template>
       <template #cell(actions)="{ row }">
         <div class="flex items-center space-x-2">
+          <button @click="toggleUserStatus(row)" :title="row.active_account ? 'Desactivar' : 'Activar'" class="p-1 transition-colors" :class="row.active_account ? 'text-gray-500 hover:text-red-600' : 'text-gray-500 hover:text-green-600'">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+          </button>
           <button @click="editUser(row)" title="Editar" class="p-1 text-yellow-600 hover:text-yellow-800 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
           </button>
@@ -84,6 +92,7 @@ export default {
       headers: [
         { text: 'Nombre', value: 'name' },
         { text: 'Correo', value: 'email' },
+        { text: 'Estado', value: 'status' },
         { text: 'Acciones', value: 'actions' },
       ],
       showUserModal: false,
@@ -129,6 +138,23 @@ export default {
     editUser(user) {
       this.selectedUser = { ...user };
       this.showUserModal = true;
+    },
+    async toggleUserStatus(user) {
+        const newStatus = !user.active_account;
+        const action = newStatus ? 'activar' : 'desactivar';
+        if (confirm(`¿Está seguro de que desea ${action} a ${user.name}?`)) {
+            try {
+                await axios.put(`/api/admin/users/${user.id}`,
+                    { active_account: newStatus },
+                    { headers: { Authorization: `Bearer ${this.token}` } }
+                );
+                this.$emitter.emit('show-alert', { type: 'success', message: `Usuario ${action} con éxito.` });
+                this.fetchUsers(this.pagination.currentPage);
+            } catch (error) {
+                console.error(`Error toggling user status:`, error);
+                this.$emitter.emit('show-alert', { type: 'error', message: `No se pudo ${action} el usuario.` });
+            }
+        }
     },
     async deleteUser(user) {
       if (confirm(`¿Está seguro de que desea eliminar a ${user.name}?`)) {
