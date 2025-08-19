@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
-    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center p-4" :style="{ paddingLeft: isSidebarOpen ? '16rem' : '5rem' }" @click.self="$emit('close')">
-      <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+    <div class="fixed top-0 bottom-0 right-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center" :style="{ left: isSidebarOpen ? '16rem' : '5rem' }" @click.self="$emit('close')">
+      <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white" @click.stop>
         <div class="mt-3">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl leading-6 font-medium text-gray-900">Cargar Firma para {{ client.name }}</h3>
