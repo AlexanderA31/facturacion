@@ -78,7 +78,7 @@ Route::group(['middleware' => ['json.response']], function () {
         Route::get('/{clave_acceso}', [ComprobantesController::class, 'show']);
         Route::get('/{clave_acceso}/estado', [ComprobantesController::class, 'getEstado']);
         Route::get('/{clave_acceso}/xml', [ComprobantesController::class, 'getXml']);
-        Route::get('/{clave_acceso}/pdf', [ComprobantesController::class, 'getPdf']);
+        Route::get('/{clave_acceso}/pdf', [ComprobantesController::class, 'getPdf'])->name('comprobantes.pdf');
         // Route::get('/{clave_acceso}/anular', [ComprobantesController::class, 'show']);
 
         Route::post('/factura/{punto_emision}', [ComprobantesController::class, 'generateFactura']);
