@@ -11,7 +11,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Left Column: Client Details Form -->
-            <div>
+            <fieldset :disabled="isClientCreated">
                 <h4 class="text-lg font-medium text-gray-800 border-b pb-2 mb-4">Detalles del Cliente</h4>
                 <form @submit.prevent="saveClient" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -68,18 +68,21 @@
                     </div>
                     </div>
                 </form>
-            </div>
+            </fieldset>
 
-            <!-- Right Column: Signature Manager (only in edit mode) -->
-            <div v-if="isEditMode">
+            <!-- Right Column: Signature Manager -->
+            <div>
                 <h4 class="text-lg font-medium text-gray-800 border-b pb-2 mb-4">Firma Electrónica</h4>
-                <SignatureManager :client="client" :token="token" @signature-uploaded="$emit('client-saved')" />
+                <div v-if="!isEditMode" class="p-4 bg-gray-100 rounded-lg text-center text-gray-500">
+                    Guarde el cliente para poder cargar la firma.
+                </div>
+                <SignatureManager v-else :client="editableClient" :token="token" @signature-uploaded="$emit('client-saved')" />
             </div>
         </div>
 
         <div class="mt-6 flex justify-end space-x-4">
-          <BaseButton @click="$emit('close')" variant="secondary">Cancelar</BaseButton>
-          <BaseButton @click="saveClient" variant="primary">{{ isEditMode ? 'Guardar Cambios' : 'Crear Cliente' }}</BaseButton>
+          <BaseButton @click="$emit('close')" variant="secondary">Finalizar</BaseButton>
+          <BaseButton v-if="!isClientCreated" @click="saveClient" variant="primary">{{ isEditMode ? 'Guardar Cambios' : 'Crear Cliente' }}</BaseButton>
         </div>
       </div>
     </div>
@@ -110,6 +113,7 @@ export default {
   },
   data() {
     return {
+      editableClient: null,
       form: {
         name: '',
         email: '',
@@ -127,7 +131,11 @@ export default {
   },
   computed: {
     isEditMode() {
-      return !!this.client;
+      return !!this.editableClient;
+    },
+    isClientCreated() {
+        // True if we are editing an existing client OR if we just created one
+        return this.isEditMode && this.client;
     },
     formTitle() {
       return this.isEditMode ? 'Editar Cliente' : 'Crear Cliente';
@@ -138,8 +146,10 @@ export default {
       handler(newVal) {
         this.formErrors = {};
         if (newVal) {
+          this.editableClient = { ...newVal };
           this.form = { ...this.form, ...newVal };
         } else {
+          this.editableClient = null;
           this.resetForm();
         }
       },
@@ -163,8 +173,10 @@ export default {
     },
     async saveClient() {
       this.formErrors = {};
+      // When creating, we only save the client details first.
+      // The signature can only be uploaded after the client exists.
       const method = this.isEditMode ? 'put' : 'post';
-      const url = this.isEditMode ? `/api/admin/clients/${this.client.id}` : '/api/admin/clients';
+      const url = this.isEditMode ? `/api/admin/clients/${this.editableClient.id}` : '/api/admin/clients';
 
       const payload = { ...this.form };
       if (this.isEditMode && !payload.password) {
@@ -172,12 +184,20 @@ export default {
       }
 
       try {
-        await axios[method](url, payload, {
+        const response = await axios[method](url, payload, {
           headers: { Authorization: `Bearer ${this.token}` },
         });
-        this.$emitter.emit('show-alert', { type: 'success', message: 'Cliente guardado con éxito.' });
-        this.$emit('client-saved');
-        this.$emit('close');
+
+        if (this.isEditMode) {
+            this.$emitter.emit('show-alert', { type: 'success', message: 'Cliente actualizado con éxito.' });
+            this.$emit('client-saved');
+            this.$emit('close');
+        } else {
+            // This was a creation. Now we transition to edit mode within the modal.
+            this.$emitter.emit('show-alert', { type: 'success', message: 'Cliente creado. Ahora puede cargar la firma.' });
+            this.editableClient = response.data.data;
+            this.$emit('client-saved'); // Refresh list in the background
+        }
       } catch (error) {
         if (error.response && (error.response.status === 400 || error.response.status === 422) && error.response.data.errors) {
             this.formErrors = error.response.data.errors;
