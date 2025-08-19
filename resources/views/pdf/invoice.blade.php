@@ -51,6 +51,9 @@
                 <p><span class="bold">Emisión:</span> {{ $infoTributaria->tipoEmision == '1' ? 'NORMAL' : 'CONTINGENCIA' }}</p>
                 <p><span class="bold">Clave de Acceso:</span></p>
                 <p style="font-size: 9px; word-wrap: break-word;">{{ $infoTributaria->claveAcceso }}</p>
+                <div style="text-align: center; margin-top: 10px;">
+                    <img src="data:image/png;base64,{{ DNS1D::getBarcodePNG($infoTributaria->claveAcceso, 'C128', 2, 33, [1,1,1], true) }}" alt="barcode" />
+                </div>
             </div>
         </div>
 
