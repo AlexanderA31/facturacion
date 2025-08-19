@@ -145,7 +145,7 @@ export default {
         if (confirm(`¿Está seguro de que desea ${action} a ${user.name}?`)) {
             try {
                 await axios.put(`/api/admin/users/${user.id}`,
-                    { active_account: newStatus },
+                    { active_account: newStatus ? 1 : 0 },
                     { headers: { Authorization: `Bearer ${this.token}` } }
                 );
                 this.$emitter.emit('show-alert', { type: 'success', message: `Usuario ${action} con éxito.` });

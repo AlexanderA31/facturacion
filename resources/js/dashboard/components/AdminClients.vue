@@ -156,7 +156,7 @@ export default {
         if (confirm(`¿Está seguro de que desea ${action} a ${client.name}?`)) {
             try {
                 await axios.put(`/api/admin/clients/${client.id}`,
-                    { active_account: newStatus },
+                    { active_account: newStatus ? 1 : 0 },
                     { headers: { Authorization: `Bearer ${this.token}` } }
                 );
                 this.$emitter.emit('show-alert', { type: 'success', message: `Cliente ${action} con éxito.` });
