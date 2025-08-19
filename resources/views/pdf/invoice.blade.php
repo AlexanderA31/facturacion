@@ -119,6 +119,39 @@
                 @else
                     <p>No hay información adicional.</p>
                 @endif
+
+                @php
+                    $formasPago = [
+                        '01' => 'Sin utilización del sistema financiero',
+                        '15' => 'Compensación de deudas',
+                        '16' => 'Tarjeta de débito',
+                        '17' => 'Dinero electrónico',
+                        '18' => 'Tarjeta prepago',
+                        '19' => 'Tarjeta de crédito',
+                        '20' => 'Otros con utilización del sistema financiero',
+                        '21' => 'Endoso de títulos',
+                    ];
+                @endphp
+
+                @if(isset($infoFactura->pagos))
+                    <p class="bold" style="margin-top: 10px;">Formas de Pago</p>
+                    <table style="border: none;">
+                        <thead style="display: none;">
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($infoFactura->pagos->pago as $pago)
+                                <tr>
+                                    <td style="border: none;">{{ $formasPago[(string)$pago->formaPago] ?? (string)$pago->formaPago }}</td>
+                                    <td class="text-right" style="border: none;">{{ number_format((float)$pago->total, 2) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
             </div>
             <div class="totals-table-container">
                 <table class="totals-table">
