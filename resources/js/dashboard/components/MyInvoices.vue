@@ -99,6 +99,10 @@ export default {
 
         let finalHeaders = [...baseHeaders];
 
+        if (this.currentTab === 'authorized') {
+            finalHeaders.push({ text: 'Fecha de Autorización', value: 'fecha_autorizacion' });
+        }
+
         if (this.currentTab === 'unauthorized') {
             finalHeaders.push({ text: 'Mensaje de Error', value: 'error_message' });
         }
@@ -194,6 +198,7 @@ export default {
           return {
             ...invoice,
             fecha_emision: this.formatDateTime(invoice.fecha_emision),
+            fecha_autorizacion: this.formatDateTime(invoice.fecha_autorizacion),
             numero_factura: `${invoice.establecimiento}-${invoice.punto_emision}-${invoice.secuencial}`,
             cliente: payload.razonSocialComprador || 'N/A',
             valor: payload.importeTotal || 0,
