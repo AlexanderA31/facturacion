@@ -73,8 +73,7 @@
     <PdfPreviewModal
       :show="isPdfModalOpen"
       :pdf-url="selectedPdfUrl"
-      :token="token"
-      @close="isPdfModalOpen = false"
+      @close="closePdfModal"
     />
 </template>
 
@@ -225,9 +224,33 @@ export default {
     clearInterval(this.polling);
   },
   methods: {
-    openPdfPreview(claveAcceso) {
-        this.selectedPdfUrl = `/api/comprobantes/${claveAcceso}/pdf`;
-        this.isPdfModalOpen = true;
+    async openPdfPreview(claveAcceso) {
+        try {
+            const response = await axios.get(`/api/comprobantes/${claveAcceso}/pdf`, {
+                headers: { 'Authorization': `Bearer ${this.token}` },
+                responseType: 'blob',
+            });
+
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+
+            if (this.selectedPdfUrl) {
+                URL.revokeObjectURL(this.selectedPdfUrl);
+            }
+
+            this.selectedPdfUrl = URL.createObjectURL(blob);
+            this.isPdfModalOpen = true;
+
+        } catch (error) {
+            console.error('Error fetching PDF for preview:', error);
+            this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo cargar el PDF para la previsualización.' });
+        }
+    },
+    closePdfModal() {
+        if (this.selectedPdfUrl) {
+            URL.revokeObjectURL(this.selectedPdfUrl);
+        }
+        this.isPdfModalOpen = false;
+        this.selectedPdfUrl = '';
     },
     sortBy(key) {
       if (this.sortKey === key) {
