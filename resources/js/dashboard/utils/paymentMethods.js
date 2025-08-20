@@ -11,25 +11,41 @@ const paymentMethodMap = {
 };
 
 export const parsePaymentMethods = (paymentString, totalAmount) => {
+  const defaultPayment = [{ formaPago: '01', total: totalAmount }];
+
   if (!paymentString || String(paymentString).trim() === '') {
-    return [{ formaPago: '01', total: totalAmount }];
+    return defaultPayment;
   }
 
+  const paymentStringClean = String(paymentString).trim();
   const payments = [];
-  const parts = String(paymentString).split(',').map(p => p.trim());
-  let totalFromParts = 0;
+  const parts = paymentStringClean.split(',').map(p => p.trim());
 
+  // If there's only one part and no colon, it's a single payment method for the full amount.
+  if (parts.length === 1 && !parts[0].includes(':')) {
+    const methodName = parts[0];
+    const normalizedMethodName = methodName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const formaPago = paymentMethodMap[normalizedMethodName];
+    if (!formaPago) {
+      throw new Error(`Método de pago no reconocido: "${methodName}"`);
+    }
+    return [{ formaPago, total: totalAmount }];
+  }
+
+  // Otherwise, expect the method:amount format for all parts.
+  let totalFromParts = 0;
   for (const part of parts) {
     const [methodName, amountStr] = part.split(':').map(p => p.trim());
+
+    if (!amountStr) {
+        throw new Error(`Monto no especificado para el método de pago: "${methodName}"`);
+    }
+
     const normalizedMethodName = methodName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const formaPago = paymentMethodMap[normalizedMethodName];
 
     if (!formaPago) {
       throw new Error(`Método de pago no reconocido: "${methodName}"`);
-    }
-
-    if (!amountStr) {
-        throw new Error(`Monto no especificado para el método de pago: "${methodName}"`);
     }
 
     const total = parseFloat(amountStr);
