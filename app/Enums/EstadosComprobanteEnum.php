@@ -10,6 +10,7 @@ enum EstadosComprobanteEnum: string
     case AUTORIZADO = 'autorizado';
     case RECHAZADO = 'rechazado';
     case FALLIDO = 'fallido';
+    case REINTENTANDO = 'reintentando';
 
 
     public static function values(): array

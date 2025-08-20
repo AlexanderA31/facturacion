@@ -25,6 +25,9 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $tries = 5;
+    public array $backoff = [60, 300, 900];
+
     protected Comprobante $comprobante;
     protected User $user;
     public PuntoEmision $puntoEmision;
@@ -275,12 +278,24 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             }
 
         } catch (SriException $e) {
+            $errorMessage = $e->getMessage();
+            if (Str::contains($errorMessage, ['SRI no disponible', 'Parsing WSDL'])) {
+                Log::warning("SRI no disponible. Reintentando el job para el comprobante [{$this->claveAcceso}]. Intento {$this->attempts()} de {$this->tries}.");
+                $this->comprobante->update([
+                    'estado' => EstadosComprobanteEnum::REINTENTANDO->value,
+                    'error_message' => "SRI no disponible. Reintentando... (Intento {$this->attempts()})",
+                ]);
+                // Libera el job de nuevo a la cola con el delay configurado en $backoff
+                $this->release();
+                return;
+            }
+
             $this->comprobante->update([
                 'estado' => EstadosComprobanteEnum::RECHAZADO->value,
-                'error_message' => $e->getMessage(),
+                'error_message' => $errorMessage,
                 'error_code' => $e->getCode(),
             ]);
-            Log::error("❌ Comprobante rechazado por el SRI [{$this->claveAcceso}]: " . $e->getMessage());
+            Log::error("❌ Comprobante rechazado por el SRI [{$this->claveAcceso}]: " . $errorMessage);
         } catch (\Exception $e) {
             $this->comprobante->update([
                 'estado' => EstadosComprobanteEnum::FALLIDO->value,
