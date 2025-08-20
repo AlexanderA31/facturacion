@@ -2,7 +2,26 @@
   <div>
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-bold text-gray-800">Mis Comprobantes</h2>
-      <RefreshButton :is-loading="isLoading" @click="getInvoices(false)" />
+        <div class="flex items-center space-x-2">
+            <!-- Download Button -->
+            <div v-if="currentTab === 'authorized'" class="relative inline-block text-left">
+                <div>
+                    <button type="button" @click="isDropdownOpen = !isDropdownOpen" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500" id="options-menu" aria-haspopup="true" aria-expanded="true">
+                        Descargar todo
+                        <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+                <div v-if="isDropdownOpen" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                        <a href="#" @click.prevent="downloadAll('xml')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Descargar todo (XML)</a>
+                        <a href="#" @click.prevent="downloadAll('pdf')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Descargar todo (PDF)</a>
+                    </div>
+                </div>
+            </div>
+            <RefreshButton :is-loading="isLoading" @click="getInvoices(false)" />
+        </div>
     </div>
 
     <div class="mb-4 border-b border-gray-200">
@@ -36,6 +55,7 @@
 </template>
 
 <script>
+import JSZip from 'jszip';
 import axios from 'axios';
 import DataTable from './DataTable.vue';
 import Pagination from './Pagination.vue';
@@ -64,6 +84,7 @@ export default {
       currentPage: 1,
       itemsPerPage: 10,
       currentTab: 'all',
+      isDropdownOpen: false,
     };
   },
   computed: {
@@ -82,7 +103,9 @@ export default {
             finalHeaders.push({ text: 'Mensaje de Error', value: 'error_message' });
         }
 
-        finalHeaders.push({ text: 'Acciones', value: 'acciones' });
+        if (this.currentTab === 'all' || this.currentTab === 'authorized') {
+            finalHeaders.push({ text: 'Acciones', value: 'acciones' });
+        }
 
         return finalHeaders;
     },
@@ -227,6 +250,65 @@ export default {
             const message = error.response?.data?.message || 'Error desconocido';
             this.$emitter.emit('show-alert', { type: 'error', message: `No se pudo descargar el PDF: ${message}` });
         }
+      }
+    },
+    async downloadAll(format) {
+      this.isDropdownOpen = false;
+      if (this.filteredInvoices.length === 0) {
+        this.$emitter.emit('show-alert', { type: 'info', message: 'No hay facturas autorizadas para descargar.' });
+        return;
+      }
+
+      this.$emitter.emit('show-alert', { type: 'info', message: `Iniciando la descarga de ${this.filteredInvoices.length} facturas. Esto puede tardar un momento...` });
+
+      const zip = new JSZip();
+      const downloadPromises = this.filteredInvoices.map(async (invoice) => {
+        try {
+          const url = `/api/comprobantes/${invoice.clave_acceso}/${format}`;
+          const response = await axios.get(url, {
+            headers: { 'Authorization': `Bearer ${this.token}` },
+            responseType: format === 'pdf' ? 'blob' : 'json', // 'json' for xml, 'blob' for pdf
+          });
+
+          let fileContent;
+          let fileName;
+
+          if (format === 'xml') {
+            fileContent = response.data.data.xml;
+            fileName = `${invoice.clave_acceso}.xml`;
+          } else { // pdf
+            fileContent = response.data;
+            const contentDisposition = response.headers['content-disposition'];
+            const fileNameMatch = contentDisposition ? contentDisposition.match(/filename="(.+)"/) : null;
+            fileName = (fileNameMatch && fileNameMatch.length === 2) ? fileNameMatch[1] : `${invoice.clave_acceso}.pdf`;
+          }
+
+          zip.file(fileName, fileContent);
+        } catch (error) {
+          console.error(`Error descargando ${invoice.clave_acceso}.${format}:`, error);
+          this.$emitter.emit('show-alert', { type: 'error', message: `Error al descargar ${invoice.numero_factura}` });
+        }
+      });
+
+      try {
+        await Promise.all(downloadPromises);
+        if (Object.keys(zip.files).length === 0) {
+            this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo descargar ninguna factura.' });
+            return;
+        }
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(zipBlob);
+        link.download = `facturas_autorizadas.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.$emitter.emit('show-alert', { type: 'success', message: 'Descarga completada.' });
+      } catch (error) {
+        console.error('Error generando el archivo ZIP:', error);
+        this.$emitter.emit('show-alert', { type: 'error', message: 'Ocurrió un error al generar el archivo ZIP.' });
       }
     },
   },
