@@ -4,25 +4,134 @@
     <meta charset="utf-8">
     <title>Factura</title>
     <style>
-        body { font-family: sans-serif; font-size: 10px; }
+        body { 
+            font-family: sans-serif; 
+            font-size: 12px; /* Aumentado de 10px a 12px */
+            line-height: 1.4;
+        }
         .container { width: 100%; margin: 0 auto; }
-        .header-container { display: table; width: 100%; border: 1px solid #ddd; }
-        .emitter-container { display: table-cell; width: 50%; vertical-align: top; padding: 10px; }
-        .invoice-info-container { display: table-cell; width: 50%; vertical-align: top; border-left: 1px solid #ddd; padding: 10px;}
-        .client-info-container { margin-top: 10px; border: 1px solid #ddd; padding: 10px; }
-        .content { margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 5px; }
-        th { background-color: #f2f2f2; }
+        .header-container { 
+            display: table; 
+            width: 100%; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; /* Bordes redondeados */
+        }
+        .emitter-container { 
+            display: table-cell; 
+            width: 50%; 
+            vertical-align: top; 
+            padding: 15px; /* Aumentado padding */
+        }
+        .invoice-info-container { 
+            display: table-cell; 
+            width: 50%; 
+            vertical-align: top; 
+            border-left: 1px solid #ddd; 
+            padding: 15px; /* Aumentado padding */
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+        .client-info-container { 
+            margin-top: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; /* Bordes redondeados */
+            padding: 15px; /* Aumentado padding */
+            background-color: #fafafa;
+            display: table;
+            width: 100%;
+        }
+        .client-info-left { 
+            display: table-cell; 
+            width: 50%; 
+            vertical-align: top; 
+            padding-right: 15px;
+        }
+        .client-info-right { 
+            display: table-cell; 
+            width: 50%; 
+            vertical-align: top; 
+            padding-left: 15px;
+        }
+        .content { margin-top: 15px; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            border-radius: 8px; /* Bordes redondeados */
+            overflow: hidden; /* Para que los bordes redondeados funcionen con border-collapse */
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 8px; /* Aumentado de 5px a 8px */
+        }
+        th { 
+            background-color: #f2f2f2; 
+            font-weight: bold;
+        }
         .text-right { text-align: right; }
         .text-left { text-align: left; }
         .bold { font-weight: bold; }
-        .totals-container { display: table; width: 100%; margin-top: 10px; }
-        .additional-info-container { display: table-cell; width: 60%; vertical-align: top; border: 1px solid #ddd; padding: 10px; }
-        .totals-table-container { display: table-cell; width: 40%; vertical-align: top; padding-left: 10px; }
-        .totals-table { width: 100%; }
-        .totals-table td { border: 1px solid #ddd; padding: 5px; }
-        p { margin: 2px 0; }
+        .totals-container { 
+            width: 100%; 
+            margin-top: 15px;
+        }
+        .additional-info-container { 
+            width: 48%;
+            float: left;
+            border: 1px solid #ddd; 
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #fafafa;
+            box-sizing: border-box;
+            margin-bottom: 15px; /* Por si se necesita espacio abajo */
+        }
+        .totals-table-container { 
+            width: 44%;
+            float: right;
+            box-sizing: border-box;
+        }
+        /* Clearfix para contener los floats */
+        .totals-container::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        .totals-table { 
+            width: 100%; 
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #ddd; /* Agregamos borde a la tabla */
+        }
+        .totals-table td { 
+            border: 1px solid #ddd; 
+            padding: 8px; /* Aumentado padding */
+        }
+        p { 
+            margin: 4px 0; /* Aumentado de 2px a 4px */
+        }
+        .barcode-container {
+            text-align: center; 
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+        }
+        .access-key {
+            font-size: 10px; 
+            word-wrap: break-word;
+            font-family: monospace;
+        }
+        /* Estilos para las primeras y últimas celdas de las tablas para bordes redondeados */
+        table tr:first-child th:first-child { border-top-left-radius: 8px; }
+        table tr:first-child th:last-child { border-top-right-radius: 8px; }
+        table tr:last-child td:first-child { border-bottom-left-radius: 8px; }
+        table tr:last-child td:last-child { border-bottom-right-radius: 8px; }
+
+        /* Estilos específicos para hacer el contenedor más compacto cuando no hay información */
+        .additional-info-container.minimal {
+            padding: 10px 15px; /* Padding reducido para cuando no hay contenido adicional */
+        }
     </style>
 </head>
 <body>
@@ -30,7 +139,7 @@
         <div class="header-container">
             <div class="emitter-container">
                 @if(isset($logo_path))
-                    <img src="{{ public_path('storage/' . $logo_path) }}" alt="Logo" style="max-width: 200px; max-height: 100px; margin-bottom: 10px;"/>
+                    <img src="{{ public_path('storage/' . $logo_path) }}" alt="Logo" style="max-width: 200px; max-height: 100px; margin-bottom: 15px; border-radius: 4px;"/>
                 @endif
                 <p><span class="bold">Emisor:</span> {{ $infoTributaria->razonSocial }}</p>
                 <p><span class="bold">RUC:</span> {{ $infoTributaria->ruc }}</p>
@@ -50,10 +159,12 @@
                 <p><span class="bold">Ambiente:</span> {{ $infoTributaria->ambiente == '1' ? 'PRUEBAS' : 'PRODUCCIÓN' }}</p>
                 <p><span class="bold">Emisión:</span> {{ $infoTributaria->tipoEmision == '1' ? 'NORMAL' : 'CONTINGENCIA' }}</p>
                 <p><span class="bold">Clave de Acceso:</span></p>
-                <p style="font-size: 9px; word-wrap: break-word;">{{ $infoTributaria->claveAcceso }}</p>
-                <div style="text-align: center; margin-top: 10px;">
-                    <img src="{{ $barcode_path }}" alt="barcode" />
-                </div>
+              
+            
+                    <img src="{{ $barcode_path }}" alt="Código de barras de la factura" style="max-width: 100%; height: 5%;" />
+                      <p class="access-key">{{ $infoTributaria->claveAcceso }}</p>
+          
+                
             </div>
         </div>
 
@@ -74,15 +185,24 @@
                     }
                 }
             }
+
+            // Determinar si hay formas de pago
+            $hayFormasPago = isset($infoFactura->pagos) && isset($infoFactura->pagos->pago);
+            $hayInfoAdicional = count($infoAdicionalCampos) > 0;
+            $esMinimal = !$hayFormasPago && !$hayInfoAdicional;
         @endphp
 
         <div class="client-info-container">
-            <p><span class="bold">Razón Social:</span> {{ $infoFactura->razonSocialComprador }}</p>
-            <p><span class="bold">RUC/CI:</span> {{ $infoFactura->identificacionComprador }}</p>
-            <p><span class="bold">Dirección:</span> {{ $infoFactura->direccionComprador ?? 'N/A' }}</p>
-            <p><span class="bold">Teléfono:</span> {{ $clientTelefono }}</p>
-            <p><span class="bold">Fecha Emisión:</span> {{ $infoFactura->fechaEmision }}</p>
-            <p><span class="bold">Correo:</span> {{ $clientEmail }}</p>
+            <div class="client-info-left">
+                <p><span class="bold">Razón Social:</span> {{ $infoFactura->razonSocialComprador }}</p>
+                <p><span class="bold">RUC/CI:</span> {{ $infoFactura->identificacionComprador }}</p>
+                <p><span class="bold">Dirección:</span> {{ $infoFactura->direccionComprador ?? 'N/A' }}</p>
+            </div>
+            <div class="client-info-right">
+                <p><span class="bold">Teléfono:</span> {{ $clientTelefono }}</p>
+                <p><span class="bold">Fecha Emisión:</span> {{ $infoFactura->fechaEmision }}</p>
+                <p><span class="bold">Correo:</span> {{ $clientEmail }}</p>
+            </div>
         </div>
 
         <div class="content">
@@ -113,9 +233,9 @@
         </div>
 
         <div class="totals-container">
-            <div class="additional-info-container">
+            <div class="additional-info-container {{ $esMinimal ? 'minimal' : '' }}">
                 <p class="bold">Información Adicional</p>
-                @if(count($infoAdicionalCampos) > 0)
+                @if($hayInfoAdicional)
                     @foreach($infoAdicionalCampos as $campo)
                         <p><span class="bold">{{ $campo['nombre'] }}:</span> {{ $campo['valor'] }}</p>
                     @endforeach
@@ -136,9 +256,9 @@
                     ];
                 @endphp
 
-                @if(isset($infoFactura->pagos))
-                    <p class="bold" style="margin-top: 10px;">Formas de Pago</p>
-                    <table style="border: none;">
+                @if($hayFormasPago)
+                    <p class="bold" style="margin-top: 15px;">Formas de Pago</p>
+                    <table style="border: none; border-radius: 6px; background-color: white;">
                         <thead style="display: none;">
                             <tr>
                                 <th>Descripción</th>
@@ -148,8 +268,8 @@
                         <tbody>
                             @foreach($infoFactura->pagos->pago as $pago)
                                 <tr>
-                                    <td style="border: none;">{{ $formasPago[(string)$pago->formaPago] ?? (string)$pago->formaPago }}</td>
-                                    <td class="text-right" style="border: none;">{{ number_format((float)$pago->total, 2) }}</td>
+                                    <td style="border: none; padding: 4px 0;">{{ $formasPago[(string)$pago->formaPago] ?? (string)$pago->formaPago }}</td>
+                                    <td class="text-right" style="border: none; padding: 4px 0;">{{ number_format((float)$pago->total, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -157,51 +277,86 @@
                 @endif
             </div>
             <div class="totals-table-container">
+                @php
+                    // Initialize all possible totals to 0
+                    $subtotal15 = 0;
+                    $iva15 = 0;
+                    $subtotal5 = 0;
+                    $iva5 = 0;
+                    $subtotal0 = 0;
+                    $subtotalNoObjeto = 0;
+                    $ice = 0;
+
+                    // Process the taxes from the invoice data
+                    if (isset($infoFactura->totalConImpuestos)) {
+                        foreach($infoFactura->totalConImpuestos->totalImpuesto as $impuesto) {
+                            if ($impuesto->codigo == '2') { // IVA
+                                switch ($impuesto->codigoPorcentaje) {
+                                    case '4': // 15%
+                                        $subtotal15 = (float)$impuesto->baseImponible;
+                                        $iva15 = (float)$impuesto->valor;
+                                        break;
+                                    case '5': // 5% (Guess)
+                                        $subtotal5 = (float)$impuesto->baseImponible;
+                                        $iva5 = (float)$impuesto->valor;
+                                        break;
+                                    case '0': // 0%
+                                        $subtotal0 = (float)$impuesto->baseImponible;
+                                        break;
+                                    case '6': // No Objeto de IVA
+                                        $subtotalNoObjeto = (float)$impuesto->baseImponible;
+                                        break;
+                                }
+                            } elseif ($impuesto->codigo == '3') { // ICE
+                                $ice += (float)$impuesto->valor;
+                            }
+                        }
+                    }
+                @endphp
                 <table class="totals-table">
                     <tr>
                         <td class="bold text-left">Subtotal Sin Impuestos:</td>
-                        <td class="text-right">{{ number_format((float)$infoFactura->totalSinImpuestos, 2) }}</td>
+                        <td class="text-right">${{ number_format((float)$infoFactura->totalSinImpuestos, 2) }}</td>
                     </tr>
                     <tr>
-                        <td class="bold text-left">Total Descuento:</td>
-                        <td class="text-right">{{ number_format((float)$infoFactura->totalDescuento, 2) }}</td>
-                    </tr>
-                    @foreach($infoFactura->totalConImpuestos->totalImpuesto as $impuesto)
-                        @php
-                            $tarifa = (float)$impuesto->tarifa;
-                            $baseImponible = (float)$impuesto->baseImponible;
-                            $valor = (float)$impuesto->valor;
-                            $codigo = (string)$impuesto->codigo;
-                            $codigoPorcentaje = (string)$impuesto->codigoPorcentaje;
-                            $label = 'IVA';
-                            if ($codigo == '2') { // IVA
-                                if ($codigoPorcentaje == '0') $label = 'IVA 0%';
-                                elseif ($codigoPorcentaje == '2') $label = 'IVA 12%';
-                                elseif ($codigoPorcentaje == '3') $label = 'IVA 14%';
-                                elseif ($codigoPorcentaje == '4') $label = 'IVA 15%';
-                                else $label = 'IVA (' . $tarifa . '%)';
-                            } elseif ($codigo == '3') { // ICE
-                                $label = 'ICE';
-                            } elseif ($codigo == '5') { // IRBPNR
-                                $label = 'IRBPNR';
-                            }
-                        @endphp
-                        <tr>
-                            <td class="bold text-left">Subtotal {{ $label }}:</td>
-                            <td class="text-right">{{ number_format($baseImponible, 2) }}</td>
-                        </tr>
-                        <tr>
-                            <td class="bold text-left">{{ $label }} Valor:</td>
-                            <td class="text-right">{{ number_format($valor, 2) }}</td>
-                        </tr>
-                    @endforeach
-                    <tr>
-                        <td class="bold text-left">Propina:</td>
-                        <td class="text-right">{{ number_format((float)$infoFactura->propina, 2) }}</td>
+                        <td class="bold text-left">Subtotal 15%:</td>
+                        <td class="text-right">${{ number_format($subtotal15, 2) }}</td>
                     </tr>
                     <tr>
-                        <td class="bold text-left">Importe Total:</td>
-                        <td class="text-right">{{ number_format((float)$infoFactura->importeTotal, 2) }}</td>
+                        <td class="bold text-left">Subtotal 5%:</td>
+                        <td class="text-right">${{ number_format($subtotal5, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold text-left">Subtotal 0%:</td>
+                        <td class="text-right">${{ number_format($subtotal0, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold text-left">Subtotal No Objeto IVA:</td>
+                        <td class="text-right">${{ number_format($subtotalNoObjeto, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold text-left">Descuentos:</td>
+                        <td class="text-right">${{ number_format((float)$infoFactura->totalDescuento, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold text-left">ICE:</td>
+                        <td class="text-right">${{ number_format($ice, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold text-left">IVA 15%:</td>
+                        <td class="text-right">${{ number_format($iva15, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold text-left">IVA 5%:</td>
+                        <td class="text-right">${{ number_format($iva5, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold text-left">Servicio %:</td>
+                        <td class="text-right">${{ number_format((float)$infoFactura->propina, 2) }}</td>
+                    </tr>
+                    <tr style="background-color: #f0f8ff;">
+                        <td class="bold text-left" style="font-size: 14px;">Valor Total:</td>
+                        <td class="text-right bold" style="font-size: 14px;">${{ number_format((float)$infoFactura->importeTotal, 2) }}</td>
                     </tr>
                 </table>
             </div>
