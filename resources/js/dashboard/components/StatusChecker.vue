@@ -20,7 +20,7 @@
     <div v-if="result" class="mt-4 p-3 rounded-md" :class="result.isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'">
       <p><strong>Estado:</strong> {{ result.status }}</p>
       <p v-if="result.message" class="text-sm">{{ result.message }}</p>
-      <p v-if="result.status === 'autorizado'" class="text-sm mt-1 text-green-800">Descargando XML...</p>
+      <p v-if="result.status === 'autorizado'" class="text-sm mt-1 text-green-800">Descargando PDF...</p>
     </div>
   </div>
 </template>
@@ -62,7 +62,7 @@ export default {
         };
 
         if (this.result.status === 'autorizado') {
-            this.downloadXml();
+            this.downloadPdf();
         }
 
       } catch (error) {
@@ -82,22 +82,22 @@ export default {
         this.loading = false;
       }
     },
-    async downloadXml() {
+    async downloadPdf() {
         if (!this.accessKey || this.result?.status !== 'autorizado') return;
 
         try {
-            const response = await axios.get(`/api/comprobantes/${this.accessKey}/xml`, {
+            const response = await axios.get(`/api/comprobantes/${this.accessKey}/pdf`, {
                 headers: { 'Authorization': `Bearer ${this.token}` },
+                responseType: 'blob', // Important for handling file downloads
             });
 
-            const xmlContent = response.data.data.xml;
-            const blob = new Blob([xmlContent], { type: 'application/xml' });
+            const blob = new Blob([response.data], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
 
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            a.download = `factura-${this.accessKey}.xml`;
+            a.download = `factura-${this.accessKey}.pdf`;
 
             document.body.appendChild(a);
             a.click();
@@ -106,8 +106,8 @@ export default {
             document.body.removeChild(a);
 
         } catch (error) {
-            this.$emitter.emit('show-alert', { type: 'error', message: 'Error al descargar el XML. Por favor, revisa la consola.' });
-            console.error('XML download error:', error);
+            this.$emitter.emit('show-alert', { type: 'error', message: 'Error al descargar el PDF. Por favor, revisa la consola.' });
+            console.error('PDF download error:', error);
         }
     },
   },
