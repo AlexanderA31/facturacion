@@ -60,7 +60,7 @@
       <div v-else class="flex flex-col">
           <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                  <DataTable :data="paginatedInvoices" :headers="headers" :sort-key="sortKey" :sort-order="sortOrder" @sort="sortBy" @download-xml="downloadXml" @download-pdf="downloadPdf" @toggle-error-expansion="toggleErrorExpansion" />
+                  <DataTable :data="paginatedInvoices" :headers="headers" :sort-key="sortKey" :sort-order="sortOrder" @sort="sortBy" @download-xml="downloadXml" @download-pdf="downloadPdf" @preview-pdf="openPdfPreview" @toggle-error-expansion="toggleErrorExpansion" />
               </div>
           </div>
           <div v-if="totalPages > 1" class="py-4 px-6 flex justify-center">
@@ -68,6 +68,13 @@
           </div>
       </div>
     </div>
+
+    <PdfPreviewModal
+      :show="isPdfModalOpen"
+      :pdf-url="selectedPdfUrl"
+      :token="token"
+      @close="isPdfModalOpen = false"
+    />
   </div>
 </template>
 
@@ -78,6 +85,7 @@ import DataTable from './DataTable.vue';
 import Pagination from './Pagination.vue';
 import TableSkeleton from './TableSkeleton.vue';
 import RefreshButton from './RefreshButton.vue';
+import PdfPreviewModal from './PdfPreviewModal.vue';
 
 export default {
   name: 'MyInvoices',
@@ -86,6 +94,7 @@ export default {
     Pagination,
     TableSkeleton,
     RefreshButton,
+    PdfPreviewModal,
   },
   props: {
     token: {
@@ -105,6 +114,8 @@ export default {
       searchQuery: '',
       sortKey: 'fecha_emision',
       sortOrder: 'desc',
+      isPdfModalOpen: false,
+      selectedPdfUrl: '',
     };
   },
   computed: {
@@ -214,6 +225,10 @@ export default {
     clearInterval(this.polling);
   },
   methods: {
+    openPdfPreview(claveAcceso) {
+        this.selectedPdfUrl = `/api/comprobantes/${claveAcceso}/pdf`;
+        this.isPdfModalOpen = true;
+    },
     sortBy(key) {
       if (this.sortKey === key) {
         this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
