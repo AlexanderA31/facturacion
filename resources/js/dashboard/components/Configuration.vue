@@ -187,6 +187,8 @@ export default {
             ambiente: profile.ambiente,
             enviar_factura_por_correo: profile.enviar_factura_por_correo,
             logo_path: profile.logo_path,
+            tipo_impuesto: profile.tipo_impuesto,
+            codigo_porcentaje_iva: profile.codigo_porcentaje_iva,
         };
         if (profile.logo_path) {
             this.logoPreview = `/storage/${profile.logo_path}`;

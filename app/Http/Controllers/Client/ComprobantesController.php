@@ -256,21 +256,7 @@ class ComprobantesController extends Controller
     }
 
 
-    private function getTarifaFromCodigoPorcentaje(string $codigo): int
-    {
-        return match ($codigo) {
-            '0' => 0,
-            '2' => 12,
-            '3' => 14,
-            '6' => 0,
-            '7' => 0,
-            '8' => 5,
-            '9' => 15,
-            default => 0,
-        };
-    }
-
-    public function generateFactura(Request $request, PuntoEmision $puntoEmision)
+    public function generateFactura(FacturaRequest $request, PuntoEmision $puntoEmision)
     {
         $validated_data = null;
         try {
@@ -281,40 +267,8 @@ class ComprobantesController extends Controller
             $user = \Auth::user();
             Gate::authorize('firma', $user);
 
-            // 3. Preparar y validar datos del comprobante
-            $data = $request->all();
-
-            if ($user->tipo_impuesto && $user->codigo_porcentaje_iva) {
-                if (isset($data['detalles']) && is_array($data['detalles'])) {
-                    foreach ($data['detalles'] as &$detalle) {
-                        if (!isset($detalle['impuestos'])) {
-                            $tarifa = $this->getTarifaFromCodigoPorcentaje($user->codigo_porcentaje_iva);
-                            $baseImponible = $detalle['precioTotalSinImpuesto'];
-                            $valor = round($baseImponible * ($tarifa / 100), 2);
-
-                            $detalle['impuestos'] = [
-                                [
-                                    'codigo' => $user->tipo_impuesto,
-                                    'codigoPorcentaje' => $user->codigo_porcentaje_iva,
-                                    'tarifa' => $tarifa,
-                                    'baseImponible' => $baseImponible,
-                                    'valor' => $valor,
-                                ]
-                            ];
-                        }
-                    }
-                }
-            }
-
-            $facturaRequest = new FacturaRequest();
-            $validator = \Validator::make($data, $facturaRequest->rules());
-
-            if ($validator->fails()) {
-                return $this->sendError('Datos no válidos', $validator->errors(), 422);
-            }
-
-            $validated_data = $validator->validated();
-
+            // 3. Validar datos del comprobante
+            $validated_data = $request->validated();
 
             // Si no se proporciona fecha de emisión, usar la fecha actual del servidor
             if (!isset($validated_data['fechaEmision'])) {
