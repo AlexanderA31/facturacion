@@ -49,6 +49,24 @@
                         </button>
                         <p class="mt-2 text-sm text-gray-500">Si se activa, se enviará una copia de la factura al correo del cliente.</p>
                     </div>
+                    <div>
+                        <BaseSelect
+                            id="tipo-impuesto-select"
+                            label="Tipo de Impuesto"
+                            v-model="form.tipo_impuesto"
+                            :options="tipoImpuestoOptions"
+                        />
+                        <p class="mt-2 text-sm text-gray-500">Seleccione el tipo de impuesto principal para los comprobantes.</p>
+                    </div>
+                    <div>
+                        <BaseSelect
+                            id="codigo-porcentaje-iva-select"
+                            label="Porcentaje de IVA"
+                            v-model="form.codigo_porcentaje_iva"
+                            :options="codigoPorcentajeIvaOptions"
+                        />
+                        <p class="mt-2 text-sm text-gray-500">Seleccione el porcentaje de IVA a aplicar.</p>
+                    </div>
                 </div>
                 <div class="mt-6 flex justify-end">
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -120,12 +138,31 @@ export default {
         ambiente: '1',
         enviar_factura_por_correo: true,
         logo_path: '',
+        tipo_impuesto: '2',
+        codigo_porcentaje_iva: '2',
       },
       logoFile: null,
       logoPreview: null,
       ambienteOptions: [
         { value: '1', text: 'Pruebas' },
         { value: '2', text: 'Producción' },
+      ],
+      tipoImpuestoOptions: [
+        { value: '1', text: 'Impuesto a la Renta' },
+        { value: '2', text: 'IVA' },
+        { value: '3', text: 'ICE' },
+        { value: '4', text: 'IRBPNR' },
+        { value: '5', text: 'ISD' },
+        { value: '6', text: 'IMPUESTO VERDE' },
+      ],
+      codigoPorcentajeIvaOptions: [
+        { value: '0', text: 'IVA 0%' },
+        { value: '2', text: 'IVA 12%' },
+        { value: '3', text: 'IVA 14%' },
+        { value: '6', text: 'No objeto de IVA' },
+        { value: '7', text: 'Exento de IVA' },
+        { value: '8', text: 'IVA 5%' },
+        { value: '9', text: 'IVA 15%' },
       ],
       token: localStorage.getItem('jwt_token'),
     };
