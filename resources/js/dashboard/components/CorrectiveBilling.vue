@@ -207,6 +207,16 @@ export default {
     window.removeEventListener('corrective-billing-update', this.loadState);
   },
   methods: {
+    getTipoIdentificacion(idValue) {
+        const value = String(idValue).trim();
+        if (/^[0-9]+$/.test(value)) { // Check if it's all numbers
+            if (value.length === 13) return '04'; // RUC
+            if (value.length === 10) return '05'; // Cédula
+            if (value === '9999999999999') return '07'; // Consumidor Final
+        }
+        // Default to Pasaporte for other cases (alphanumeric, other lengths)
+        return '06';
+    },
     getTarifaFromCodigoPorcentaje(codigo) {
         const map = {
             '0': 0,
@@ -363,8 +373,9 @@ export default {
         ...p,
         total: formatToString(p.total)
       }));
+      const tipoIdentificacion = this.getTipoIdentificacion(cedula);
       return {
-        tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
+        tipoIdentificacionComprador: tipoIdentificacion,
         razonSocialComprador: nombres,
         identificacionComprador: String(cedula),
         direccionComprador: direccion,
