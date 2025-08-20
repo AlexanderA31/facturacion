@@ -78,4 +78,29 @@ class Comprobante extends Model
     {
         return self::where('clave_acceso', $claveAcceso)->firstOrFail();
     }
+
+    /**
+     * Get the fecha_emision attribute.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    public function getFechaEmisionAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
+
+    /**
+     * Get the fecha_autorizacion attribute.
+     *
+     * @param  string|null  $value
+     * @return string|null
+     */
+    public function getFechaAutorizacionAttribute($value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+        return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
 }
