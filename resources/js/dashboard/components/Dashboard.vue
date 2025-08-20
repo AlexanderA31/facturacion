@@ -385,9 +385,9 @@ export default {
         return undefined;
       };
 
-      const formatToNumber = (value, decimals = 2) => {
+      const formatToString = (value, decimals = 2) => {
           const num = parseFloat(String(value).replace(',', '.'));
-          return isNaN(num) ? 0 : parseFloat(num.toFixed(decimals));
+          return isNaN(num) ? "0.00" : num.toFixed(decimals);
       };
 
       const cedula = findValue('Cédula');
@@ -397,7 +397,7 @@ export default {
       const evento = findValue('Evento');
       const email = findValue('Email');
       let telefono = findValue('Teléfono');
-      const precio = formatToNumber(findValue('Precio'));
+      const precio = parseFloat(formatToString(findValue('Precio')));
 
       // Validations
       if (!cedula || (String(cedula).length !== 10 && String(cedula).length !== 13)) {
@@ -422,41 +422,44 @@ export default {
       // Use 6 decimal places for intermediate calculations to maintain precision
       const tarifa = this.getTarifaFromCodigoPorcentaje(this.userProfile.codigo_porcentaje_iva);
       const taxRate = 1 + (tarifa / 100);
-      const totalSinImpuestos = formatToNumber(precio / taxRate, 6);
-      const iva = formatToNumber(precio - totalSinImpuestos, 2);
+      const totalSinImpuestos = precio / taxRate;
+      const iva = precio - totalSinImpuestos;
 
       const metodoPago = findValue('metodo de pago');
-      const pagos = parsePaymentMethods(metodoPago, precio);
+      const pagos = parsePaymentMethods(metodoPago, precio).map(p => ({
+        ...p,
+        total: formatToString(p.total)
+      }));
 
       return {
         // fechaEmision is now set by the server
-        tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
+        tipoIdentificacionComprador: String(cedula),
         razonSocialComprador: nombres,
         identificacionComprador: String(cedula),
         direccionComprador: direccion,
-        totalSinImpuestos: formatToNumber(totalSinImpuestos, 2),
-        totalDescuento: 0,
+        totalSinImpuestos: formatToString(totalSinImpuestos),
+        totalDescuento: "0.00",
         totalConImpuestos: [{
             codigo: this.userProfile.tipo_impuesto,
             codigoPorcentaje: this.userProfile.codigo_porcentaje_iva,
-            baseImponible: formatToNumber(totalSinImpuestos, 2),
-            valor: iva
+            baseImponible: formatToString(totalSinImpuestos),
+            valor: formatToString(iva)
         }],
-        importeTotal: precio,
+        importeTotal: formatToString(precio),
         pagos: pagos,
         detalles: [{
           codigoPrincipal: String(codigo),
           descripcion: evento,
-          cantidad: 1,
-          precioUnitario: formatToNumber(totalSinImpuestos, 2), // Format to 2 decimal places
-          descuento: 0,
-          precioTotalSinImpuesto: formatToNumber(totalSinImpuestos, 2),
+          cantidad: "1",
+          precioUnitario: formatToString(totalSinImpuestos, 6),
+          descuento: "0.00",
+          precioTotalSinImpuesto: formatToString(totalSinImpuestos),
           impuestos: [{
                 codigo: this.userProfile.tipo_impuesto,
                 codigoPorcentaje: this.userProfile.codigo_porcentaje_iva,
                 tarifa: tarifa,
-                baseImponible: formatToNumber(totalSinImpuestos, 2),
-                valor: iva
+                baseImponible: formatToString(totalSinImpuestos),
+                valor: formatToString(iva)
             }],
         }],
         infoAdicional: { email: email, telefono: telefono },
