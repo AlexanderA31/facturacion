@@ -3,8 +3,16 @@
     <table class="min-w-full bg-white">
       <thead class="bg-gray-800 text-white">
         <tr>
-          <th v-for="header in headers" :key="header.value" scope="col" class="px-8 py-4 text-left text-sm font-bold uppercase tracking-wider">
-            {{ header.text }}
+          <th v-for="header in headers" :key="header.value" scope="col"
+              class="px-8 py-4 text-left text-sm font-bold uppercase tracking-wider cursor-pointer select-none"
+              @click="header.value !== 'acciones' ? $emit('sort', header.value) : null">
+            <div class="flex items-center">
+              <span>{{ header.text }}</span>
+              <span v-if="sortKey === header.value" class="ml-2">
+                <svg v-if="sortOrder === 'asc'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </span>
+            </div>
           </th>
         </tr>
       </thead>
@@ -84,6 +92,14 @@ export default {
     showEditButton: {
       type: Boolean,
       default: false,
+    },
+    sortKey: {
+      type: String,
+      default: '',
+    },
+    sortOrder: {
+      type: String,
+      default: 'asc',
     },
   },
   methods: {

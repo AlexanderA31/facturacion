@@ -44,10 +44,14 @@
         </nav>
     </div>
 
+    <div class="my-4">
+        <input type="text" v-model="searchQuery" placeholder="Buscar por número de factura o cliente..." class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+    </div>
+
     <div class="bg-white rounded-xl shadow-lg p-6">
       <TableSkeleton v-if="isLoading" />
       <div v-else>
-        <DataTable :data="paginatedInvoices" :headers="headers" @download-xml="downloadXml" @download-pdf="downloadPdf" @toggle-error-expansion="toggleErrorExpansion" />
+        <DataTable :data="paginatedInvoices" :headers="headers" :sort-key="sortKey" :sort-order="sortOrder" @sort="sortBy" @download-xml="downloadXml" @download-pdf="downloadPdf" @toggle-error-expansion="toggleErrorExpansion" />
         <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
       </div>
     </div>
@@ -85,6 +89,9 @@ export default {
       itemsPerPage: 10,
       currentTab: 'all',
       isDropdownOpen: false,
+      searchQuery: '',
+      sortKey: 'fecha_emision',
+      sortOrder: 'desc',
     };
   },
   computed: {
@@ -113,34 +120,66 @@ export default {
 
         return finalHeaders;
     },
-    filteredInvoices() {
-        switch (this.currentTab) {
-            case 'authorized':
-                return this.invoices.filter(i => i.estado === 'autorizado');
-            case 'pending':
-                return this.invoices.filter(i => ['pendiente', 'procesando', 'firmado'].includes(i.estado));
-            case 'unauthorized':
-                return this.invoices.filter(i =>
-                    ['rechazado', 'fallido'].includes(i.estado) &&
-                    i.error_message !== 'ERROR SECUENCIAL REGISTRADO'
-                );
-            case 'duplicates':
-                return this.invoices.filter(i =>
-                    i.estado === 'rechazado' &&
-                    i.error_message === 'ERROR SECUENCIAL REGISTRADO'
-                );
-            case 'all':
-            default:
-                return this.invoices;
-        }
+    processedInvoices() {
+      let processed = [...this.invoices];
+
+      // 1. Filter by tab
+      switch (this.currentTab) {
+        case 'authorized':
+          processed = processed.filter(i => i.estado === 'autorizado');
+          break;
+        case 'pending':
+          processed = processed.filter(i => ['pendiente', 'procesando', 'firmado'].includes(i.estado));
+          break;
+        case 'unauthorized':
+          processed = processed.filter(i =>
+            ['rechazado', 'fallido'].includes(i.estado) &&
+            i.error_message !== 'ERROR SECUENCIAL REGISTRADO'
+          );
+          break;
+        case 'duplicates':
+          processed = processed.filter(i =>
+            i.estado === 'rechazado' &&
+            i.error_message === 'ERROR SECUENCIAL REGISTRADO'
+          );
+          break;
+        // 'all' tab doesn't need filtering
+      }
+
+      // 2. Filter by search query
+      if (this.searchQuery && this.searchQuery.trim() !== '') {
+        const lowerCaseQuery = this.searchQuery.trim().toLowerCase();
+        processed = processed.filter(invoice => {
+          const numeroFactura = (invoice.numero_factura || '').toLowerCase();
+          const cliente = (invoice.cliente || '').toLowerCase();
+          return numeroFactura.includes(lowerCaseQuery) || cliente.includes(lowerCaseQuery);
+        });
+      }
+
+      // 3. Sort
+      if (this.sortKey) {
+        processed.sort((a, b) => {
+          let valA = a[this.sortKey];
+          let valB = b[this.sortKey];
+
+          // Simple comparison for numbers and strings
+          if (valA < valB) return this.sortOrder === 'asc' ? -1 : 1;
+          if (valA > valB) return this.sortOrder === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      return processed;
     },
     totalPages() {
-      return Math.ceil(this.filteredInvoices.length / this.itemsPerPage);
+      if (!this.processedInvoices) return 1;
+      return Math.ceil(this.processedInvoices.length / this.itemsPerPage);
     },
     paginatedInvoices() {
+      if (!this.processedInvoices) return [];
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.filteredInvoices.slice(start, end);
+      return this.processedInvoices.slice(start, end);
     },
   },
   mounted() {
@@ -153,11 +192,22 @@ export default {
     currentTab() {
       this.currentPage = 1;
     },
+    searchQuery() {
+      this.currentPage = 1;
+    },
   },
   beforeUnmount() {
     clearInterval(this.polling);
   },
   methods: {
+    sortBy(key) {
+      if (this.sortKey === key) {
+        this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+      } else {
+        this.sortKey = key;
+        this.sortOrder = 'asc';
+      }
+    },
     formatDateTime(dateTimeString) {
       if (!dateTimeString) return 'N/A';
       const date = new Date(dateTimeString);
@@ -278,15 +328,15 @@ export default {
     },
     async downloadAll(format) {
       this.isDropdownOpen = false;
-      if (this.filteredInvoices.length === 0) {
+      if (this.processedInvoices.length === 0) {
         this.$emitter.emit('show-alert', { type: 'info', message: 'No hay facturas autorizadas para descargar.' });
         return;
       }
 
-      this.$emitter.emit('show-alert', { type: 'info', message: `Iniciando la descarga de ${this.filteredInvoices.length} facturas. Esto puede tardar un momento...` });
+      this.$emitter.emit('show-alert', { type: 'info', message: `Iniciando la descarga de ${this.processedInvoices.length} facturas. Esto puede tardar un momento...` });
 
       const zip = new JSZip();
-      const downloadPromises = this.filteredInvoices.map(async (invoice) => {
+      const downloadPromises = this.processedInvoices.map(async (invoice) => {
         try {
           const url = `/api/comprobantes/${invoice.clave_acceso}/${format}`;
           const response = await axios.get(url, {
