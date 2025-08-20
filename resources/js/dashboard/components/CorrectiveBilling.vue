@@ -127,6 +127,10 @@ export default {
   },
   data() {
     return {
+      userProfile: {
+        tipo_impuesto: '2',
+        codigo_porcentaje_iva: '2',
+      },
       failedRows: [],
       currentPage: 1,
       itemsPerPage: 10,
@@ -194,6 +198,7 @@ export default {
   mounted() {
     this.loadState();
     window.addEventListener('corrective-billing-update', this.loadState);
+    this.fetchUserProfile();
     this.fetchEstablecimientos();
     this.fetchPuntosEmision();
   },
@@ -201,6 +206,29 @@ export default {
     window.removeEventListener('corrective-billing-update', this.loadState);
   },
   methods: {
+    getTarifaFromCodigoPorcentaje(codigo) {
+        const map = {
+            '0': 0,
+            '2': 12,
+            '3': 14,
+            '6': 0,
+            '7': 0,
+            '8': 5,
+            '9': 15,
+        };
+        return map[codigo] || 0;
+    },
+    async fetchUserProfile() {
+      try {
+        const response = await axios.get('/api/profile', {
+          headers: { 'Authorization': `Bearer ${this.token}` },
+        });
+        this.userProfile = response.data.data;
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        this.userProfile = { tipo_impuesto: '2', codigo_porcentaje_iva: '2' };
+      }
+    },
     async fetchEstablecimientos() {
         try {
             const response = await axios.get('/api/establecimientos', {
@@ -325,7 +353,9 @@ export default {
       if (!nombres || !codigo || !evento) {
         throw new Error('Una o más columnas requeridas (Nombres, Código, Evento) no se encontraron o están vacías en el archivo.');
       }
-      const totalSinImpuestos = formatToNumber(precio / 1.15, 6);
+      const tarifa = this.getTarifaFromCodigoPorcentaje(this.userProfile.codigo_porcentaje_iva);
+      const taxRate = 1 + (tarifa / 100);
+      const totalSinImpuestos = formatToNumber(precio / taxRate, 6);
       const iva = formatToNumber(precio - totalSinImpuestos, 2);
       return {
         tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
@@ -334,7 +364,12 @@ export default {
         direccionComprador: direccion,
         totalSinImpuestos: formatToNumber(totalSinImpuestos, 2),
         totalDescuento: 0,
-        totalConImpuestos: [{ codigo: 2, codigoPorcentaje: 4, baseImponible: formatToNumber(totalSinImpuestos, 2), valor: iva }],
+        totalConImpuestos: [{
+            codigo: this.userProfile.tipo_impuesto,
+            codigoPorcentaje: this.userProfile.codigo_porcentaje_iva,
+            baseImponible: formatToNumber(totalSinImpuestos, 2),
+            valor: iva
+        }],
         importeTotal: precio,
         pagos: [{ formaPago: '01', total: precio }],
         detalles: [{
@@ -344,7 +379,13 @@ export default {
           precioUnitario: formatToNumber(totalSinImpuestos, 2),
           descuento: 0,
           precioTotalSinImpuesto: formatToNumber(totalSinImpuestos, 2),
-          impuestos: [{ codigo: 2, codigoPorcentaje: 4, tarifa: 15.00, baseImponible: formatToNumber(totalSinImpuestos, 2), valor: iva }],
+          impuestos: [{
+                codigo: this.userProfile.tipo_impuesto,
+                codigoPorcentaje: this.userProfile.codigo_porcentaje_iva,
+                tarifa: tarifa,
+                baseImponible: formatToNumber(totalSinImpuestos, 2),
+                valor: iva
+            }],
         }],
         infoAdicional: { email: email, telefono: telefono },
       };
