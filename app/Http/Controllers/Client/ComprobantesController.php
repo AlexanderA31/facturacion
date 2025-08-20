@@ -272,7 +272,7 @@ class ComprobantesController extends Controller
 
             // Si no se proporciona fecha de emisión, usar la fecha actual del servidor
             if (!isset($validated_data['fechaEmision'])) {
-                $validated_data['fechaEmision'] = now()->format('Y-m-d');
+                $validated_data['fechaEmision'] = now()->format('Y-m-d H:i:s');
             }
 
             // 4. Generar comprobante

@@ -158,6 +158,20 @@ export default {
     clearInterval(this.polling);
   },
   methods: {
+    formatDateTime(dateTimeString) {
+      if (!dateTimeString) return 'N/A';
+      const date = new Date(dateTimeString);
+      if (isNaN(date)) return dateTimeString; // Return original if invalid
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    },
     async getInvoices(isPolling = false) {
       if (!isPolling) {
         this.isLoading = true;
@@ -183,6 +197,7 @@ export default {
 
           return {
             ...invoice,
+            fecha_emision: this.formatDateTime(invoice.fecha_emision),
             numero_factura: `${invoice.establecimiento}-${invoice.punto_emision}-${invoice.secuencial}`,
             cliente: payload.razonSocialComprador || 'N/A',
             valor: payload.importeTotal || 0,

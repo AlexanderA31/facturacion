@@ -80,17 +80,6 @@ class Comprobante extends Model
     }
 
     /**
-     * Get the fecha_emision attribute.
-     *
-     * @param  string  $value
-     * @return string
-     */
-    public function getFechaEmisionAttribute($value)
-    {
-        return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
-    }
-
-    /**
      * Get the fecha_autorizacion attribute.
      *
      * @param  string|null  $value
