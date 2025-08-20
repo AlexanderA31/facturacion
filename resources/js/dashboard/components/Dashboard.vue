@@ -25,75 +25,91 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-lg p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-                <BaseSelect
-                    id="establecimiento-select"
-                    label="Establecimiento"
-                    v-model="selectedEstablecimientoId"
-                    :options="establecimientoOptions"
-                    placeholder="Seleccione un establecimiento"
-                />
+      <div class="bg-white rounded-xl shadow-lg">
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <BaseSelect
+                        id="establecimiento-select"
+                        label="Establecimiento"
+                        v-model="selectedEstablecimientoId"
+                        :options="establecimientoOptions"
+                        placeholder="Seleccione un establecimiento"
+                    />
+                </div>
+                <div>
+                    <BaseSelect
+                        id="punto-emision-select"
+                        label="Punto de Emisión"
+                        v-model="selectedPuntoEmisionId"
+                        :options="puntoEmisionOptions"
+                        :disabled="!selectedEstablecimientoId"
+                        placeholder="Seleccione un punto de emisión"
+                    />
+                </div>
             </div>
-            <div>
-                <BaseSelect
-                    id="punto-emision-select"
-                    label="Punto de Emisión"
-                    v-model="selectedPuntoEmisionId"
-                    :options="puntoEmisionOptions"
-                    :disabled="!selectedEstablecimientoId"
-                    placeholder="Seleccione un punto de emisión"
-                />
-            </div>
-        </div>
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-          <div>
-            <h2 class="text-2xl font-bold text-gray-800">Facturación Masiva</h2>
-            <p class="text-gray-600">Revise los datos cargados y proceda a emitir las facturas.</p>
-          </div>
-          <div class="flex items-center space-x-4">
-            <div class="relative">
-              <label for="status-filter" class="sr-only">Filtrar por estado</label>
-              <select id="status-filter" v-model="filterStatus" class="appearance-none mt-4 sm:mt-0 block w-full sm:w-auto pl-4 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
-                <option value="Todos">Todos los Estados</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Pago Pendiente">Pago Pendiente</option>
-                <option value="Procesando">Procesando</option>
-                <option value="Facturado">Facturado</option>
-                <option value="No Facturado">No Facturado</option>
-                <option value="Enviado">Enviado</option>
-              </select>
-              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-800">Facturación Masiva</h2>
+                <p class="text-gray-600">Revise los datos cargados y proceda a emitir las facturas.</p>
+              </div>
+              <div class="flex items-center space-x-4">
+                <div class="relative">
+                  <label for="status-filter" class="sr-only">Filtrar por estado</label>
+                  <select id="status-filter" v-model="filterStatus" class="appearance-none mt-4 sm:mt-0 block w-full sm:w-auto pl-4 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
+                    <option value="Todos">Todos los Estados</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Pago Pendiente">Pago Pendiente</option>
+                    <option value="Procesando">Procesando</option>
+                    <option value="Facturado">Facturado</option>
+                    <option value="No Facturado">No Facturado</option>
+                    <option value="Enviado">Enviado</option>
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                  </div>
+                </div>
+                <!-- Start Button -->
+                <BaseButton v-if="!isBilling" @click="startBilling" :disabled="tableData.length === 0 || !selectedPuntoEmisionId" variant="primary">
+                    <template #icon>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </template>
+                    Iniciar Facturación
+                </BaseButton>
+                <!-- Billing In Progress Controls -->
+                <div v-if="isBilling" class="flex items-center space-x-4">
+                    <div class="flex items-center text-lg font-medium text-gray-700">
+                        <svg class="animate-spin mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Facturando... ({{ currentIndex + 1 }} / {{ rowsToBill.length }})</span>
+                    </div>
+                    <BaseButton v-if="!isPaused" @click="pauseBilling" variant="warning">Pausar</BaseButton>
+                    <BaseButton v-if="isPaused" @click="resumeBilling" variant="success">Reanudar</BaseButton>
+                    <BaseButton @click="cancelBilling" variant="danger">Cancelar</BaseButton>
+                </div>
               </div>
             </div>
-            <!-- Start Button -->
-            <BaseButton v-if="!isBilling" @click="startBilling" :disabled="tableData.length === 0 || !selectedPuntoEmisionId" variant="primary">
-                <template #icon>
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </template>
-                Iniciar Facturación
-            </BaseButton>
-            <!-- Billing In Progress Controls -->
-            <div v-if="isBilling" class="flex items-center space-x-4">
-                <div class="flex items-center text-lg font-medium text-gray-700">
-                    <svg class="animate-spin mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </div>
+        <div class="flex justify-end my-4 px-6">
+            <div class="relative w-full max-w-xs">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                     </svg>
-                    <span>Facturando... ({{ currentIndex + 1 }} / {{ rowsToBill.length }})</span>
                 </div>
-                <BaseButton v-if="!isPaused" @click="pauseBilling" variant="warning">Pausar</BaseButton>
-                <BaseButton v-if="isPaused" @click="resumeBilling" variant="success">Reanudar</BaseButton>
-                <BaseButton @click="cancelBilling" variant="danger">Cancelar</BaseButton>
+                <input type="text" v-model="searchQuery" placeholder="Buscar..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
             </div>
-          </div>
         </div>
         <TableSkeleton v-if="isParsingFile" />
         <template v-else>
-          <DataTable :data="paginatedPendingRows" :headers="tableHeaders" @toggle-expansion="toggleRowExpansion" />
-          <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+            <div class="overflow-x-auto">
+                <DataTable :data="paginatedPendingRows" :headers="tableHeaders" :sort-key="sortKey" :sort-order="sortOrder" @sort="sortBy" @toggle-expansion="toggleRowExpansion" />
+            </div>
+            <div v-if="totalPages > 1" class="py-4 px-6 flex justify-center">
+                <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+            </div>
         </template>
       </div>
     </div>

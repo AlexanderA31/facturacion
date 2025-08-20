@@ -18,8 +18,9 @@
     </div>
     <p class="text-gray-600 mb-6">Aquí puede ver las facturas que fallaron durante el proceso masivo y necesitan corrección. Edite los datos necesarios y vuelva a procesarlas.</p>
 
-    <div class="bg-white rounded-xl shadow-lg p-6">
-      <!-- Billing controls will go here -->
+    <div class="bg-white rounded-xl shadow-lg">
+        <div class="px-6 pt-6">
+            <!-- Billing controls will go here -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
               <BaseSelect
@@ -63,7 +64,18 @@
             <BaseButton @click="cancelBilling" variant="danger">Cancelar</BaseButton>
         </div>
       </div>
+    </div>
 
+      <div class="flex justify-end my-4">
+        <div class="relative w-full max-w-xs">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <input type="text" v-model="searchQuery" placeholder="Buscar..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+      </div>
       <!-- Data table for failed rows -->
       <TableSkeleton v-if="isLoading" />
       <div v-else>
@@ -71,6 +83,9 @@
           :data="paginatedRows"
           :headers="tableHeaders"
           :showEditButton="false"
+          :sort-key="sortKey"
+          :sort-order="sortOrder"
+          @sort="sortBy"
           @open-edit-modal="openEditModal"
           @toggle-expansion="toggleRowExpansion"
         >
@@ -85,7 +100,9 @@
                 </div>
             </template>
         </DataTable>
-        <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+        <div v-if="totalPages > 1" class="py-4 px-6 flex justify-center">
+            <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+        </div>
       </div>
     </div>
 
@@ -156,16 +173,44 @@ export default {
       selectedEstablecimientoId: null,
       selectedPuntoEmisionId: null,
       isLoading: false,
+      searchQuery: '',
+      sortKey: 'Nombres',
+      sortOrder: 'asc',
     };
   },
   computed: {
+    processedRows() {
+        let filtered = [...this.failedRows];
+
+        if (this.searchQuery) {
+            const lowerCaseQuery = this.searchQuery.toLowerCase();
+            filtered = filtered.filter(item => {
+                return (item.Nombres || '').toLowerCase().includes(lowerCaseQuery) ||
+                       (item.Cédula || '').toString().toLowerCase().includes(lowerCaseQuery) ||
+                       (item.Evento || '').toLowerCase().includes(lowerCaseQuery) ||
+                       (item.Precio || '').toString().toLowerCase().includes(lowerCaseQuery);
+            });
+        }
+
+        if (this.sortKey) {
+            filtered.sort((a, b) => {
+                let valA = a[this.sortKey];
+                let valB = b[this.sortKey];
+                if (valA < valB) return this.sortOrder === 'asc' ? -1 : 1;
+                if (valA > valB) return this.sortOrder === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        return filtered;
+    },
     totalPages() {
-      return Math.ceil(this.failedRows.length / this.itemsPerPage);
+      return Math.ceil(this.processedRows.length / this.itemsPerPage);
     },
     paginatedRows() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.failedRows.slice(start, end);
+      return this.processedRows.slice(start, end);
     },
     establecimientoOptions() {
       return this.establecimientos.map(est => ({
@@ -207,6 +252,14 @@ export default {
     window.removeEventListener('corrective-billing-update', this.loadState);
   },
   methods: {
+    sortBy(key) {
+        if (this.sortKey === key) {
+            this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.sortKey = key;
+            this.sortOrder = 'asc';
+        }
+    },
     getTarifaFromCodigoPorcentaje(codigo) {
         const map = {
             '0': 0,
