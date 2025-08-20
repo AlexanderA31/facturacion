@@ -364,7 +364,7 @@ export default {
         total: formatToString(p.total)
       }));
       return {
-        tipoIdentificacionComprador: String(cedula),
+        tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
         razonSocialComprador: nombres,
         identificacionComprador: String(cedula),
         direccionComprador: direccion,

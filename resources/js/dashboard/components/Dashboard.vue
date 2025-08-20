@@ -433,7 +433,7 @@ export default {
 
       return {
         // fechaEmision is now set by the server
-        tipoIdentificacionComprador: String(cedula),
+        tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
         razonSocialComprador: nombres,
         identificacionComprador: String(cedula),
         direccionComprador: direccion,
