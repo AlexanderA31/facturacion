@@ -1,5 +1,5 @@
 <template>
-  <nav v-if="totalPages > 1" class="flex items-center space-x-2" aria-label="Pagination">
+  <nav class="flex items-center space-x-2" aria-label="Pagination">
     <!-- Previous Button -->
     <button @click="$emit('prev-page')" :disabled="currentPage === 1"
             class="relative inline-flex items-center p-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">

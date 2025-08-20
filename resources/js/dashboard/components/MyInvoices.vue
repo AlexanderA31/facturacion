@@ -63,7 +63,7 @@
                   <DataTable :data="paginatedInvoices" :headers="headers" :sort-key="sortKey" :sort-order="sortOrder" @sort="sortBy" @download-xml="downloadXml" @download-pdf="downloadPdf" @toggle-error-expansion="toggleErrorExpansion" />
               </div>
           </div>
-          <div class="py-4 px-6 flex justify-center">
+          <div v-if="totalPages > 1" class="py-4 px-6 flex justify-center">
               <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
           </div>
       </div>
