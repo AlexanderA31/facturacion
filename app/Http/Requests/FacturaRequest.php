@@ -59,7 +59,7 @@ class FacturaRequest extends FormRequest
             "detalles.*.precioUnitario" => "required|numeric|min:0",
             "detalles.*.descuento" => "required|numeric|min:0|max:1.0E+14",
             "detalles.*.precioTotalSinImpuesto" => "required|numeric|min:0|max:1.0E+14",
-            "detalles.*.impuestos" => "required|array",
+            "detalles.*.impuestos" => "sometimes|array",
             "detalles.*.impuestos.*.codigo" => "required|integer|in:" . implode(',', CodigosImpuestosEnum::values()),
             "detalles.*.impuestos.*.codigoPorcentaje" => "required|integer|min:0|max:9999",
             "detalles.*.impuestos.*.tarifa" => "required|numeric|min:0|max:9999|regex:/^\d+(\.\d{2})?$/",
