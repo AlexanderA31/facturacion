@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <div class="flex justify-between items-center mb-4">
+  <div :class="{ '-mx-4 sm:-mx-6 lg:-mx-8': currentTab === 'authorized' }">
+    <div class="flex justify-between items-center mb-4 px-4 sm:px-6 lg:px-8">
       <h2 class="text-2xl font-bold text-gray-800">Mis Comprobantes</h2>
         <div class="flex items-center space-x-2">
             <!-- Download Button -->
