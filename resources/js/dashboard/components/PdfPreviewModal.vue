@@ -1,6 +1,6 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-40" @click.self="close">
-    <div class="relative top-10 mx-auto shadow-lg rounded-md bg-white w-11/12 md:w-3/4 lg:w-1/2">
+  <div v-if="show" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-40" @click.self="close">
+    <div class="relative shadow-lg rounded-md bg-white w-11/12 md:w-3/4 lg:w-1/2 flex flex-col" style="max-height: 90vh;">
       <!-- Modal Header -->
       <div class="flex justify-between items-center p-4 border-b">
         <h3 class="text-lg font-semibold text-gray-800">Previsualización de PDF</h3>
@@ -73,7 +73,9 @@ export default {
       this.$emit('close');
     },
     cleanup() {
-        this.$refs.pdfContainer.innerHTML = '';
+        if (this.$refs.pdfContainer) {
+            this.$refs.pdfContainer.innerHTML = '';
+        }
         this.pdfDoc = null;
         this.error = null;
     },
