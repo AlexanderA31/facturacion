@@ -11,6 +11,7 @@
             <svg class="h-6 w-6" :class="iconClasses" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path v-if="type === 'success'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               <path v-if="type === 'error'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path v-if="type === 'info'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div class="ml-3 w-0 flex-1 pt-0.5">
@@ -37,7 +38,7 @@ export default {
     return {
       show: false,
       message: '',
-      type: 'success', // 'success' or 'error'
+      type: 'success', // 'success', 'error', or 'info'
       timeout: null,
     };
   },
@@ -46,24 +47,28 @@ export default {
       return {
         'bg-green-100 border-l-4 border-green-500': this.type === 'success',
         'bg-red-100 border-l-4 border-red-500': this.type === 'error',
+        'bg-blue-100 border-l-4 border-blue-500': this.type === 'info',
       };
     },
     iconClasses() {
       return {
         'text-green-500': this.type === 'success',
         'text-red-500': this.type === 'error',
+        'text-blue-500': this.type === 'info',
       };
     },
     messageClasses() {
       return {
         'text-green-800': this.type === 'success',
         'text-red-800': this.type === 'error',
+        'text-blue-800': this.type === 'info',
       };
     },
     buttonFocusClasses() {
         return {
             'ring-green-500': this.type === 'success',
             'ring-red-500': this.type === 'error',
+            'ring-blue-500': this.type === 'info',
         }
     }
   },
