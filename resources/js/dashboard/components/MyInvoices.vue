@@ -57,9 +57,15 @@
 
     <div class="bg-white rounded-xl shadow-lg">
       <TableSkeleton v-if="isLoading" />
-      <div v-else>
-        <DataTable :data="paginatedInvoices" :headers="headers" :sort-key="sortKey" :sort-order="sortOrder" @sort="sortBy" @download-xml="downloadXml" @download-pdf="downloadPdf" @toggle-error-expansion="toggleErrorExpansion" />
-        <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+      <div v-else class="flex flex-col">
+          <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                  <DataTable :data="paginatedInvoices" :headers="headers" :sort-key="sortKey" :sort-order="sortOrder" @sort="sortBy" @download-xml="downloadXml" @download-pdf="downloadPdf" @toggle-error-expansion="toggleErrorExpansion" />
+              </div>
+          </div>
+          <div class="py-4 px-6 flex justify-end">
+              <Pagination :currentPage="currentPage" :totalPages="totalPages" @prev-page="currentPage--" @next-page="currentPage++" />
+          </div>
       </div>
     </div>
   </div>
