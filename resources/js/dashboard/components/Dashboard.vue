@@ -450,7 +450,7 @@ export default {
         detalles: [{
           codigoPrincipal: String(codigo),
           descripcion: evento,
-          cantidad: "1",
+          cantidad: formatToString(1, 2),
           precioUnitario: formatToString(totalSinImpuestos, 6),
           descuento: "0.00",
           precioTotalSinImpuesto: formatToString(totalSinImpuestos),
