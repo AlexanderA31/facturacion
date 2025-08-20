@@ -55,7 +55,7 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="bg-white rounded-xl shadow-lg">
       <TableSkeleton v-if="isLoading" />
       <div v-else>
         <DataTable :data="paginatedInvoices" :headers="headers" :sort-key="sortKey" :sort-order="sortOrder" @sort="sortBy" @download-xml="downloadXml" @download-pdf="downloadPdf" @toggle-error-expansion="toggleErrorExpansion" />
