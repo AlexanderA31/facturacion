@@ -69,12 +69,6 @@
       </div>
     </div>
 
-    <PdfPreviewModal
-      :show="isPdfModalOpen"
-      :pdf-url="selectedPdfUrl"
-      :token="token"
-      @close="isPdfModalOpen = false"
-    />
   </div>
 </template>
 
@@ -85,7 +79,6 @@ import DataTable from './DataTable.vue';
 import Pagination from './Pagination.vue';
 import TableSkeleton from './TableSkeleton.vue';
 import RefreshButton from './RefreshButton.vue';
-import PdfPreviewModal from './PdfPreviewModal.vue';
 
 export default {
   name: 'MyInvoices',
@@ -94,7 +87,6 @@ export default {
     Pagination,
     TableSkeleton,
     RefreshButton,
-    PdfPreviewModal,
   },
   props: {
     token: {
@@ -114,8 +106,6 @@ export default {
       searchQuery: '',
       sortKey: 'fecha_emision',
       sortOrder: 'desc',
-      isPdfModalOpen: false,
-      selectedPdfUrl: '',
     };
   },
   computed: {
@@ -226,8 +216,8 @@ export default {
   },
   methods: {
     openPdfPreview(claveAcceso) {
-        this.selectedPdfUrl = `/api/comprobantes/${claveAcceso}/pdf`;
-        this.isPdfModalOpen = true;
+        const url = `/api/comprobantes/${claveAcceso}/pdf`;
+        window.open(url, '_blank');
     },
     sortBy(key) {
       if (this.sortKey === key) {

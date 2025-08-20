@@ -31,7 +31,7 @@
         <h1 class="text-xl font-semibold">{{ headerTitle }}</h1>
       </header>
 
-      <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+      <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 py-8">
         <slot></slot>
       </main>
     </div>
