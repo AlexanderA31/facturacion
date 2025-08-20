@@ -1,5 +1,7 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-40" @click.self="close">
+  <div v-if="show" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-40"
+       :class="isSidebarOpen ? 'ml-64' : 'ml-20'"
+       @click.self="close">
     <div class="relative shadow-lg rounded-md bg-white w-11/12 md:w-3/4 lg:w-4/5 flex flex-col" style="height: 90vh;">
       <!-- Modal Header -->
       <div class="flex justify-between items-center p-4 border-b">
@@ -29,6 +31,10 @@ export default {
       type: String,
       default: null,
     },
+    isSidebarOpen: {
+        type: Boolean,
+        default: false,
+    }
   },
   methods: {
     close() {

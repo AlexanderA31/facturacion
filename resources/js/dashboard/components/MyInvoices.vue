@@ -69,12 +69,13 @@
       </div>
     </div>
 
-  </div>
     <PdfPreviewModal
       :show="isPdfModalOpen"
       :pdf-url="selectedPdfUrl"
+      :is-sidebar-open="isSidebarOpen"
       @close="closePdfModal"
     />
+  </div>
 </template>
 
 <script>
@@ -100,6 +101,10 @@ export default {
       type: String,
       required: true,
     },
+    isSidebarOpen: {
+        type: Boolean,
+        default: false,
+    }
   },
   data() {
     return {

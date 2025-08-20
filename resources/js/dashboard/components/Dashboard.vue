@@ -125,7 +125,7 @@
 
     <!-- My Invoices Section -->
     <div v-if="currentDashboardView === 'my-invoices'">
-      <MyInvoices :token="token" />
+      <MyInvoices :token="token" :is-sidebar-open="isSidebarOpen" />
     </div>
 
     <!-- Corrective Billing Section -->
