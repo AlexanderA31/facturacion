@@ -139,6 +139,7 @@ import BaseAlert from './BaseAlert.vue';
 import BaseSelect from './BaseSelect.vue';
 import AppLayout from './AppLayout.vue';
 import axios from 'axios';
+import { parsePaymentMethods } from '../utils/paymentMethods.js';
 
 const IconBilling = {
   render() { return h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' }, [ h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': 2, d: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }) ]); }
@@ -424,6 +425,9 @@ export default {
       const totalSinImpuestos = formatToNumber(precio / taxRate, 6);
       const iva = formatToNumber(precio - totalSinImpuestos, 2);
 
+      const metodoPago = findValue('metodo de pago');
+      const pagos = parsePaymentMethods(metodoPago, precio);
+
       return {
         // fechaEmision is now set by the server
         tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
@@ -439,7 +443,7 @@ export default {
             valor: iva
         }],
         importeTotal: precio,
-        pagos: [{ formaPago: '01', total: precio }],
+        pagos: pagos,
         detalles: [{
           codigoPrincipal: String(codigo),
           descripcion: evento,

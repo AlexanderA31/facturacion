@@ -108,6 +108,7 @@ import RefreshButton from './RefreshButton.vue';
 import BaseSelect from './BaseSelect.vue';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
+import { parsePaymentMethods } from '../utils/paymentMethods.js';
 
 export default {
   name: 'CorrectiveBilling',
@@ -357,6 +358,8 @@ export default {
       const taxRate = 1 + (tarifa / 100);
       const totalSinImpuestos = formatToNumber(precio / taxRate, 6);
       const iva = formatToNumber(precio - totalSinImpuestos, 2);
+      const metodoPago = findValue('metodo de pago');
+      const pagos = parsePaymentMethods(metodoPago, precio);
       return {
         tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
         razonSocialComprador: nombres,
@@ -371,7 +374,7 @@ export default {
             valor: iva
         }],
         importeTotal: precio,
-        pagos: [{ formaPago: '01', total: precio }],
+        pagos: pagos,
         detalles: [{
           codigoPrincipal: String(codigo),
           descripcion: evento,
