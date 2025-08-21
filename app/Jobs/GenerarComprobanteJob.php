@@ -287,16 +287,15 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 
     private function getImporteTotal(array $payload): float
     {
-        if (isset($payload['infoFactura']['importeTotal'])) {
-            return (float) $payload['infoFactura']['importeTotal'];
+        // Based on XmlBlockGenerator, the payload is flat.
+        if (isset($payload['importeTotal'])) {
+            return (float) $payload['importeTotal'];
         }
 
-        if (isset($payload['infoNotaCredito']['valorModificacion'])) {
-            return (float) $payload['infoNotaCredito']['valorModificacion'];
+        // Fallback for other potential document types that might be stored differently.
+        if (isset($payload['valorModificacion'])) { // e.g., Nota de Crédito
+            return (float) $payload['valorModificacion'];
         }
-
-        // Add other document types here if needed
-        // e.g., infoNotaDebito, infoGuiaRemision, etc.
 
         return 0.0;
     }
