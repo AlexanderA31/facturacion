@@ -32,19 +32,33 @@
       </header>
 
       <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-8">
-        <!-- Global Download Progress -->
-        <div v-if="downloadStore.activeBulkDownloads.length > 0" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-md shadow-md" role="alert">
-            <div v-for="job in downloadStore.activeBulkDownloads" :key="job.id">
-                <p class="font-bold">Descarga en progreso ({{ job.format.toUpperCase() }})</p>
-                <p v-if="job.status === 'pending'">Iniciando...</p>
-                <p v-if="job.status === 'processing'">Procesando: {{ job.processed_files }} de {{ job.total_files }} archivos.</p>
-                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                    <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: (job.processed_files / job.total_files * 100) + '%' }"></div>
+        <slot></slot>
+      </main>
+    </div>
+
+    <!-- Global Download Progress Floating Alert -->
+    <div v-if="downloadStore.activeBulkDownloads.length > 0"
+         class="fixed bottom-4 right-4 w-80 bg-white p-4 rounded-lg shadow-lg border border-gray-200 z-50">
+        <div v-for="job in downloadStore.activeBulkDownloads" :key="job.id" class="not-prose">
+            <div class="flex items-center mb-2">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="font-bold text-gray-800">Descarga en progreso ({{ job.format.toUpperCase() }})</p>
+            </div>
+            <p v-if="job.status === 'pending'" class="text-sm text-gray-600">Iniciando...</p>
+            <p v-if="job.status === 'processing'" class="text-sm text-gray-600">
+                Procesando: {{ job.processed_files }} de {{ job.total_files }} archivos.
+            </p>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                <div class="bg-blue-600 h-2.5 rounded-full"
+                     :style="{ width: (job.processed_files / job.total_files * 100) + '%' }"
+                     style="transition: width 0.5s ease;">
                 </div>
             </div>
         </div>
-        <slot></slot>
-      </main>
+    </div>
     </div>
   </div>
 </template>
