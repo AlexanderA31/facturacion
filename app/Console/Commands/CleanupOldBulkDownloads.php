@@ -36,8 +36,8 @@ class CleanupOldBulkDownloads extends Command
         $oldJobs = BulkDownloadJob::where('created_at', '<', $expirationDate)->get();
 
         foreach ($oldJobs as $job) {
-            if ($job->file_path && Storage::disk('local')->exists($job->file_path)) {
-                Storage::disk('local')->delete($job->file_path);
+            if ($job->file_path && Storage::disk('public')->exists($job->file_path)) {
+                Storage::disk('public')->delete($job->file_path);
                 $this->line("Deleted zip file: {$job->file_path}");
             }
             $job->delete();

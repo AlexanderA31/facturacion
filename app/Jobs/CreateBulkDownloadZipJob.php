@@ -39,7 +39,7 @@ class CreateBulkDownloadZipJob implements ShouldQueue
     {
         $this->bulkDownloadJob->update(['status' => BulkDownloadStatusEnum::PROCESSING]);
 
-        $zipFileName = 'bulk-download-' . $this->bulkDownloadJob->id . '.zip';
+        $zipFileName = 'bulk-downloads/bulk-download-' . $this->bulkDownloadJob->id . '.zip';
         $tempZipPath = tempnam(sys_get_temp_dir(), 'zip');
 
         try {
@@ -76,7 +76,7 @@ class CreateBulkDownloadZipJob implements ShouldQueue
 
             $zip->close();
 
-            Storage::disk('local')->put($zipFileName, file_get_contents($tempZipPath));
+            Storage::disk('public')->put($zipFileName, file_get_contents($tempZipPath));
 
             $this->bulkDownloadJob->update([
                 'status' => BulkDownloadStatusEnum::COMPLETED,
