@@ -104,8 +104,10 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             Log::error("Error en generación del comprobante [ID {$this->comprobante->id}]: " . $e->getMessage());
             throw $e;
         } finally {
-            // No longer deleting the file from here to prevent race conditions.
-            // A separate cleanup job will handle this.
+            if ($signedFilePath && file_exists($signedFilePath)) {
+                @unlink($signedFilePath);
+                Log::info("Archivo firmado eliminado: $signedFilePath");
+            }
         }
     }
 
@@ -232,6 +234,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 
             Log::info("✅ Comprobante autorizado: {$this->claveAcceso}");
 
+            $pdfPath = null;
             try {
                 if ($this->user->enviar_factura_por_correo) {
                     $payload = json_decode($this->comprobante->payload, true);
@@ -253,6 +256,10 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                 }
             } catch (\Exception $e) {
                 Log::error("Error al intentar enviar el correo para el comprobante {$this->claveAcceso}: " . $e->getMessage());
+            } finally {
+                if ($pdfPath && file_exists($pdfPath)) {
+                    @unlink($pdfPath);
+                }
             }
 
         } catch (SriException $e) {
