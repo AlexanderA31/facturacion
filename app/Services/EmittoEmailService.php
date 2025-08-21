@@ -36,27 +36,45 @@ class EmittoEmailService
         }
 
         try {
-            $request = Http::withHeaders([
-                'x-key-emitto' => $this->secretKey,
-                'Accept' => 'application/json',
-            ]);
+            $multipart = [
+                [
+                    'name'     => 'from',
+                    'contents' => config('mail.from.address', 'noreply@example.com'),
+                ],
+                [
+                    'name'     => 'subjectEmail',
+                    'contents' => $subject,
+                ],
+                [
+                    'name'     => 'message',
+                    'contents' => $message,
+                ],
+            ];
+
+            // The 'sendTo' parameter in Emitto seems to be an array of emails.
+            foreach ([$recipientEmail] as $email) {
+                $multipart[] = [
+                    'name'     => 'sendTo[]',
+                    'contents' => $email,
+                ];
+            }
 
             foreach ($attachments as $attachment) {
                 if (isset($attachment['path']) && file_exists($attachment['path'])) {
-                    $request->attach(
-                        'attachments[]',
-                        file_get_contents($attachment['path']),
-                        $attachment['filename']
-                    );
+                    $multipart[] = [
+                        'name'     => 'attachments[]',
+                        'contents' => fopen($attachment['path'], 'r'),
+                        'filename' => $attachment['filename'],
+                    ];
                 }
             }
 
-            $response = $request->post("{$this->baseUrl}/email/send", [
-                'from' => config('mail.from.address', 'noreply@example.com'),
-                'subjectEmail' => $subject,
-                'sendTo' => [$recipientEmail],
-                'message' => $message,
-            ]);
+            $response = Http::withHeaders([
+                'x-key-emitto' => $this->secretKey,
+                'Accept' => 'application/json',
+            ])
+            ->asMultipart()
+            ->post("{$this->baseUrl}/email/send", $multipart);
 
             if ($response->failed()) {
                 Log::error('EmittoEmailService: Falló el envío de correo.', [
