@@ -26,7 +26,7 @@ class EmittoEmailService
      * @return bool
      * @throws \Exception
      */
-    public function sendInvoiceEmail(string $recipientEmail, string $subject, string $message, array $attachments): bool
+    public function sendInvoiceEmail(string $recipientEmail, string $subject, string $message, array $attachments, ?string $fromAddress = null): bool
     {
         if (!$this->secretKey) {
             Log::error('EmittoEmailService: La clave secreta de Emitto no está configurada.');
@@ -37,7 +37,7 @@ class EmittoEmailService
             $multipart = [
                 [
                     'name'     => 'from',
-                    'contents' => config('mail.from.address', 'noreply@example.com'),
+                    'contents' => $fromAddress ?? config('mail.from.address', 'noreply@example.com'),
                 ],
                 [
                     'name'     => 'subjectEmail',
