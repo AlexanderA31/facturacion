@@ -40,48 +40,57 @@ class CreateBulkDownloadZipJob implements ShouldQueue
         $this->bulkDownloadJob->update(['status' => BulkDownloadStatusEnum::PROCESSING]);
 
         $zipFileName = 'bulk-download-' . $this->bulkDownloadJob->id . '.zip';
-        $zipPath = Storage::disk('local')->path($zipFileName);
+        $tempZipPath = tempnam(sys_get_temp_dir(), 'zip');
 
-        $zip = new ZipArchive();
+        try {
+            $zip = new ZipArchive();
+            if ($zip->open($tempZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
+                throw new \Exception('Cannot create zip file.');
+            }
 
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
-            $this->fail(new \Exception('Cannot create zip file.'));
-            return;
-        }
+            $processedCount = 0;
+            foreach ($this->clavesAcceso as $claveAcceso) {
+                try {
+                    $comprobante = Comprobante::findByClaveAcceso($claveAcceso);
+                    if (!$comprobante) {
+                        Log::warning("Comprobante not found for clave de acceso: {$claveAcceso} in job {$this->bulkDownloadJob->id}");
+                        continue;
+                    }
 
-        $processedCount = 0;
-        foreach ($this->clavesAcceso as $claveAcceso) {
-            try {
-                $comprobante = Comprobante::findByClaveAcceso($claveAcceso);
-                if (!$comprobante) {
-                    Log::warning("Comprobante not found for clave de acceso: {$claveAcceso}");
-                    continue;
+                    if ($this->bulkDownloadJob->format === 'pdf') {
+                        $fileName = '';
+                        $content = $fileGenerationService->generatePdfContent($comprobante, $fileName);
+                        $zip->addFromString($fileName, $content);
+                    } else {
+                        $content = $fileGenerationService->generateXmlContent($comprobante);
+                        $zip->addFromString($claveAcceso . '.xml', $content);
+                    }
+
+                    $processedCount++;
+                    $this->bulkDownloadJob->update(['processed_files' => $processedCount]);
+
+                } catch (Throwable $e) {
+                    Log::error("Error processing file for bulk download job {$this->bulkDownloadJob->id}: " . $e->getMessage());
                 }
+            }
 
-                if ($this->bulkDownloadJob->format === 'pdf') {
-                    $fileName = '';
-                    $content = $fileGenerationService->generatePdfContent($comprobante, $fileName);
-                    $zip->addFromString($fileName, $content);
-                } else {
-                    $content = $fileGenerationService->generateXmlContent($comprobante);
-                    $zip->addFromString($claveAcceso . '.xml', $content);
-                }
+            $zip->close();
 
-                $processedCount++;
-                $this->bulkDownloadJob->update(['processed_files' => $processedCount]);
+            Storage::disk('local')->put($zipFileName, file_get_contents($tempZipPath));
 
-            } catch (Throwable $e) {
-                Log::error("Error processing file for bulk download job {$this->bulkDownloadJob->id}: " . $e->getMessage());
+            $this->bulkDownloadJob->update([
+                'status' => BulkDownloadStatusEnum::COMPLETED,
+                'file_path' => $zipFileName,
+                'expires_at' => now()->addDay(),
+            ]);
+
+        } catch (Throwable $e) {
+            $this->fail($e);
+        } finally {
+            if (file_exists($tempZipPath)) {
+                unlink($tempZipPath);
             }
         }
-
-        $zip->close();
-
-        $this->bulkDownloadJob->update([
-            'status' => BulkDownloadStatusEnum::COMPLETED,
-            'file_path' => $zipFileName,
-            'expires_at' => now()->addDay(),
-        ]);
     }
 
     /**
