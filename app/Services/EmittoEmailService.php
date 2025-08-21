@@ -36,17 +36,20 @@ class EmittoEmailService
         }
 
         try {
-            $response = Http::withHeaders([
-                'x-key-emitto' => $this->secretKey,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ])->post("{$this->baseUrl}/email/send", [
+            $payload = [
                 'from' => config('mail.from.address', 'noreply@example.com'),
                 'subjectEmail' => $subject,
                 'sendTo' => [$recipientEmail],
                 'message' => $message,
                 'attachments' => $attachments,
-            ]);
+            ];
+
+            $response = Http::withHeaders([
+                'x-key-emitto' => $this->secretKey,
+                'Accept' => 'application/json',
+            ])
+            ->withBody(json_encode($payload), 'application/json')
+            ->post("{$this->baseUrl}/email/send");
 
             if ($response->failed()) {
                 Log::error('EmittoEmailService: Falló el envío de correo.', [
