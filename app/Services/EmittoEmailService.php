@@ -62,7 +62,7 @@ class EmittoEmailService
                     }
 
                     $multipart[] = [
-                        'name'     => 'attachments[]',
+                        'name'     => 'attachments',
                         'contents' => $fileStream,
                         'filename' => $attachment['filename'],
                     ];
