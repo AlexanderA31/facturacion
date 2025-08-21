@@ -91,8 +91,8 @@
 <body>
     <div class="email-container">
         <div class="email-header">
-            @if(isset($logoUrl))
-                <img src="{{ $logoUrl }}" alt="Logo de la Empresa">
+            @if(isset($logoData))
+                <img src="{{ $logoData }}" alt="Logo de la Empresa">
             @endif
             <h1>Nuevo Comprobante Electrónico</h1>
         </div>

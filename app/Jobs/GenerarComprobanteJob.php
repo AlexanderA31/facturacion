@@ -249,8 +249,15 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                         $pdfUrl = Storage::disk('public')->url($relativePath);
 
                         // Prepare data for the email template
+                        $logoData = null;
+                        if ($this->user->logo_path && Storage::disk('public')->exists($this->user->logo_path)) {
+                            $logoContents = Storage::disk('public')->get($this->user->logo_path);
+                            $logoMimeType = Storage::disk('public')->mimeType($this->user->logo_path);
+                            $logoData = 'data:' . $logoMimeType . ';base64,' . base64_encode($logoContents);
+                        }
+
                         $emailData = [
-                            'logoUrl' => $this->user->logo_path ? Storage::url($this->user->logo_path) : null,
+                            'logoData' => $logoData,
                             'claveAcceso' => $this->claveAcceso,
                             'total' => $this->getImporteTotal($payload),
                             'pdfUrl' => $pdfUrl,
