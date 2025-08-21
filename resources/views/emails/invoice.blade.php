@@ -5,114 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuevo Comprobante Electrónico</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
         body {
-            font-family: 'Lato', Arial, sans-serif;
+            font-family: 'Roboto', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8f9fa;
-            color: #333333;
+            background-color: #eef2f5;
+            color: #3d4852;
+        }
+        .email-wrapper {
+            padding: 20px 0;
         }
         .email-container {
-            max-width: 680px;
-            margin: 20px auto;
+            max-width: 600px;
+            margin: 0 auto;
             background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
             overflow: hidden;
         }
         .email-header {
-            background-color: #0d6efd;
-            color: #ffffff;
-            padding: 40px;
+            padding: 30px;
             text-align: center;
+            border-bottom: 1px solid #e2e8f0;
         }
         .email-header img {
-            max-width: 150px;
-            margin-bottom: 20px;
-        }
-        .email-header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
+            max-width: 120px;
         }
         .email-body {
-            padding: 40px;
+            padding: 30px 40px;
+        }
+        .email-body h1 {
+            color: #2d3748;
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 0;
+            text-align: center;
         }
         .email-body p {
             font-size: 16px;
-            line-height: 1.7;
-            margin: 0 0 16px;
+            line-height: 1.6;
+            margin: 0 0 1em;
         }
         .invoice-details {
-            margin: 30px 0;
+            margin: 25px 0;
             padding: 20px;
-            background-color: #f8f9fa;
-            border-left: 5px solid #0d6efd;
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
         }
         .invoice-details p {
-            margin: 8px 0;
-            font-size: 16px;
+            margin: 0.5em 0;
+            font-size: 15px;
         }
         .invoice-details strong {
-            color: #0d6efd;
+            color: #2d3748;
         }
         .button-container {
             text-align: center;
-            margin-top: 30px;
+            padding: 20px 0;
         }
         .button {
-            background-color: #198754;
-            color: #ffffff;
-            padding: 15px 30px;
+            background-color: #38a89d;
+            color: #ffffff !important; /* Important to override default link colors */
+            padding: 14px 28px;
             text-decoration: none;
-            border-radius: 50px;
-            font-size: 18px;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 700;
             display: inline-block;
-            transition: background-color 0.3s ease;
-        }
-        .button:hover {
-            background-color: #157347;
         }
         .email-footer {
             text-align: center;
-            padding: 20px;
-            font-size: 14px;
-            color: #6c757d;
-            background-color: #f8f9fa;
-            border-top: 1px solid #dee2e6;
-        }
-        .email-footer p {
-            margin: 0;
+            padding: 25px;
+            font-size: 12px;
+            color: #718096;
+            background-color: #f7fafc;
+            border-top: 1px solid #e2e8f0;
         }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <div class="email-header">
-            @if(isset($logoData))
-                <img src="{{ $logoData }}" alt="Logo de la Empresa">
-            @endif
-            <h1>Nuevo Comprobante Electrónico</h1>
-        </div>
-        <div class="email-body">
-            <p>Estimado cliente,</p>
-            <p>Hemos generado un nuevo comprobante electrónico para usted. Puede encontrar un resumen de los detalles a continuación y los archivos adjuntos en este correo.</p>
-
-            <div class="invoice-details">
-                <p><strong>Clave de Acceso:</strong><br>{{ $claveAcceso }}</p>
-                <p><strong>Importe Total:</strong><br>${{ number_format($total, 2) }}</p>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="email-header">
+                @if(isset($logoData))
+                    <img src="{{ $logoData }}" alt="Logo de la Empresa">
+                @endif
             </div>
+            <div class="email-body">
+                <h1>Ha Recibido un Nuevo Comprobante</h1>
+                <p>Estimado cliente,</p>
+                <p>Adjunto a este correo encontrará los archivos de su comprobante electrónico. A continuación, un resumen de la operación:</p>
 
-            <p>Para su conveniencia, también puede descargar el comprobante en formato PDF directamente desde el siguiente enlace:</p>
+                <div class="invoice-details">
+                    <p><strong>Clave de Acceso:</strong><br>{{ $claveAcceso }}</p>
+                    <p><strong>Importe Total:</strong><br>${{ number_format($total, 2) }}</p>
+                </div>
 
-            <div class="button-container">
-                <a href="{{ $pdfUrl }}" class="button" download>Descargar PDF</a>
+                <p>Si desea visualizar el comprobante en formato PDF, puede hacerlo a través del siguiente botón:</p>
+
+                <div class="button-container">
+                    <a href="{{ $pdfUrl }}" class="button" target="_blank">Previsualizar PDF</a>
+                </div>
             </div>
-        </div>
-        <div class="email-footer">
-            <p>Este es un correo electrónico generado automáticamente. Por favor, no responda a este mensaje.</p>
+            <div class="email-footer">
+                Este es un correo electrónico generado automáticamente. Por favor, no responda a este mensaje.
+            </div>
         </div>
     </div>
 </body>
