@@ -257,8 +257,13 @@ class ComprobantesController extends Controller
                 return $this->sendError('El archivo no está listo', 'El archivo ZIP aún no está listo para descargar.', 409);
             }
 
-            if (!Storage::disk('public')->exists($job->file_path)) {
-                return $this->sendError('Archivo no encontrado', 'El archivo ZIP no se encontró en el servidor.', 404);
+            if (!$job->file_path || !Storage::disk('public')->exists($job->file_path)) {
+                $expectedPath = $job->file_path ? Storage::disk('public')->path($job->file_path) : 'null';
+                return $this->sendError(
+                    'Archivo no encontrado',
+                    'El archivo ZIP no se encontró en el servidor. Path: ' . $expectedPath,
+                    404
+                );
             }
 
             return Storage::disk('public')->download($job->file_path);
