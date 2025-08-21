@@ -68,6 +68,7 @@ class User extends Authenticatable implements JWTSubject
         'contribuyenteEspecial',
         'obligadoContabilidad',
         'enviar_factura_por_correo',
+        'from_email',
         'logo_path',
         'tipo_impuesto',
         'codigo_porcentaje_iva',
