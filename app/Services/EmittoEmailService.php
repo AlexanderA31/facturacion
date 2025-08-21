@@ -37,17 +37,6 @@ class EmittoEmailService
         }
 
         try {
-            // Base64 encode attachments
-            $encodedAttachments = [];
-            foreach ($attachments as $attachment) {
-                if (isset($attachment['path']) && file_exists($attachment['path'])) {
-                    $encodedAttachments[] = [
-                        'filename' => $attachment['filename'],
-                        'content'  => base64_encode(file_get_contents($attachment['path'])),
-                    ];
-                }
-            }
-
             $response = $this->guzzleClient->request('POST', "{$this->baseUrl}/email/send", [
                 'headers' => [
                     'x-key-emitto' => $this->secretKey,
@@ -58,7 +47,7 @@ class EmittoEmailService
                     'subjectEmail' => $subject,
                     'sendTo' => [$recipientEmail],
                     'message' => $message,
-                    'attachments' => $encodedAttachments,
+                    'attachments' => $attachments,
                 ],
             ]);
 
