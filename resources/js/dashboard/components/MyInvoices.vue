@@ -79,7 +79,6 @@
 </template>
 
 <script>
-import JSZip from 'jszip';
 import axios from 'axios';
 import DataTable from './DataTable.vue';
 import Pagination from './Pagination.vue';
@@ -384,63 +383,42 @@ export default {
       }
     },
     async downloadAll(format) {
-      this.isDropdownOpen = false;
-      if (this.processedInvoices.length === 0) {
-        this.$emitter.emit('show-alert', { type: 'info', message: 'No hay facturas autorizadas para descargar.' });
-        return;
-      }
+        this.isDropdownOpen = false;
+        const invoicesToDownload = this.processedInvoices;
 
-      this.$emitter.emit('show-alert', { type: 'info', message: `Iniciando la descarga de ${this.processedInvoices.length} facturas. Esto puede tardar un momento...` });
-
-      const zip = new JSZip();
-      const downloadPromises = this.processedInvoices.map(async (invoice) => {
-        try {
-          const url = `/api/comprobantes/${invoice.clave_acceso}/${format}`;
-          const response = await axios.get(url, {
-            headers: { 'Authorization': `Bearer ${this.token}` },
-            responseType: format === 'pdf' ? 'blob' : 'json', // 'json' for xml, 'blob' for pdf
-          });
-
-          let fileContent;
-          let fileName;
-
-          if (format === 'xml') {
-            fileContent = response.data.data.xml;
-            fileName = `${invoice.clave_acceso}.xml`;
-          } else { // pdf
-            fileContent = response.data;
-            const contentDisposition = response.headers['content-disposition'];
-            const fileNameMatch = contentDisposition ? contentDisposition.match(/filename="(.+)"/) : null;
-            fileName = (fileNameMatch && fileNameMatch.length === 2) ? fileNameMatch[1] : `${invoice.clave_acceso}.pdf`;
-          }
-
-          zip.file(fileName, fileContent);
-        } catch (error) {
-          console.error(`Error descargando ${invoice.clave_acceso}.${format}:`, error);
-          this.$emitter.emit('show-alert', { type: 'error', message: `Error al descargar ${invoice.numero_factura}` });
-        }
-      });
-
-      try {
-        await Promise.all(downloadPromises);
-        if (Object.keys(zip.files).length === 0) {
-            this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo descargar ninguna factura.' });
+        if (invoicesToDownload.length === 0) {
+            this.$emitter.emit('show-alert', { type: 'info', message: 'No hay facturas autorizadas para descargar.' });
             return;
         }
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
 
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(zipBlob);
-        link.download = `facturas_autorizadas.zip`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        this.$emitter.emit('show-alert', { type: 'info', message: `Iniciando la descarga de ${invoicesToDownload.length} facturas. Esto puede tardar un momento...` });
 
-        this.$emitter.emit('show-alert', { type: 'success', message: 'Descarga completada.' });
-      } catch (error) {
-        console.error('Error generando el archivo ZIP:', error);
-        this.$emitter.emit('show-alert', { type: 'error', message: 'Ocurrió un error al generar el archivo ZIP.' });
-      }
+        try {
+            const claves_acceso = invoicesToDownload.map(invoice => invoice.clave_acceso);
+
+            const response = await axios.post('/api/comprobantes/descargar-masivo', {
+                claves_acceso,
+                format,
+            }, {
+                headers: { 'Authorization': `Bearer ${this.token}` },
+                responseType: 'blob',
+            });
+
+            const blob = new Blob([response.data], { type: 'application/zip' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `comprobantes-${format}.zip`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+
+            this.$emitter.emit('show-alert', { type: 'success', message: 'Descarga completada.' });
+
+        } catch (error) {
+            console.error('Error en la descarga masiva:', error);
+            this.$emitter.emit('show-alert', { type: 'error', message: 'Ocurrió un error durante la descarga masiva.' });
+        }
     },
   },
 };

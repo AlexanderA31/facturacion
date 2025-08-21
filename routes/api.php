@@ -82,6 +82,7 @@ Route::group(['middleware' => ['json.response']], function () {
         // Route::get('/{clave_acceso}/anular', [ComprobantesController::class, 'show']);
 
         Route::post('/factura/{punto_emision}', [ComprobantesController::class, 'generateFactura']);
+        Route::post('/descargar-masivo', [ComprobantesController::class, 'descargarMasivo']);
         // Route::post('/notas-credito/{punto_emision_id}/emitir', [FacturaController::class, 'generateNotaCredito']);
         // Route::post('/retenciones/{punto_emision_id}/emitir', [FacturaController::class, 'generateRetencion']);
     });
