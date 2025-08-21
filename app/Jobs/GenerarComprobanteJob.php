@@ -18,6 +18,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Services\EmittoEmailService;
 use App\Services\PdfGeneratorService;
@@ -269,9 +270,18 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                         // Generar PDF
                         $pdfPath = $pdfGenerator->generate($this->comprobante);
 
+                        // Convertir rutas locales a URLs públicas
+                        $baseStoragePath = storage_path('app/public');
+
+                        $xmlRelativePath = str_replace($baseStoragePath . DIRECTORY_SEPARATOR, '', $signedFilePath);
+                        $pdfRelativePath = str_replace($baseStoragePath . DIRECTORY_SEPARATOR, '', $pdfPath);
+
+                        $xmlUrl = Storage::disk('public')->url($xmlRelativePath);
+                        $pdfUrl = Storage::disk('public')->url($pdfRelativePath);
+
                         $attachments = [
-                            ['filename' => "{$this->claveAcceso}.xml", 'path' => $signedFilePath],
-                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfPath]
+                            ['filename' => "{$this->claveAcceso}.xml", 'path' => $xmlUrl],
+                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfUrl]
                         ];
 
                         $emailSent = $emittoEmailService->sendInvoiceEmail($recipientEmail, $subject, $message, $attachments);

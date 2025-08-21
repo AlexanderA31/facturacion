@@ -36,16 +36,6 @@ class EmittoEmailService
         }
 
         try {
-            $encodedAttachments = [];
-            foreach ($attachments as $attachment) {
-                if (isset($attachment['path']) && file_exists($attachment['path'])) {
-                    $encodedAttachments[] = [
-                        'filename' => $attachment['filename'],
-                        'content'  => base64_encode(file_get_contents($attachment['path'])),
-                    ];
-                }
-            }
-
             $response = Http::withHeaders([
                 'x-key-emitto' => $this->secretKey,
                 'Content-Type' => 'application/json',
@@ -55,7 +45,7 @@ class EmittoEmailService
                 'subjectEmail' => $subject,
                 'sendTo' => [$recipientEmail],
                 'message' => $message,
-                'attachments' => $encodedAttachments,
+                'attachments' => $attachments,
             ]);
 
             if ($response->failed()) {
