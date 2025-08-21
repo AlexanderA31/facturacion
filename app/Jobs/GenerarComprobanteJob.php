@@ -274,7 +274,13 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                             ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfPath]
                         ];
 
-                        $emittoEmailService->sendInvoiceEmail($recipientEmail, $subject, $message, $attachments);
+                        $emailSent = $emittoEmailService->sendInvoiceEmail($recipientEmail, $subject, $message, $attachments);
+
+                        if ($emailSent) {
+                            Log::info("Correo de factura enviado exitosamente a {$recipientEmail} para el comprobante {$this->claveAcceso}.");
+                        } else {
+                            Log::error("Fallo al enviar el correo de factura a {$recipientEmail} para el comprobante {$this->claveAcceso}.");
+                        }
                     } else {
                         Log::warning("No se encontró correo de destinatario para el comprobante {$this->claveAcceso}.");
                     }
