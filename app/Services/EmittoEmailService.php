@@ -36,45 +36,27 @@ class EmittoEmailService
         }
 
         try {
-            $multipart = [
-                [
-                    'name'     => 'from',
-                    'contents' => config('mail.from.address', 'noreply@example.com'),
-                ],
-                [
-                    'name'     => 'subjectEmail',
-                    'contents' => $subject,
-                ],
-                [
-                    'name'     => 'message',
-                    'contents' => $message,
-                ],
-            ];
-
-            // The 'sendTo' parameter in Emitto seems to be an array of emails.
-            foreach ([$recipientEmail] as $email) {
-                $multipart[] = [
-                    'name'     => 'sendTo[]',
-                    'contents' => $email,
-                ];
-            }
-
+            $encodedAttachments = [];
             foreach ($attachments as $attachment) {
                 if (isset($attachment['path']) && file_exists($attachment['path'])) {
-                    $multipart[] = [
-                        'name'     => 'attachments[]',
-                        'contents' => fopen($attachment['path'], 'r'),
+                    $encodedAttachments[] = [
                         'filename' => $attachment['filename'],
+                        'content'  => base64_encode(file_get_contents($attachment['path'])),
                     ];
                 }
             }
 
             $response = Http::withHeaders([
                 'x-key-emitto' => $this->secretKey,
+                'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])
-            ->asMultipart()
-            ->post("{$this->baseUrl}/email/send", $multipart);
+            ])->post("{$this->baseUrl}/email/send", [
+                'from' => config('mail.from.address', 'noreply@example.com'),
+                'subjectEmail' => $subject,
+                'sendTo' => [$recipientEmail],
+                'message' => $message,
+                'attachments' => $encodedAttachments,
+            ]);
 
             if ($response->failed()) {
                 Log::error('EmittoEmailService: Falló el envío de correo.', [
