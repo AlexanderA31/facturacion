@@ -4,7 +4,7 @@
       <thead class="bg-gray-800 text-white">
         <tr>
           <th v-for="header in headers" :key="header.value" scope="col"
-              class="px-8 py-4 text-left text-sm font-bold uppercase tracking-wider cursor-pointer select-none"
+              class="px-4 py-4 text-left text-sm font-bold uppercase tracking-wider cursor-pointer select-none"
               @click="header.value !== 'acciones' ? $emit('sort', header.value) : null">
             <div class="flex items-center">
               <span>{{ header.text }}</span>
