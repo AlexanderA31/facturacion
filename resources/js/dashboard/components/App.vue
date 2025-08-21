@@ -22,6 +22,7 @@ import Register from './Register.vue';
 import Dashboard from './Dashboard.vue';
 import AdminDashboard from './AdminDashboard.vue';
 import axios from 'axios';
+import downloadStore from '../utils/downloadStore.js';
 
 export default {
   name: 'App',
@@ -42,6 +43,8 @@ export default {
   },
   created() {
     if (this.token) {
+      downloadStore.setToken(this.token);
+      downloadStore.setEmitter(this.$emitter);
       this.fetchUserProfile();
     } else {
       this.isLoading = false;
@@ -52,6 +55,8 @@ export default {
       this.isLoading = true;
       localStorage.setItem('jwt_token', token);
       this.token = token;
+      downloadStore.setToken(token);
+      downloadStore.setEmitter(this.$emitter);
       await this.fetchUserProfile();
     },
     async fetchUserProfile() {

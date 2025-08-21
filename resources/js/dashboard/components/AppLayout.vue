@@ -32,6 +32,17 @@
       </header>
 
       <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-8">
+        <!-- Global Download Progress -->
+        <div v-if="downloadStore.activeBulkDownloads.length > 0" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-md shadow-md" role="alert">
+            <div v-for="job in downloadStore.activeBulkDownloads" :key="job.id">
+                <p class="font-bold">Descarga en progreso ({{ job.format.toUpperCase() }})</p>
+                <p v-if="job.status === 'pending'">Iniciando...</p>
+                <p v-if="job.status === 'processing'">Procesando: {{ job.processed_files }} de {{ job.total_files }} archivos.</p>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                    <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: (job.processed_files / job.total_files * 100) + '%' }"></div>
+                </div>
+            </div>
+        </div>
         <slot></slot>
       </main>
     </div>
@@ -39,30 +50,40 @@
 </template>
 
 <script>
+import downloadStore from '../utils/downloadStore.js';
+
 export default {
-  name: 'AppLayout',
-  props: {
-    navigation: {
-      type: Array,
-      required: true,
+    name: 'AppLayout',
+    props: {
+        navigation: {
+            type: Array,
+            required: true,
+        },
+        currentView: {
+            type: String,
+            required: true,
+        },
+        headerTitle: {
+            type: String,
+            default: 'Dashboard',
+        },
+        sidebarTitle: {
+            type: String,
+            default: 'Dashboard'
+        },
+        isSidebarOpen: {
+            type: Boolean,
+            required: true,
+        }
     },
-    currentView: {
-      type: String,
-      required: true,
+    emits: ['navigate', 'logout', 'toggle-sidebar'],
+    data() {
+        return {
+            downloadStore: downloadStore
+        };
     },
-    headerTitle: {
-      type: String,
-      default: 'Dashboard',
-    },
-    sidebarTitle: {
-        type: String,
-        default: 'Dashboard'
-    },
-    isSidebarOpen: {
-        type: Boolean,
-        required: true,
+    beforeUnmount() {
+        this.downloadStore.clearPollers();
     }
-  },
-  emits: ['navigate', 'logout', 'toggle-sidebar'],
 };
 </script>
