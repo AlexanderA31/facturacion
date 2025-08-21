@@ -58,7 +58,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
         $this->comprobante->update(['estado' => EstadosComprobanteEnum::PROCESANDO->value]);
 
         $transactionStarted = false;
-        $signedFileRelativePath = null;
+        $signedFilePath = null;
 
         try {
             // Comenzar transacción
@@ -82,7 +82,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             $xmlFilePath = $this->guardarXMLTemporal($generado['xml'], $this->type->value);
 
             // Firmar XML
-            $signedFileRelativePath = $this->firmarComprobante($xmlFilePath);
+            $signedFilePath = $this->firmarComprobante($xmlFilePath);
 
             // Guardar cambios
             \DB::commit();
@@ -91,7 +91,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             $this->actualizarEstadoFirmado($preparedData);
 
             // Enviar y autorizar
-            $this->autorizarComprobanteFirmado($signedFileRelativePath, $emittoEmailService, $pdfGenerator);
+            $this->autorizarComprobanteFirmado($signedFilePath, $emittoEmailService, $pdfGenerator);
         } catch (\Throwable $e) {
             if ($transactionStarted) {
                 \DB::rollBack();
@@ -103,6 +103,9 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             ]);
             Log::error("Error en generación del comprobante [ID {$this->comprobante->id}]: " . $e->getMessage());
             throw $e;
+        } finally {
+            // No longer deleting the file from here to prevent race conditions.
+            // A separate cleanup job will handle this.
         }
     }
 
@@ -118,13 +121,9 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 
     private function actualizarSecuencial(PuntoEmision $puntoEmision, string $secuencial): void
     {
-        // Guardar el secuencial que se acaba de usar
         $puntoEmision->ultimoSecuencial = $secuencial;
-
-        // Incrementar el próximo secuencial para el siguiente comprobante
         $proximo = (int)$puntoEmision->proximo_secuencial + 1;
         $puntoEmision->proximo_secuencial = str_pad($proximo, 9, '0', STR_PAD_LEFT);
-
         $puntoEmision->save();
     }
 
@@ -139,63 +138,44 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 
     private function guardarXMLTemporal(string $xml, string $tipo): string
     {
-        $xmlDir = storage_path('app/public/comprobantes');
+        $xmlDir = storage_path('app/temp/comprobantes');
         if (!file_exists($xmlDir)) {
             mkdir($xmlDir, 0777, true);
         }
-
-        $this->uniqueId = Str::uuid()->toString(); // asegúrate de declarar esto como propiedad
+        $this->uniqueId = Str::uuid()->toString();
         $xmlFilePath = $xmlDir . '/' . $tipo . '_temporal_' . $this->uniqueId . '.xml';
         file_put_contents($xmlFilePath, $xml);
-        Log::info('XML temporal guardado');
         return $xmlFilePath;
     }
 
     private function firmarXMLTemporal(string $xmlFilePath): string
     {
-        $tempSignedFile = null;
         try {
             $password = decrypt($this->user->signature_key);
             $signatureFilePath = storage_path('app/private/' . $this->user->signature_path);
-
-            // Define a temporary directory for the output of the signing process
-            $tempOutputDir = storage_path('app/temp/firmados');
-            if (!file_exists($tempOutputDir)) {
-                mkdir($tempOutputDir, 0777, true);
+            $outputDir = storage_path('app/temp/comprobantes_firmados');
+            if (!file_exists($outputDir)) {
+                mkdir($outputDir, 0777, true);
             }
-            $tempOutputFile = 'outputFile_' . $this->uniqueId . '.xml';
-            $tempSignedFile = $tempOutputDir . '/' . $tempOutputFile;
+            $outputFile = 'signed_' . $this->uniqueId . '.xml';
+            $signedFilePath = $outputDir . '/' . $outputFile;
 
             $command = "java -jar " . escapeshellarg(base_path('app/firmador/sri-fat.jar')) . " " .
                 escapeshellarg($signatureFilePath) . " " .
                 escapeshellarg($password) . " " .
                 escapeshellarg($xmlFilePath) . " " .
-                escapeshellarg($tempOutputDir) . " " . escapeshellarg($tempOutputFile);
+                escapeshellarg($outputDir) . " " . escapeshellarg($outputFile);
 
             exec($command, $output, $return_var);
-            Log::info('Código de retorno de la firma: ' . $return_var);
 
-            if ($return_var !== 0 || !file_exists($tempSignedFile)) {
-                Log::error('Error al ejecutar el firmador o el archivo firmado no se ha creado.', [
-                    'return_var' => $return_var,
-                    'output' => implode("\n", $output)
-                ]);
+            if ($return_var !== 0 || !file_exists($signedFilePath)) {
+                Log::error('Error ejecutando el firmador.', ['output' => $output]);
                 throw new \Exception('Error ejecutando el firmador.');
             }
 
-            // Move the signed file to public storage and get the relative path
-            $signedFileContent = file_get_contents($tempSignedFile);
-            $relativeStoragePath = 'comprobantes/firmados/' . $this->claveAcceso . '.xml';
-            Storage::disk('public')->put($relativeStoragePath, $signedFileContent);
-
-            return $relativeStoragePath;
+            return $signedFilePath;
         } catch (\Exception $e) {
             throw new \Exception('Error al firmar el XML: ' . $e->getMessage());
-        } finally {
-            // Clean up the temporary signed file
-            if ($tempSignedFile && file_exists($tempSignedFile)) {
-                @unlink($tempSignedFile);
-            }
         }
     }
 
@@ -214,8 +194,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
     private function eliminarXMLTemporal(string $xmlFilePath): void
     {
         if (file_exists($xmlFilePath)) {
-            unlink($xmlFilePath);
-            Log::info("XML temporal eliminado");
+            @unlink($xmlFilePath);
         }
     }
 
@@ -231,13 +210,12 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
         ]);
     }
 
-    private function autorizarComprobanteFirmado(string $signedFileRelativePath, EmittoEmailService $emittoEmailService, PdfGeneratorService $pdfGenerator): void
+    private function autorizarComprobanteFirmado(string $signedFilePath, EmittoEmailService $emittoEmailService, PdfGeneratorService $pdfGenerator): void
     {
-        $pdfRelativePath = null;
         try {
             $sriSender = new SriComprobanteService();
             $response = $sriSender->enviarYAutorizarComprobante(
-                Storage::disk('public')->get($signedFileRelativePath),
+                file_get_contents($signedFilePath),
                 $this->claveAcceso
             );
 
@@ -254,7 +232,6 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 
             Log::info("✅ Comprobante autorizado: {$this->claveAcceso}");
 
-            // Enviar correo si está activado
             try {
                 if ($this->user->enviar_factura_por_correo) {
                     $payload = json_decode($this->comprobante->payload, true);
@@ -264,55 +241,31 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                         $subject = "Nuevo Comprobante Electrónico: {$this->claveAcceso}";
                         $message = "Estimado cliente, se ha generado un nuevo comprobante electrónico. Puede encontrar los detalles adjuntos.";
 
-                        // Generar PDF
-                        $pdfRelativePath = $pdfGenerator->generate($this->comprobante);
+                        $pdfPath = $pdfGenerator->generate($this->comprobante);
 
-                        // Usar las rutas relativas al disco de almacenamiento público
                         $attachments = [
-                            ['filename' => "{$this->claveAcceso}.xml", 'path' => $signedFileRelativePath],
-                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfRelativePath]
+                            ['filename' => "{$this->claveAcceso}.xml", 'path' => $signedFilePath],
+                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfPath]
                         ];
 
-                        $emailSent = $emittoEmailService->sendInvoiceEmail($recipientEmail, $subject, $message, $attachments);
-
-                        if ($emailSent) {
-                            Log::info("Correo de factura enviado exitosamente a {$recipientEmail} para el comprobante {$this->claveAcceso}.");
-                        } else {
-                            Log::error("Fallo al enviar el correo de factura a {$recipientEmail} para el comprobante {$this->claveAcceso}.");
-                        }
-                    } else {
-                        Log::warning("No se encontró correo de destinatario para el comprobante {$this->claveAcceso}.");
+                        $emittoEmailService->sendInvoiceEmail($recipientEmail, $subject, $message, $attachments);
                     }
                 }
             } catch (\Exception $e) {
                 Log::error("Error al intentar enviar el correo para el comprobante {$this->claveAcceso}: " . $e->getMessage());
-                // No relanzar la excepción para no marcar el job como fallido si solo el correo falla.
             }
 
         } catch (SriException $e) {
             $errorMessage = $e->getMessage();
             if (Str::contains($errorMessage, ['SRI no disponible', 'Parsing WSDL'])) {
-                Log::warning("SRI no disponible. Reintentando el job para el comprobante [{$this->claveAcceso}]. Intento {$this->attempts()} de {$this->tries}.");
-                $this->comprobante->update([
-                    'estado' => EstadosComprobanteEnum::REINTENTANDO->value,
-                    'error_message' => "SRI no disponible. Reintentando... (Intento {$this->attempts()})",
-                ]);
-                // Libera el job de nuevo a la cola con el delay configurado en $backoff
+                Log::warning("SRI no disponible. Reintentando... [{$this->claveAcceso}]");
                 $this->release();
                 return;
             }
-
-            $this->comprobante->update([
-                'estado' => EstadosComprobanteEnum::RECHAZADO->value,
-                'error_message' => $errorMessage,
-                'error_code' => $e->getCode(),
-            ]);
+            $this->comprobante->update(['estado' => EstadosComprobanteEnum::RECHAZADO->value, 'error_message' => $errorMessage]);
             Log::error("❌ Comprobante rechazado por el SRI [{$this->claveAcceso}]: " . $errorMessage);
         } catch (\Exception $e) {
-            $this->comprobante->update([
-                'estado' => EstadosComprobanteEnum::FALLIDO->value,
-                'error_message' => $e->getMessage(),
-            ]);
+            $this->comprobante->update(['estado' => EstadosComprobanteEnum::FALLIDO->value, 'error_message' => $e->getMessage()]);
             Log::error("🔥 Error inesperado en autorización [{$this->claveAcceso}]: " . $e->getMessage());
         }
     }
