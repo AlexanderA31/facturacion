@@ -252,7 +252,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                         $emailData = [
                             'logoUrl' => $this->user->logo_path ? Storage::url($this->user->logo_path) : null,
                             'claveAcceso' => $this->claveAcceso,
-                            'total' => json_decode($this->comprobante->payload, true)['infoFactura']['importeTotal'],
+                            'total' => $this->getImporteTotal($payload),
                             'pdfUrl' => $pdfUrl,
                         ];
 
@@ -283,5 +283,21 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             $this->comprobante->update(['estado' => EstadosComprobanteEnum::FALLIDO->value, 'error_message' => $e->getMessage()]);
             Log::error("🔥 Error inesperado en autorización [{$this->claveAcceso}]: " . $e->getMessage());
         }
+    }
+
+    private function getImporteTotal(array $payload): float
+    {
+        if (isset($payload['infoFactura']['importeTotal'])) {
+            return (float) $payload['infoFactura']['importeTotal'];
+        }
+
+        if (isset($payload['infoNotaCredito']['valorModificacion'])) {
+            return (float) $payload['infoNotaCredito']['valorModificacion'];
+        }
+
+        // Add other document types here if needed
+        // e.g., infoNotaDebito, infoGuiaRemision, etc.
+
+        return 0.0;
     }
 }
