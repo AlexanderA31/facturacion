@@ -58,7 +58,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
         $this->comprobante->update(['estado' => EstadosComprobanteEnum::PROCESANDO->value]);
 
         $transactionStarted = false;
-        $signedFileRelativePath = null;
+        $signedFilePath = null;
 
         try {
             // Comenzar transacción
@@ -82,7 +82,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             $xmlFilePath = $this->guardarXMLTemporal($generado['xml'], $this->type->value);
 
             // Firmar XML
-            $signedFileRelativePath = $this->firmarComprobante($xmlFilePath);
+            $signedFilePath = $this->firmarComprobante($xmlFilePath);
 
             // Guardar cambios
             \DB::commit();
@@ -91,7 +91,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             $this->actualizarEstadoFirmado($preparedData);
 
             // Enviar y autorizar
-            $this->autorizarComprobanteFirmado($signedFileRelativePath, $emittoEmailService, $pdfGenerator);
+            $this->autorizarComprobanteFirmado($signedFilePath, $emittoEmailService, $pdfGenerator);
         } catch (\Throwable $e) {
             if ($transactionStarted) {
                 \DB::rollBack();
@@ -104,9 +104,9 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             Log::error("Error en generación del comprobante [ID {$this->comprobante->id}]: " . $e->getMessage());
             throw $e;
         } finally {
-            if ($signedFileRelativePath && Storage::disk('public')->exists($signedFileRelativePath)) {
-                Storage::disk('public')->delete($signedFileRelativePath);
-                Log::info("Archivo firmado eliminado: $signedFileRelativePath");
+            if ($signedFilePath && file_exists($signedFilePath)) {
+                @unlink($signedFilePath);
+                Log::info("Archivo firmado eliminado: $signedFilePath");
             }
         }
     }
@@ -158,49 +158,46 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 
     private function firmarXMLTemporal(string $xmlFilePath): string
     {
-        $tempSignedFile = null;
         try {
             $password = decrypt($this->user->signature_key);
             $signatureFilePath = storage_path('app/private/' . $this->user->signature_path);
 
-            // Define a temporary directory for the output of the signing process
-            $tempOutputDir = storage_path('app/temp/firmados');
-            if (!file_exists($tempOutputDir)) {
-                mkdir($tempOutputDir, 0777, true);
+            $outputDir = storage_path('app/public/comprobantes/firmados');
+            $outputFile = 'outputFile_' . $this->uniqueId . '.xml';
+
+            if (!file_exists($outputDir)) {
+                mkdir($outputDir, 0777, true);
             }
-            $tempOutputFile = 'outputFile_' . $this->uniqueId . '.xml';
-            $tempSignedFile = $tempOutputDir . '/' . $tempOutputFile;
+
+            if (!is_writable($outputDir)) {
+                Log::error('El directorio de salida no tiene permisos de escritura: ' . $outputDir);
+                throw new \Exception('El directorio de salida no tiene permisos de escritura.');
+            }
 
             $command = "java -jar " . escapeshellarg(base_path('app/firmador/sri-fat.jar')) . " " .
                 escapeshellarg($signatureFilePath) . " " .
                 escapeshellarg($password) . " " .
                 escapeshellarg($xmlFilePath) . " " .
-                escapeshellarg($tempOutputDir) . " " . escapeshellarg($tempOutputFile);
+                escapeshellarg($outputDir) . " " . escapeshellarg($outputFile);
 
             exec($command, $output, $return_var);
             Log::info('Código de retorno de la firma: ' . $return_var);
 
-            if ($return_var !== 0 || !file_exists($tempSignedFile)) {
-                Log::error('Error al ejecutar el firmador o el archivo firmado no se ha creado.', [
-                    'return_var' => $return_var,
-                    'output' => implode("\n", $output)
-                ]);
+            $signedFilePath = $outputDir . '/' . $outputFile;
+
+            if (!file_exists($signedFilePath)) {
+                Log::error('El archivo firmado no se ha creado: ' . $signedFilePath);
+                throw new \Exception('El archivo firmado no se ha creado.');
+            }
+
+            if ($return_var !== 0) {
+                Log::error('Error al ejecutar el firmador: ' . implode("\n", $output));
                 throw new \Exception('Error ejecutando el firmador.');
             }
 
-            // Move the signed file to public storage and get the relative path
-            $signedFileContent = file_get_contents($tempSignedFile);
-            $relativeStoragePath = 'comprobantes/firmados/' . $this->claveAcceso . '.xml';
-            Storage::disk('public')->put($relativeStoragePath, $signedFileContent);
-
-            return $relativeStoragePath;
+            return $signedFilePath;
         } catch (\Exception $e) {
             throw new \Exception('Error al firmar el XML: ' . $e->getMessage());
-        } finally {
-            // Clean up the temporary signed file
-            if ($tempSignedFile && file_exists($tempSignedFile)) {
-                @unlink($tempSignedFile);
-            }
         }
     }
 
@@ -236,13 +233,13 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
         ]);
     }
 
-    private function autorizarComprobanteFirmado(string $signedFileRelativePath, EmittoEmailService $emittoEmailService, PdfGeneratorService $pdfGenerator): void
+    private function autorizarComprobanteFirmado(string $signedFilePath, EmittoEmailService $emittoEmailService, PdfGeneratorService $pdfGenerator): void
     {
-        $pdfRelativePath = null;
+        $pdfPath = null;
         try {
             $sriSender = new SriComprobanteService();
             $response = $sriSender->enviarYAutorizarComprobante(
-                Storage::disk('public')->get($signedFileRelativePath),
+                file_get_contents($signedFilePath),
                 $this->claveAcceso
             );
 
@@ -260,7 +257,6 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             Log::info("✅ Comprobante autorizado: {$this->claveAcceso}");
 
             // Enviar correo si está activado
-            $pdfPath = null;
             try {
                 if ($this->user->enviar_factura_por_correo) {
                     $payload = json_decode($this->comprobante->payload, true);
@@ -271,15 +267,11 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                         $message = "Estimado cliente, se ha generado un nuevo comprobante electrónico. Puede encontrar los detalles adjuntos.";
 
                         // Generar PDF
-                        $pdfRelativePath = $pdfGenerator->generate($this->comprobante);
-
-                        // Generar URLs públicas
-                        $xmlUrl = Storage::disk('public')->url($signedFileRelativePath);
-                        $pdfUrl = Storage::disk('public')->url($pdfRelativePath);
+                        $pdfPath = $pdfGenerator->generate($this->comprobante);
 
                         $attachments = [
-                            ['filename' => "{$this->claveAcceso}.xml", 'path' => $xmlUrl],
-                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfUrl]
+                            ['filename' => "{$this->claveAcceso}.xml", 'path' => $signedFilePath],
+                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfPath]
                         ];
 
                         $emailSent = $emittoEmailService->sendInvoiceEmail($recipientEmail, $subject, $message, $attachments);
@@ -297,9 +289,9 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                 Log::error("Error al intentar enviar el correo para el comprobante {$this->claveAcceso}: " . $e->getMessage());
                 // No relanzar la excepción para no marcar el job como fallido si solo el correo falla.
             } finally {
-                if ($pdfRelativePath && Storage::disk('public')->exists($pdfRelativePath)) {
-                    Storage::disk('public')->delete($pdfRelativePath);
-                    Log::info("Archivo PDF temporal eliminado: $pdfRelativePath");
+                if ($pdfPath && file_exists($pdfPath)) {
+                    @unlink($pdfPath);
+                    Log::info("Archivo PDF temporal eliminado: $pdfPath");
                 }
             }
 

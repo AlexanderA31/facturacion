@@ -54,12 +54,17 @@ class PdfGeneratorService
         // Generar el PDF
         $pdf = PDF::loadView('pdf.invoice', $data);
 
-        // Guardar el PDF en un archivo temporal en el disco público
+        // Guardar el PDF en un archivo temporal
         $facturaNumero = $xmlObject->infoTributaria->estab . '-' . $xmlObject->infoTributaria->ptoEmi . '-' . $xmlObject->infoTributaria->secuencial;
-        $fileName = 'temp/FAC-' . $facturaNumero . '.pdf';
+        $fileName = 'FAC-' . $facturaNumero . '.pdf';
+        $tempPath = storage_path('app/temp/' . $fileName);
 
-        Storage::disk('public')->put($fileName, $pdf->output());
+        if (!file_exists(storage_path('app/temp'))) {
+            mkdir(storage_path('app/temp'), 0777, true);
+        }
 
-        return $fileName;
+        $pdf->save($tempPath);
+
+        return $tempPath;
     }
 }
