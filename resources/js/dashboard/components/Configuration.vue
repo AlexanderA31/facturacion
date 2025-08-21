@@ -50,6 +50,17 @@
                         <p class="mt-2 text-sm text-gray-500">Si se activa, se enviará una copia de la factura al correo del cliente.</p>
                     </div>
                     <div>
+                        <label for="from-email" class="block text-sm font-medium text-gray-700">Correo Electrónico de Envío</label>
+                        <input
+                            type="email"
+                            id="from-email"
+                            v-model="form.from_email"
+                            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            placeholder="remitente@ejemplo.com"
+                        />
+                        <p class="mt-2 text-sm text-gray-500">Establece el correo desde el cual se enviarán las facturas. Si se deja en blanco, se usará el predeterminado.</p>
+                    </div>
+                    <div>
                         <BaseSelect
                             id="tipo-impuesto-select"
                             label="Tipo de Impuesto"
@@ -137,6 +148,7 @@ export default {
         obligadoContabilidad: false,
         ambiente: '1',
         enviar_factura_por_correo: true,
+        from_email: '',
         logo_path: '',
         tipo_impuesto: '2',
         codigo_porcentaje_iva: '2',
@@ -186,6 +198,7 @@ export default {
             obligadoContabilidad: profile.obligadoContabilidad,
             ambiente: profile.ambiente,
             enviar_factura_por_correo: profile.enviar_factura_por_correo,
+            from_email: profile.from_email,
             logo_path: profile.logo_path,
             tipo_impuesto: profile.tipo_impuesto,
             codigo_porcentaje_iva: profile.codigo_porcentaje_iva,

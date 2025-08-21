@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -26,7 +27,7 @@ class EmittoEmailService
      * @return bool
      * @throws \Exception
      */
-    public function sendInvoiceEmail(string $recipientEmail, string $subject, string $message, array $attachments): bool
+    public function sendInvoiceEmail(User $user, string $recipientEmail, string $subject, string $message, array $attachments): bool
     {
         if (!$this->secretKey) {
             Log::error('EmittoEmailService: La clave secreta de Emitto no está configurada.');
@@ -34,10 +35,13 @@ class EmittoEmailService
         }
 
         try {
+            // Determine the 'from' address
+            $fromEmail = $user->from_email ?? config('mail.from.address', 'noreply@example.com');
+
             $multipart = [
                 [
                     'name'     => 'from',
-                    'contents' => config('mail.from.address', 'noreply@example.com'),
+                    'contents' => $fromEmail,
                 ],
                 [
                     'name'     => 'subjectEmail',

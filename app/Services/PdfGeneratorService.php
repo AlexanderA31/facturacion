@@ -17,11 +17,11 @@ class PdfGeneratorService
         $this->sriService = $sriService;
     }
 
-    public function generate(Comprobante $comprobante): string
+    public function generate(Comprobante $comprobante, string $disk = 'temp'): string
     {
         $clave_acceso = $comprobante->clave_acceso;
 
-        // Generar y guardar el código de barras si no existe
+        // Generate and save barcode if it doesn't exist
         $barcodePath = "barcodes/{$clave_acceso}.png";
         if (!Storage::disk('public')->exists($barcodePath)) {
             $pngBase64 = ClaveAccesoBarcode::makeBase64($clave_acceso);
@@ -29,16 +29,16 @@ class PdfGeneratorService
             Storage::disk('public')->put($barcodePath, $pngBinary);
         }
 
-        // Obtener el ambiente del comprobante
+        // Get the environment from the comprobante
         $ambiente = strval($comprobante->ambiente);
 
-        // Consultar el XML desde el SRI
+        // Query the XML from SRI
         $xmlString = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
 
-        // Parsear el XML
+        // Parse the XML
         $xmlObject = simplexml_load_string($xmlString);
 
-        // Extraer los datos para la vista
+        // Extract data for the view
         $data = [
             'numeroAutorizacion' => $comprobante->clave_acceso,
             'fechaAutorizacion' => $comprobante->fecha_autorizacion,
@@ -51,20 +51,29 @@ class PdfGeneratorService
             'barcode_path' => Storage::disk('public')->path($barcodePath),
         ];
 
-        // Generar el PDF
+        // Generate the PDF
         $pdf = PDF::loadView('pdf.invoice', $data);
 
-        // Guardar el PDF en un archivo temporal
+        // Save the PDF
         $facturaNumero = $xmlObject->infoTributaria->estab . '-' . $xmlObject->infoTributaria->ptoEmi . '-' . $xmlObject->infoTributaria->secuencial;
         $fileName = 'FAC-' . $facturaNumero . '.pdf';
-        $tempPath = storage_path('app/temp/' . $fileName);
 
-        if (!file_exists(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'), 0777, true);
+        if ($disk === 'public') {
+            $directory = storage_path('app/public/invoices');
+            if (!file_exists($directory)) {
+                mkdir($directory, 0777, true);
+            }
+            $path = $directory . '/' . $fileName;
+        } else {
+            $directory = storage_path('app/temp');
+            if (!file_exists($directory)) {
+                mkdir($directory, 0777, true);
+            }
+            $path = $directory . '/' . $fileName;
         }
 
-        $pdf->save($tempPath);
+        $pdf->save($path);
 
-        return $tempPath;
+        return $path;
     }
 }

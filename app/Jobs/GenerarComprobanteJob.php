@@ -242,24 +242,32 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 
                     if ($recipientEmail) {
                         $subject = "Nuevo Comprobante Electrónico: {$this->claveAcceso}";
-                        $message = "Estimado cliente, se ha generado un nuevo comprobante electrónico. Puede encontrar los detalles adjuntos.";
 
-                        $pdfPath = $pdfGenerator->generate($this->comprobante);
+                        // Generate PDF and store it publicly
+                        $pdfPath = $pdfGenerator->generate($this->comprobante, 'public');
+                        $relativePath = str_replace(storage_path('app/public') . '/', '', $pdfPath);
+                        $pdfUrl = Storage::disk('public')->url($relativePath);
+
+                        // Prepare data for the email template
+                        $emailData = [
+                            'logoUrl' => $this->user->logo_path ? Storage::url($this->user->logo_path) : null,
+                            'claveAcceso' => $this->claveAcceso,
+                            'total' => json_decode($this->comprobante->payload, true)['infoFactura']['importeTotal'],
+                            'pdfUrl' => $pdfUrl,
+                        ];
+
+                        $message = view('emails.invoice', $emailData)->render();
 
                         $attachments = [
                             ['filename' => "{$this->claveAcceso}.xml", 'path' => $signedFilePath],
-                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfPath]
+                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfPath],
                         ];
 
-                        $emittoEmailService->sendInvoiceEmail($recipientEmail, $subject, $message, $attachments);
+                        $emittoEmailService->sendInvoiceEmail($this->user, $recipientEmail, $subject, $message, $attachments);
                     }
                 }
             } catch (\Exception $e) {
                 Log::error("Error al intentar enviar el correo para el comprobante {$this->claveAcceso}: " . $e->getMessage());
-            } finally {
-                if ($pdfPath && file_exists($pdfPath)) {
-                    @unlink($pdfPath);
-                }
             }
 
         } catch (SriException $e) {
