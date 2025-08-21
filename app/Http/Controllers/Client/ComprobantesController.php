@@ -10,9 +10,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Comprobante;
 use App\Models\PuntoEmision;
 use App\Http\Requests\FacturaRequest;
+use App\Jobs\CreateBulkDownloadZipJob;
 use App\Jobs\GenerarComprobanteJob;
+use App\Models\BulkDownloadJob;
 use App\Services\ClaveAccesoBarcode;
+use App\Services\FileGenerationService;
 use App\Services\SriComprobanteService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -25,10 +29,12 @@ use ZipArchive;
 class ComprobantesController extends Controller
 {
     protected $sriService;
+    protected $fileGenerationService;
 
-    public function __construct(SriComprobanteService $sriService)
+    public function __construct(SriComprobanteService $sriService, FileGenerationService $fileGenerationService)
     {
         $this->sriService = $sriService;
+        $this->fileGenerationService = $fileGenerationService;
     }
 
     private function validarClaveAcceso(string $claveAcceso)
@@ -155,29 +161,12 @@ class ComprobantesController extends Controller
     }
 
 
-    private function generateXmlContent(Comprobante $comprobante)
-    {
-        // Validar que el comprobante haya sido autorizado
-        if (trim(strtolower($comprobante->estado)) !== EstadosComprobanteEnum::AUTORIZADO->value) {
-            throw new SriException('No es posible obtener el XML porque el comprobante no ha sido autorizado por el SRI');
-        }
-
-        // Autorizar la acción
-        Gate::authorize('viewXml', $comprobante);
-
-        // Obtener el ambiente del comprobante
-        $ambiente = strval($comprobante->ambiente);
-
-        // Consultar el XML desde el SRI
-        return $this->sriService->consultarXmlAutorizado($comprobante->clave_acceso, $ambiente);
-    }
-
     public function getXml(string $clave_acceso)
     {
         try {
             $this->validarClaveAcceso($clave_acceso);
             $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
-            $xml = $this->generateXmlContent($comprobante);
+            $xml = $this->fileGenerationService->generateXmlContent($comprobante);
 
             return $this->sendResponse(
                 'XML obtenido exitosamente',
@@ -194,65 +183,13 @@ class ComprobantesController extends Controller
         }
     }
 
-
-    private function generatePdfContent(Comprobante $comprobante, &$fileName)
-    {
-        // Validar que el comprobante haya sido autorizado
-        if (trim(strtolower($comprobante->estado)) !== EstadosComprobanteEnum::AUTORIZADO->value) {
-            throw new SriException('No es posible generar el PDF porque el comprobante no ha sido autorizado por el SRI');
-        }
-
-        // Autorizar la acción
-        Gate::authorize('view', $comprobante);
-
-        $clave_acceso = $comprobante->clave_acceso;
-
-        // Generar y guardar el código de barras si no existe
-        $barcodePath = "barcodes/{$clave_acceso}.png";
-        if (!Storage::disk('public')->exists($barcodePath)) {
-            $pngBase64 = ClaveAccesoBarcode::makeBase64($clave_acceso);
-            $pngBinary = base64_decode($pngBase64);
-            Storage::disk('public')->put($barcodePath, $pngBinary);
-        }
-
-        // Obtener el ambiente del comprobante
-        $ambiente = strval($comprobante->ambiente);
-
-        // Consultar el XML desde el SRI
-        $xmlString = $this->sriService->consultarXmlAutorizado($clave_acceso, $ambiente);
-
-        // Parsear el XML
-        $xmlObject = simplexml_load_string($xmlString);
-
-        // Extraer los datos para la vista
-        $data = [
-            'numeroAutorizacion' => $comprobante->clave_acceso,
-            'fechaAutorizacion' => $comprobante->fecha_autorizacion,
-            'infoTributaria' => $xmlObject->infoTributaria,
-            'infoFactura' => $xmlObject->infoFactura,
-            'detalles' => $xmlObject->detalles->detalle,
-            'infoAdicional' => $xmlObject->infoAdicional ?? null,
-            'logo_path' => $comprobante->user->logo_path ?? null,
-            'user' => $comprobante->user,
-            'barcode_path' => storage_path('app/public/' . $barcodePath),
-        ];
-
-        // Generar y descargar el PDF
-        $pdf = PDF::loadView('pdf.invoice', $data);
-        $facturaNumero = $xmlObject->infoTributaria->estab . '-' . $xmlObject->infoTributaria->ptoEmi . '-' . $xmlObject->infoTributaria->secuencial;
-        $fileName = 'FAC-' . $facturaNumero . '.pdf';
-
-        return $pdf->output();
-    }
-
-
     public function getPdf(string $clave_acceso)
     {
         try {
             $this->validarClaveAcceso($clave_acceso);
             $comprobante = Comprobante::findByClaveAcceso($clave_acceso);
             $fileName = '';
-            $pdfContent = $this->generatePdfContent($comprobante, $fileName);
+            $pdfContent = $this->fileGenerationService->generatePdfContent($comprobante, $fileName);
 
             return response($pdfContent)
                 ->header('Content-Type', 'application/pdf')
@@ -281,39 +218,55 @@ class ComprobantesController extends Controller
             return $this->sendError('Parámetros no válidos', $validator->errors(), 422);
         }
 
+        $user = Auth::user();
         $clavesAcceso = $request->input('claves_acceso');
         $format = $request->input('format');
-        $zipFileName = 'comprobantes.' . date('Y-m-d-H-i-s') . '.zip';
-        $zipPath = storage_path('app/' . $zipFileName);
 
-        $zip = new ZipArchive();
+        $job = BulkDownloadJob::create([
+            'user_id' => $user->id,
+            'format' => $format,
+            'total_files' => count($clavesAcceso),
+        ]);
 
-        if ($zip->open($zipPath, ZipArchive::CREATE) !== TRUE) {
-            return $this->sendError('Error al crear el archivo ZIP', 'No se pudo crear el archivo ZIP.', 500);
+        CreateBulkDownloadZipJob::dispatch($job, $clavesAcceso);
+
+        return $this->sendResponse('La solicitud de descarga ha sido aceptada y se está procesando en segundo plano.', ['job_id' => $job->id], 202);
+    }
+
+    public function getBulkDownloadStatus(string $jobId)
+    {
+        try {
+            $job = BulkDownloadJob::findOrFail($jobId);
+            Gate::authorize('view', $job);
+
+            return $this->sendResponse('Estado del trabajo de descarga masiva.', $job);
+        } catch (ModelNotFoundException $e) {
+            return $this->sendError('Trabajo no encontrado', 'No se encontró el trabajo de descarga masiva.', 404);
+        } catch (AuthorizationException $e) {
+            return $this->sendError('Acceso denegado', 'No tienes permiso para ver este trabajo.', 403);
         }
+    }
 
-        foreach ($clavesAcceso as $claveAcceso) {
-            try {
-                $comprobante = Comprobante::findByClaveAcceso($claveAcceso);
-                Gate::authorize('view', $comprobante);
+    public function downloadBulkZip(string $jobId)
+    {
+        try {
+            $job = BulkDownloadJob::findOrFail($jobId);
+            Gate::authorize('view', $job);
 
-                if ($format === 'pdf') {
-                    $fileName = '';
-                    $content = $this->generatePdfContent($comprobante, $fileName);
-                    $zip->addFromString($fileName, $content);
-                } else {
-                    $content = $this->generateXmlContent($comprobante);
-                    $zip->addFromString($claveAcceso . '.xml', $content);
-                }
-            } catch (\Exception $e) {
-                \Log::error("Error al procesar el comprobante {$claveAcceso} para el ZIP: " . $e->getMessage());
-                // Continue to the next file
+            if ($job->status !== \App\Enums\BulkDownloadStatusEnum::COMPLETED) {
+                return $this->sendError('El archivo no está listo', 'El archivo ZIP aún no está listo para descargar.', 409);
             }
+
+            if (!Storage::disk('local')->exists($job->file_path)) {
+                return $this->sendError('Archivo no encontrado', 'El archivo ZIP no se encontró en el servidor.', 404);
+            }
+
+            return Storage::disk('local')->download($job->file_path);
+        } catch (ModelNotFoundException $e) {
+            return $this->sendError('Trabajo no encontrado', 'No se encontró el trabajo de descarga masiva.', 404);
+        } catch (AuthorizationException $e) {
+            return $this->sendError('Acceso denegado', 'No tienes permiso para descargar este archivo.', 403);
         }
-
-        $zip->close();
-
-        return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
 

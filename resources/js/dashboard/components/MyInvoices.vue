@@ -1,5 +1,17 @@
 <template>
   <div :class="{ '-mx-4 sm:-mx-6 lg:-mx-8': currentTab === 'authorized' }">
+    <!-- Active Downloads -->
+    <div v-if="activeBulkDownloads.length > 0" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
+        <div v-for="job in activeBulkDownloads" :key="job.id">
+            <p class="font-bold">Descarga en progreso ({{ job.format.toUpperCase() }})</p>
+            <p v-if="job.status === 'pending'">Iniciando...</p>
+            <p v-if="job.status === 'processing'">Procesando: {{ job.processed_files }} de {{ job.total_files }} archivos.</p>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: (job.processed_files / job.total_files * 100) + '%' }"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="flex justify-between items-center mb-4 px-4 sm:px-6 lg:px-8">
       <h2 class="text-2xl font-bold text-gray-800">Mis Comprobantes</h2>
         <div class="flex items-center space-x-2">
@@ -119,6 +131,8 @@ export default {
       sortOrder: 'desc',
       isPdfModalOpen: false,
       selectedPdfUrl: '',
+      activeBulkDownloads: [],
+      bulkDownloadPollers: {},
     };
   },
   computed: {
@@ -226,6 +240,9 @@ export default {
   },
   beforeUnmount() {
     clearInterval(this.polling);
+    Object.keys(this.bulkDownloadPollers).forEach(jobId => {
+        clearInterval(this.bulkDownloadPollers[jobId]);
+    });
   },
   methods: {
     async openPdfPreview(claveAcceso) {
@@ -382,42 +399,76 @@ export default {
         }
       }
     },
+    getDownloadUrl(jobId) {
+        return `/api/comprobantes/descargar-masivo/${jobId}/download?token=${this.token}`;
+    },
+
+    async pollJobStatus(jobId) {
+        try {
+            const response = await axios.get(`/api/comprobantes/descargar-masivo/${jobId}/status`, {
+                headers: { 'Authorization': `Bearer ${this.token}` },
+            });
+
+            const job = response.data.data;
+            const jobIndex = this.activeBulkDownloads.findIndex(j => j.id === jobId);
+
+            if (jobIndex !== -1) {
+                this.activeBulkDownloads.splice(jobIndex, 1, job);
+
+                if (job.status === 'completed' || job.status === 'failed') {
+                    clearInterval(this.bulkDownloadPollers[jobId]);
+                    delete this.bulkDownloadPollers[jobId];
+
+                    if (job.status === 'completed') {
+                        this.$emitter.emit('show-alert', {
+                            type: 'success',
+                            message: `La descarga de ${job.total_files} archivos ${job.format.toUpperCase()} está lista.`,
+                            duration: 10000, // Keep it on screen longer
+                            hasLink: true,
+                            linkUrl: this.getDownloadUrl(job.id),
+                            linkText: 'Descargar ahora',
+                        });
+                    } else {
+                        this.$emitter.emit('show-alert', { type: 'error', message: `La descarga masiva de ${job.format.toUpperCase()} ha fallado.` });
+                    }
+                }
+            }
+        } catch (error) {
+            console.error(`Error polling for job ${jobId}:`, error);
+            clearInterval(this.bulkDownloadPollers[jobId]);
+            delete this.bulkDownloadPollers[jobId];
+            this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo verificar el estado de la descarga.' });
+        }
+    },
+
     async downloadAll(format) {
         this.isDropdownOpen = false;
         const invoicesToDownload = this.processedInvoices;
 
         if (invoicesToDownload.length === 0) {
-            this.$emitter.emit('show-alert', { type: 'info', message: 'No hay facturas autorizadas para descargar.' });
+            this.$emitter.emit('show-alert', { type: 'info', message: 'No hay facturas para descargar.' });
             return;
         }
 
-        this.$emitter.emit('show-alert', { type: 'info', message: `Iniciando la descarga de ${invoicesToDownload.length} facturas. Esto puede tardar un momento...` });
+        this.$emitter.emit('show-alert', { type: 'info', message: `Preparando la descarga de ${invoicesToDownload.length} facturas. Te notificaremos cuando esté lista.` });
 
         try {
             const claves_acceso = invoicesToDownload.map(invoice => invoice.clave_acceso);
-
             const response = await axios.post('/api/comprobantes/descargar-masivo', {
                 claves_acceso,
                 format,
             }, {
                 headers: { 'Authorization': `Bearer ${this.token}` },
-                responseType: 'blob',
             });
 
-            const blob = new Blob([response.data], { type: 'application/zip' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `comprobantes-${format}.zip`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-
-            this.$emitter.emit('show-alert', { type: 'success', message: 'Descarga completada.' });
-
+            if (response.status === 202) {
+                const jobId = response.data.data.job_id;
+                this.activeBulkDownloads.push({ id: jobId, status: 'pending', format, total_files: invoicesToDownload.length, processed_files: 0 });
+                this.bulkDownloadPollers[jobId] = setInterval(() => this.pollJobStatus(jobId), 5000);
+            }
         } catch (error) {
-            console.error('Error en la descarga masiva:', error);
-            this.$emitter.emit('show-alert', { type: 'error', message: 'Ocurrió un error durante la descarga masiva.' });
+            console.error('Error starting bulk download:', error);
+            this.$emitter.emit('show-alert', { type: 'error', message: 'Ocurrió un error al iniciar la descarga masiva.' });
         }
     },
   },

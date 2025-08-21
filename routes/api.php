@@ -83,6 +83,8 @@ Route::group(['middleware' => ['json.response']], function () {
 
         Route::post('/factura/{punto_emision}', [ComprobantesController::class, 'generateFactura']);
         Route::post('/descargar-masivo', [ComprobantesController::class, 'descargarMasivo']);
+        Route::get('/descargar-masivo/{jobId}/status', [ComprobantesController::class, 'getBulkDownloadStatus']);
+        Route::get('/descargar-masivo/{jobId}/download', [ComprobantesController::class, 'downloadBulkZip']);
         // Route::post('/notas-credito/{punto_emision_id}/emitir', [FacturaController::class, 'generateNotaCredito']);
         // Route::post('/retenciones/{punto_emision_id}/emitir', [FacturaController::class, 'generateRetencion']);
     });
