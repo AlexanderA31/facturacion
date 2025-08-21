@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class EmittoEmailService
@@ -17,12 +16,12 @@ class EmittoEmailService
     }
 
     /**
-     * Sends an invoice email using the Emitto API.
+     * Sends an invoice email using the Emitto API with native cURL.
      *
      * @param string $recipientEmail
      * @param string $subject
      * @param string $message
-     * @param array $attachments Array of attachments, each with 'filename' and 'path'.
+     * @param array $attachments Array of attachments, each with 'filename' and 'path' (URL).
      * @return bool
      * @throws \Exception
      */
@@ -30,45 +29,62 @@ class EmittoEmailService
     {
         if (!$this->secretKey) {
             Log::error('EmittoEmailService: La clave secreta de Emitto no está configurada.');
-            // No lanzar excepción para no detener el proceso de facturación si el correo es opcional.
-            // Se podría cambiar a lanzar una excepción si el envío de correo es crítico.
             return false;
         }
 
         try {
-            $payload = [
+            $payload = json_encode([
                 'from' => config('mail.from.address', 'noreply@example.com'),
                 'subjectEmail' => $subject,
                 'sendTo' => [$recipientEmail],
                 'message' => $message,
                 'attachments' => $attachments,
+            ]);
+
+            $headers = [
+                'x-key-emitto: ' . $this->secretKey,
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Content-Length: ' . strlen($payload),
             ];
 
-            $response = Http::withHeaders([
-                'x-key-emitto' => $this->secretKey,
-                'Accept' => 'application/json',
-            ])
-            ->withBody(json_encode($payload), 'application/json')
-            ->post("{$this->baseUrl}/email/send");
+            $ch = curl_init();
 
-            if ($response->failed()) {
+            curl_setopt($ch, CURLOPT_URL, "{$this->baseUrl}/email/send");
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30); // 30 second timeout
+
+            $responseBody = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+
+            curl_close($ch);
+
+            if ($curlError) {
+                throw new \Exception('cURL Error: ' . $curlError);
+            }
+
+            if ($httpCode >= 400) {
                 Log::error('EmittoEmailService: Falló el envío de correo.', [
-                    'status' => $response->status(),
-                    'response' => $response->body(),
+                    'status' => $httpCode,
+                    'response' => $responseBody,
                 ]);
-                // Opcional: lanzar una excepción para reintentar el trabajo si es necesario.
-                // throw new \Exception("Error al enviar correo: " . $response->body());
                 return false;
             }
 
-            Log::info('EmittoEmailService: Correo enviado exitosamente a ' . $recipientEmail);
+            Log::info('EmittoEmailService: Correo enviado exitosamente a ' . $recipientEmail, [
+                'status' => $httpCode,
+            ]);
             return true;
 
         } catch (\Exception $e) {
             Log::error('EmittoEmailService: Excepción al enviar correo.', [
                 'message' => $e->getMessage(),
             ]);
-            throw $e; // Relanzar la excepción para que el job que lo llama pueda manejarla.
+            throw $e;
         }
     }
 }
