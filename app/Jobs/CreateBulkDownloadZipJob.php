@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Enums\BulkDownloadStatusEnum;
@@ -37,6 +38,8 @@ class CreateBulkDownloadZipJob implements ShouldQueue
      */
     public function handle(FileGenerationService $fileGenerationService): void
     {
+        Auth::login($this->bulkDownloadJob->user);
+
         $this->bulkDownloadJob->update(['status' => BulkDownloadStatusEnum::PROCESSING]);
 
         $zipFileName = 'bulk-downloads/bulk-download-' . $this->bulkDownloadJob->id . '.zip';
