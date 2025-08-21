@@ -36,16 +36,26 @@ class EmittoEmailService
         }
 
         try {
-            $response = Http::withHeaders([
+            $request = Http::withHeaders([
                 'x-key-emitto' => $this->secretKey,
-                'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post("{$this->baseUrl}/email/send", [
+            ]);
+
+            foreach ($attachments as $attachment) {
+                if (isset($attachment['path']) && file_exists($attachment['path'])) {
+                    $request->attach(
+                        'attachments[]',
+                        file_get_contents($attachment['path']),
+                        $attachment['filename']
+                    );
+                }
+            }
+
+            $response = $request->post("{$this->baseUrl}/email/send", [
                 'from' => config('mail.from.address', 'noreply@example.com'),
                 'subjectEmail' => $subject,
                 'sendTo' => [$recipientEmail],
                 'message' => $message,
-                'attachments' => $attachments,
             ]);
 
             if ($response->failed()) {

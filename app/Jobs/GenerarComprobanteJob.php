@@ -20,6 +20,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Services\EmittoEmailService;
+use App\Services\PdfGeneratorService;
 
 class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 {
@@ -49,7 +50,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
      * @throws \Exception
      * @return void
      */
-    public function handle(ComprobanteGenerator $comprobanteGenerator, EmittoEmailService $emittoEmailService)
+    public function handle(ComprobanteGenerator $comprobanteGenerator, EmittoEmailService $emittoEmailService, PdfGeneratorService $pdfGenerator)
     {
         Log::info("Iniciando generación del comprobante ID: {$this->comprobante->id}");
 
@@ -89,7 +90,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             $this->actualizarEstadoFirmado($preparedData);
 
             // Enviar y autorizar
-            $this->autorizarComprobanteFirmado($signedFilePath, $emittoEmailService);
+            $this->autorizarComprobanteFirmado($signedFilePath, $emittoEmailService, $pdfGenerator);
         } catch (\Throwable $e) {
             if ($transactionStarted) {
                 \DB::rollBack();
@@ -231,8 +232,9 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
         ]);
     }
 
-    private function autorizarComprobanteFirmado(string $signedFilePath, EmittoEmailService $emittoEmailService): void
+    private function autorizarComprobanteFirmado(string $signedFilePath, EmittoEmailService $emittoEmailService, PdfGeneratorService $pdfGenerator): void
     {
+        $pdfPath = null;
         try {
             $sriSender = new SriComprobanteService();
             $response = $sriSender->enviarYAutorizarComprobante(
@@ -254,6 +256,7 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             Log::info("✅ Comprobante autorizado: {$this->claveAcceso}");
 
             // Enviar correo si está activado
+            $pdfPath = null;
             try {
                 if ($this->user->enviar_factura_por_correo) {
                     $payload = json_decode($this->comprobante->payload, true);
@@ -262,9 +265,13 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                     if ($recipientEmail) {
                         $subject = "Nuevo Comprobante Electrónico: {$this->claveAcceso}";
                         $message = "Estimado cliente, se ha generado un nuevo comprobante electrónico. Puede encontrar los detalles adjuntos.";
+
+                        // Generar PDF
+                        $pdfPath = $pdfGenerator->generate($this->comprobante);
+
                         $attachments = [
-                            ['filename' => "{$this->claveAcceso}.xml", 'path' => $signedFilePath]
-                            // Nota: La generación y adjunto de PDF no está implementada en este job.
+                            ['filename' => "{$this->claveAcceso}.xml", 'path' => $signedFilePath],
+                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfPath]
                         ];
 
                         $emittoEmailService->sendInvoiceEmail($recipientEmail, $subject, $message, $attachments);
@@ -275,6 +282,11 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             } catch (\Exception $e) {
                 Log::error("Error al intentar enviar el correo para el comprobante {$this->claveAcceso}: " . $e->getMessage());
                 // No relanzar la excepción para no marcar el job como fallido si solo el correo falla.
+            } finally {
+                if ($pdfPath && file_exists($pdfPath)) {
+                    @unlink($pdfPath);
+                    Log::info("Archivo PDF temporal eliminado: $pdfPath");
+                }
             }
 
         } catch (SriException $e) {
