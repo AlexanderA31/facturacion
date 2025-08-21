@@ -9,3 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 Schedule::command('invoices:sync-status')->everyFiveMinutes();
+
+Schedule::command('app:cleanup-old-invoices')->daily();

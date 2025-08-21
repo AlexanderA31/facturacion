@@ -241,7 +241,8 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                     $recipientEmail = $payload['infoAdicional']['email'] ?? null;
 
                     if ($recipientEmail) {
-                        $subject = "Nuevo Comprobante Electrónico: {$this->claveAcceso}";
+                        $numeroComprobante = "{$this->comprobante->establecimiento}-{$this->comprobante->punto_emision}-{$this->comprobante->secuencial}";
+                        $subject = "Ha recibido su documento electrónico: FAC {$numeroComprobante}";
 
                         // Generate PDF and store it publicly
                         $pdfPath = $pdfGenerator->generate($this->comprobante, 'public');
