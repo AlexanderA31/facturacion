@@ -2,21 +2,25 @@
 
 namespace App\Services;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
 
 class EmittoEmailService
 {
     protected $baseUrl;
     protected $secretKey;
+    protected $guzzleClient;
 
     public function __construct()
     {
         $this->baseUrl = config('services.emitto.base_url');
         $this->secretKey = config('services.emitto.secret');
+        $this->guzzleClient = new Client();
     }
 
     /**
-     * Sends an invoice email using the Emitto API with native cURL.
+     * Sends an invoice email using the Emitto API with Guzzle.
      *
      * @param string $recipientEmail
      * @param string $subject
@@ -33,55 +37,37 @@ class EmittoEmailService
         }
 
         try {
-            $payload = json_encode([
-                'from' => config('mail.from.address', 'noreply@example.com'),
-                'subjectEmail' => $subject,
-                'sendTo' => [$recipientEmail],
-                'message' => $message,
-                'attachments' => $attachments,
+            $response = $this->guzzleClient->request('POST', "{$this->baseUrl}/email/send", [
+                'headers' => [
+                    'x-key-emitto' => $this->secretKey,
+                    'Accept' => 'application/json',
+                ],
+                'json' => [
+                    'from' => config('mail.from.address', 'noreply@example.com'),
+                    'subjectEmail' => $subject,
+                    'sendTo' => [$recipientEmail],
+                    'message' => $message,
+                    'attachments' => $attachments,
+                ],
             ]);
 
-            $headers = [
-                'x-key-emitto: ' . $this->secretKey,
-                'Content-Type: application/json',
-                'Accept: application/json',
-                'Content-Length: ' . strlen($payload),
-            ];
+            $statusCode = $response->getStatusCode();
 
-            $ch = curl_init();
-
-            curl_setopt($ch, CURLOPT_URL, "{$this->baseUrl}/email/send");
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30); // 30 second timeout
-
-            $responseBody = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-
-            curl_close($ch);
-
-            if ($curlError) {
-                throw new \Exception('cURL Error: ' . $curlError);
-            }
-
-            if ($httpCode >= 400) {
+            if ($statusCode >= 400) {
                 Log::error('EmittoEmailService: Falló el envío de correo.', [
-                    'status' => $httpCode,
-                    'response' => $responseBody,
+                    'status' => $statusCode,
+                    'response' => (string) $response->getBody(),
                 ]);
                 return false;
             }
 
             Log::info('EmittoEmailService: Correo enviado exitosamente a ' . $recipientEmail, [
-                'status' => $httpCode,
+                'status' => $statusCode,
             ]);
             return true;
 
-        } catch (\Exception $e) {
-            Log::error('EmittoEmailService: Excepción al enviar correo.', [
+        } catch (GuzzleException $e) {
+            Log::error('EmittoEmailService: Excepción al enviar correo (Guzzle).', [
                 'message' => $e->getMessage(),
             ]);
             throw $e;
