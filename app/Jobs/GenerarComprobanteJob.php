@@ -103,11 +103,6 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             ]);
             Log::error("Error en generación del comprobante [ID {$this->comprobante->id}]: " . $e->getMessage());
             throw $e;
-        } finally {
-            if ($signedFileRelativePath && Storage::disk('public')->exists($signedFileRelativePath)) {
-                Storage::disk('public')->delete($signedFileRelativePath);
-                Log::info("Archivo firmado eliminado: $signedFileRelativePath");
-            }
         }
     }
 
@@ -295,11 +290,6 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             } catch (\Exception $e) {
                 Log::error("Error al intentar enviar el correo para el comprobante {$this->claveAcceso}: " . $e->getMessage());
                 // No relanzar la excepción para no marcar el job como fallido si solo el correo falla.
-            } finally {
-                if ($pdfRelativePath && Storage::disk('public')->exists($pdfRelativePath)) {
-                    Storage::disk('public')->delete($pdfRelativePath);
-                    Log::info("Archivo PDF temporal eliminado: $pdfRelativePath");
-                }
             }
 
         } catch (SriException $e) {
