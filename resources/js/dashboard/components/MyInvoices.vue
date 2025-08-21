@@ -399,8 +399,27 @@ export default {
         }
       }
     },
-    getDownloadUrl(jobId) {
-        return `/api/comprobantes/descargar-masivo/${jobId}/download?token=${this.token}`;
+    async downloadCompletedJob(job) {
+        try {
+            const response = await axios.get(`/api/comprobantes/descargar-masivo/${job.id}/download`, {
+                headers: { 'Authorization': `Bearer ${this.token}` },
+                responseType: 'blob',
+            });
+
+            const blob = new Blob([response.data], { type: 'application/zip' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `comprobantes-${job.format}.zip`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+
+            this.$emitter.emit('show-alert', { type: 'success', message: 'La descarga ha comenzado.' });
+        } catch (error) {
+            console.error('Error downloading completed job:', error);
+            this.$emitter.emit('show-alert', { type: 'error', message: 'Ocurrió un error al descargar el archivo ZIP.' });
+        }
     },
 
     async pollJobStatus(jobId) {
@@ -413,30 +432,26 @@ export default {
             const jobIndex = this.activeBulkDownloads.findIndex(j => j.id === jobId);
 
             if (jobIndex !== -1) {
-                this.activeBulkDownloads.splice(jobIndex, 1, job);
-
-                if (job.status === 'completed' || job.status === 'failed') {
+                if (job.status === 'completed') {
                     clearInterval(this.bulkDownloadPollers[jobId]);
                     delete this.bulkDownloadPollers[jobId];
-
-                    if (job.status === 'completed') {
-                        this.$emitter.emit('show-alert', {
-                            type: 'success',
-                            message: `La descarga de ${job.total_files} archivos ${job.format.toUpperCase()} está lista.`,
-                            duration: 10000, // Keep it on screen longer
-                            hasLink: true,
-                            linkUrl: this.getDownloadUrl(job.id),
-                            linkText: 'Descargar ahora',
-                        });
-                    } else {
-                        this.$emitter.emit('show-alert', { type: 'error', message: `La descarga masiva de ${job.format.toUpperCase()} ha fallado.` });
-                    }
+                    this.activeBulkDownloads = this.activeBulkDownloads.filter(j => j.id !== jobId);
+                    this.downloadCompletedJob(job);
+                } else if (job.status === 'failed') {
+                    clearInterval(this.bulkDownloadPollers[jobId]);
+                    delete this.bulkDownloadPollers[jobId];
+                    this.activeBulkDownloads = this.activeBulkDownloads.filter(j => j.id !== jobId);
+                    this.$emitter.emit('show-alert', { type: 'error', message: `La descarga masiva de ${job.format.toUpperCase()} ha fallado.` });
+                } else {
+                    // Use Vue.set or splice to ensure reactivity
+                    this.activeBulkDownloads.splice(jobIndex, 1, job);
                 }
             }
         } catch (error) {
             console.error(`Error polling for job ${jobId}:`, error);
             clearInterval(this.bulkDownloadPollers[jobId]);
             delete this.bulkDownloadPollers[jobId];
+            this.activeBulkDownloads = this.activeBulkDownloads.filter(j => j.id !== jobId);
             this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo verificar el estado de la descarga.' });
         }
     },
@@ -464,7 +479,7 @@ export default {
             if (response.status === 202) {
                 const jobId = response.data.data.job_id;
                 this.activeBulkDownloads.push({ id: jobId, status: 'pending', format, total_files: invoicesToDownload.length, processed_files: 0 });
-                this.bulkDownloadPollers[jobId] = setInterval(() => this.pollJobStatus(jobId), 5000);
+                this.bulkDownloadPollers[jobId] = setInterval(() => this.pollJobStatus(jobId), 3000); // Poll every 3 seconds
             }
         } catch (error) {
             console.error('Error starting bulk download:', error);
