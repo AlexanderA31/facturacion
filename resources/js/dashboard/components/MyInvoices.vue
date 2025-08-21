@@ -120,6 +120,7 @@ export default {
       sortOrder: 'desc',
       isPdfModalOpen: false,
       selectedPdfUrl: '',
+      isPreviewLoading: false,
     };
   },
   computed: {
@@ -230,6 +231,11 @@ export default {
   },
   methods: {
     async openPdfPreview(claveAcceso) {
+        if (this.isPdfModalOpen || this.isPreviewLoading) {
+            return;
+        }
+
+        this.isPreviewLoading = true;
         try {
             const response = await axios.get(`/api/comprobantes/${claveAcceso}/pdf`, {
                 headers: { 'Authorization': `Bearer ${this.token}` },
@@ -248,6 +254,8 @@ export default {
         } catch (error) {
             console.error('Error fetching PDF for preview:', error);
             this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo cargar el PDF para la previsualización.' });
+        } finally {
+            this.isPreviewLoading = false;
         }
     },
     closePdfModal() {
