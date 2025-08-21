@@ -89,8 +89,8 @@
     <div class="email-wrapper">
         <div class="email-container">
             <div class="email-header">
-                @if(isset($logoData))
-                    <img src="{{ $logoData }}" alt="Logo de la Empresa">
+                @if(isset($logoUrl))
+                    <img src="{{ $logoUrl }}" alt="Logo de la Empresa">
                 @endif
             </div>
             <div class="email-body">
