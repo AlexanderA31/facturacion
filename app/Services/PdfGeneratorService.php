@@ -48,7 +48,7 @@ class PdfGeneratorService
             'infoAdicional' => $xmlObject->infoAdicional ?? null,
             'logo_path' => $comprobante->user->logo_path ?? null,
             'user' => $comprobante->user,
-            'barcode_path' => storage_path('app/public/' . $barcodePath),
+            'barcode_path' => Storage::disk('public')->path($barcodePath),
         ];
 
         // Generar el PDF
@@ -60,6 +60,6 @@ class PdfGeneratorService
 
         Storage::disk('public')->put($fileName, $pdf->output());
 
-        return Storage::disk('public')->path($fileName);
+        return $fileName;
     }
 }
