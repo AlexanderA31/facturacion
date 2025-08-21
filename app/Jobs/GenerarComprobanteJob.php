@@ -267,13 +267,10 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
                         // Generar PDF
                         $pdfRelativePath = $pdfGenerator->generate($this->comprobante);
 
-                        // Generar rutas relativas a la raíz del sitio
-                        $xmlPath = '/storage/' . $signedFileRelativePath;
-                        $pdfPath = '/storage/' . $pdfRelativePath;
-
+                        // Usar las rutas relativas al disco de almacenamiento público
                         $attachments = [
-                            ['filename' => "{$this->claveAcceso}.xml", 'path' => $xmlPath],
-                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfPath]
+                            ['filename' => "{$this->claveAcceso}.xml", 'path' => $signedFileRelativePath],
+                            ['filename' => "{$this->claveAcceso}.pdf", 'path' => $pdfRelativePath]
                         ];
 
                         $emailSent = $emittoEmailService->sendInvoiceEmail($recipientEmail, $subject, $message, $attachments);
