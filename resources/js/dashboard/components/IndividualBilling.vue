@@ -63,19 +63,19 @@
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-for="(item, index) in items" :key="index">
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <input type="text" v-model="item.description" class="w-full border-gray-300 rounded-md shadow-sm">
+                  <input type="text" v-model="item.description" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <input type="number" v-model.number="item.quantity" class="w-24 border-gray-300 rounded-md shadow-sm">
+                  <input type="number" v-model.number="item.quantity" class="mt-1 block w-24 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <input type="number" v-model.number="item.price" class="w-32 border-gray-300 rounded-md shadow-sm">
+                  <input type="number" v-model.number="item.price" class="mt-1 block w-32 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <input type="number" v-model.number="item.discount" class="w-24 border-gray-300 rounded-md shadow-sm">
+                  <input type="number" v-model.number="item.discount" class="mt-1 block w-24 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <select v-model="item.tax" class="w-full border-gray-300 rounded-md shadow-sm">
+                  <select v-model="item.tax" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                     <option v-for="tax in taxOptions" :key="tax.value" :value="tax.value">{{ tax.text }}</option>
                   </select>
                 </td>
@@ -308,6 +308,11 @@ export default {
     async generateInvoice() {
       if (!this.selectedPuntoEmisionId) {
         this.$emitter.emit('show-alert', { type: 'error', message: 'Por favor, seleccione un punto de emisión.' });
+        return;
+      }
+
+      if (this.client.ruc.length !== 10 && this.client.ruc.length !== 13) {
+        this.$emitter.emit('show-alert', { type: 'error', message: 'El RUC/CI debe tener 10 o 13 dígitos.' });
         return;
       }
 
