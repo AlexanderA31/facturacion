@@ -90,6 +90,9 @@ export default {
             errorMessage = error.response.data.message;
           }
         }
+        if (error.response?.data?.logs) {
+          errorMessage += '<br><br><strong>Logs:</strong><pre class="whitespace-pre-wrap break-all">' + error.response.data.logs.join('\n') + '</pre>';
+        }
         this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
       }
     },
