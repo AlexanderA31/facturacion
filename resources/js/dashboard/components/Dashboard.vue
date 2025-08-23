@@ -69,13 +69,18 @@
                     <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                   </div>
                 </div>
-                <!-- Start Button -->
-                <BaseButton v-if="!isBilling" @click="startBilling" :disabled="tableData.length === 0 || !selectedPuntoEmisionId" variant="primary">
-                    <template #icon>
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </template>
-                    Iniciar Facturación
-                </BaseButton>
+                <!-- Action Buttons -->
+                <div v-if="!isBilling" class="flex items-center space-x-2">
+                    <BaseButton @click="clearState" :disabled="tableData.length === 0" variant="danger">
+                        Limpiar Tabla
+                    </BaseButton>
+                    <BaseButton @click="startBilling" :disabled="tableData.length === 0 || !selectedPuntoEmisionId" variant="primary">
+                        <template #icon>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </template>
+                        Iniciar Facturación
+                    </BaseButton>
+                </div>
                 <!-- Billing In Progress Controls -->
                 <div v-if="isBilling" class="flex items-center space-x-4">
                     <div class="flex items-center text-lg font-medium text-gray-700">
