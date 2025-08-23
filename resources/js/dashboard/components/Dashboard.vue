@@ -216,7 +216,7 @@ export default {
         tipo_impuesto: '2',
         codigo_porcentaje_iva: '2',
       },
-      isSidebarOpen: true,
+      isSidebarOpen: false,
       currentDashboardView: 'billing',
       tableData: [],
       tableHeaders: [
@@ -226,7 +226,14 @@ export default {
         { text: 'Precio', value: 'Precio' },
         { text: 'Estado', value: 'Estado' },
       ],
-      correctiveInvoicesCount: 0,
+      navigation: [
+        { name: 'Facturación Masiva', view: 'billing', icon: IconBilling },
+        { name: 'Facturación Individual', view: 'individual-billing', icon: IconIndividualBilling },
+        { name: 'Estado de factura', view: 'status', icon: IconStatus },
+        { name: 'Mis Comprobantes', view: 'my-invoices', icon: IconInvoices },
+        { name: 'Facturación Correctiva', view: 'corrective', icon: IconCorrective },
+        { name: 'Configuración', view: 'configuration', icon: IconConfig },
+      ],
       isBilling: false,
       pollingIntervalId: null,
       establecimientos: [],
@@ -276,16 +283,6 @@ export default {
         text: `${pto.numero} - ${pto.nombre}`,
       }));
     },
-    navigation() {
-      return [
-        { name: 'Facturación Masiva', view: 'billing', icon: IconBilling },
-        { name: 'Facturación Individual', view: 'individual-billing', icon: IconIndividualBilling },
-        { name: 'Estado de factura', view: 'status', icon: IconStatus },
-        { name: 'Mis Comprobantes', view: 'my-invoices', icon: IconInvoices },
-        { name: 'Facturación Correctiva', view: 'corrective', icon: IconCorrective, count: this.correctiveInvoicesCount },
-        { name: 'Configuración', view: 'configuration', icon: IconConfig },
-      ];
-    },
   },
   watch: {
     tableData: {
@@ -312,14 +309,8 @@ export default {
     this.fetchEstablecimientos();
     this.fetchPuntosEmision();
     this.$emitter.on('profile-updated', this.fetchUserProfile);
-    this.updateCorrectiveCount();
-    window.addEventListener('corrective-billing-update', this.updateCorrectiveCount);
   },
   methods: {
-    updateCorrectiveCount() {
-      const correctiveData = JSON.parse(localStorage.getItem('correctiveBillingData') || '[]');
-      this.correctiveInvoicesCount = correctiveData.length;
-    },
     getTarifaFromCodigoPorcentaje(codigo) {
         const map = {
             '0': 0,
@@ -679,7 +670,6 @@ export default {
   beforeUnmount() {
     this.stopPolling();
     this.$emitter.off('profile-updated', this.fetchUserProfile);
-    window.removeEventListener('corrective-billing-update', this.updateCorrectiveCount);
   },
 };
 </script>
