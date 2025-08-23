@@ -353,6 +353,7 @@ export default {
             this.failedRows = this.failedRows.filter(item => item.id !== row.id);
             this.saveState();
             this.$emitter.emit('show-alert', { type: 'success', message: 'Fila eliminada exitosamente.' });
+            window.dispatchEvent(new Event('corrective-billing-update'));
         }
     },
     toggleRowExpansion(rowId) {
