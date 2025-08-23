@@ -263,12 +263,12 @@ export default {
     getTarifaFromCodigoPorcentaje(codigo) {
         const map = {
             '0': 0,
+            '5': 5,
+            '8': 8,
             '2': 12,
+            '10': 13,
             '3': 14,
-            '6': 0,
-            '7': 0,
-            '8': 5,
-            '9': 15,
+            '4': 15,
         };
         return map[codigo] || 0;
     },

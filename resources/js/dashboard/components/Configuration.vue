@@ -169,12 +169,12 @@ export default {
       ],
       codigoPorcentajeIvaOptions: [
         { value: '0', text: 'IVA 0%' },
+        { value: '5', text: 'IVA 5%' },
+        { value: '8', text: 'IVA 8% (diferenciado)' },
         { value: '2', text: 'IVA 12%' },
+        { value: '10', text: 'IVA 13%' },
         { value: '3', text: 'IVA 14%' },
-        { value: '6', text: 'No objeto de IVA' },
-        { value: '7', text: 'Exento de IVA' },
-        { value: '8', text: 'IVA 5%' },
-        { value: '9', text: 'IVA 15%' },
+        { value: '4', text: 'IVA 15% (general vigente)' },
       ],
       token: localStorage.getItem('jwt_token'),
     };
