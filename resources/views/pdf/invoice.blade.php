@@ -281,6 +281,8 @@
                     // Initialize all possible totals to 0
                     $subtotal15 = 0;
                     $iva15 = 0;
+                    $subtotal8 = 0;
+                    $iva8 = 0;
                     $subtotal5 = 0;
                     $iva5 = 0;
                     $subtotal0 = 0;
@@ -295,6 +297,10 @@
                                     case '4': // 15%
                                         $subtotal15 = (float)$impuesto->baseImponible;
                                         $iva15 = (float)$impuesto->valor;
+                                        break;
+                                    case '8': // 8%
+                                        $subtotal8 = (float)$impuesto->baseImponible;
+                                        $iva8 = (float)$impuesto->valor;
                                         break;
                                     case '5': // 5% (Guess)
                                         $subtotal5 = (float)$impuesto->baseImponible;
@@ -323,6 +329,10 @@
                         <td class="text-right">${{ number_format($subtotal15, 2) }}</td>
                     </tr>
                     <tr>
+                        <td class="bold text-left">Subtotal 8%:</td>
+                        <td class="text-right">${{ number_format($subtotal8, 2) }}</td>
+                    </tr>
+                    <tr>
                         <td class="bold text-left">Subtotal 5%:</td>
                         <td class="text-right">${{ number_format($subtotal5, 2) }}</td>
                     </tr>
@@ -345,6 +355,10 @@
                     <tr>
                         <td class="bold text-left">IVA 15%:</td>
                         <td class="text-right">${{ number_format($iva15, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bold text-left">IVA 8%:</td>
+                        <td class="text-right">${{ number_format($iva8, 2) }}</td>
                     </tr>
                     <tr>
                         <td class="bold text-left">IVA 5%:</td>
