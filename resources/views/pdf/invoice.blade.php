@@ -278,40 +278,35 @@
             </div>
             <div class="totals-table-container">
                 @php
-                    // Initialize all possible totals to 0
-                    $subtotal15 = 0;
-                    $iva15 = 0;
-                    $subtotal8 = 0;
-                    $iva8 = 0;
-                    $subtotal5 = 0;
-                    $iva5 = 0;
+                    $ivaDetails = [];
                     $subtotal0 = 0;
                     $subtotalNoObjeto = 0;
                     $ice = 0;
 
-                    // Process the taxes from the invoice data
+                    $tarifaMap = [
+                        '0' => '0',
+                        '2' => '12',
+                        '3' => '14',
+                        '4' => '15',
+                        '5' => '5',
+                        '8' => '8',
+                        '10' => '13',
+                    ];
+
                     if (isset($infoFactura->totalConImpuestos)) {
                         foreach($infoFactura->totalConImpuestos->totalImpuesto as $impuesto) {
                             if ($impuesto->codigo == '2') { // IVA
-                                switch ($impuesto->codigoPorcentaje) {
-                                    case '4': // 15%
-                                        $subtotal15 = (float)$impuesto->baseImponible;
-                                        $iva15 = (float)$impuesto->valor;
-                                        break;
-                                    case '8': // 8%
-                                        $subtotal8 = (float)$impuesto->baseImponible;
-                                        $iva8 = (float)$impuesto->valor;
-                                        break;
-                                    case '5': // 5% (Guess)
-                                        $subtotal5 = (float)$impuesto->baseImponible;
-                                        $iva5 = (float)$impuesto->valor;
-                                        break;
-                                    case '0': // 0%
-                                        $subtotal0 = (float)$impuesto->baseImponible;
-                                        break;
-                                    case '6': // No Objeto de IVA
-                                        $subtotalNoObjeto = (float)$impuesto->baseImponible;
-                                        break;
+                                $codigoPorcentaje = (string)$impuesto->codigoPorcentaje;
+                                if ($codigoPorcentaje === '0') {
+                                    $subtotal0 = (float)$impuesto->baseImponible;
+                                } elseif ($codigoPorcentaje === '6') {
+                                    $subtotalNoObjeto = (float)$impuesto->baseImponible;
+                                } else {
+                                    $tarifa = $tarifaMap[$codigoPorcentaje] ?? $codigoPorcentaje;
+                                    $ivaDetails[$tarifa] = [
+                                        'subtotal' => (float)$impuesto->baseImponible,
+                                        'iva' => (float)$impuesto->valor,
+                                    ];
                                 }
                             } elseif ($impuesto->codigo == '3') { // ICE
                                 $ice += (float)$impuesto->valor;
@@ -324,18 +319,14 @@
                         <td class="bold text-left">Subtotal Sin Impuestos:</td>
                         <td class="text-right">${{ number_format((float)$infoFactura->totalSinImpuestos, 2) }}</td>
                     </tr>
-                    <tr>
-                        <td class="bold text-left">Subtotal 15%:</td>
-                        <td class="text-right">${{ number_format($subtotal15, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="bold text-left">Subtotal 8%:</td>
-                        <td class="text-right">${{ number_format($subtotal8, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="bold text-left">Subtotal 5%:</td>
-                        <td class="text-right">${{ number_format($subtotal5, 2) }}</td>
-                    </tr>
+                    @foreach($ivaDetails as $tarifa => $details)
+                        @if($details['subtotal'] > 0)
+                        <tr>
+                            <td class="bold text-left">Subtotal {{ $tarifa }}%:</td>
+                            <td class="text-right">${{ number_format($details['subtotal'], 2) }}</td>
+                        </tr>
+                        @endif
+                    @endforeach
                     <tr>
                         <td class="bold text-left">Subtotal 0%:</td>
                         <td class="text-right">${{ number_format($subtotal0, 2) }}</td>
@@ -352,18 +343,14 @@
                         <td class="bold text-left">ICE:</td>
                         <td class="text-right">${{ number_format($ice, 2) }}</td>
                     </tr>
-                    <tr>
-                        <td class="bold text-left">IVA 15%:</td>
-                        <td class="text-right">${{ number_format($iva15, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="bold text-left">IVA 8%:</td>
-                        <td class="text-right">${{ number_format($iva8, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="bold text-left">IVA 5%:</td>
-                        <td class="text-right">${{ number_format($iva5, 2) }}</td>
-                    </tr>
+                    @foreach($ivaDetails as $tarifa => $details)
+                        @if($details['iva'] > 0)
+                        <tr>
+                            <td class="bold text-left">IVA {{ $tarifa }}%:</td>
+                            <td class="text-right">${{ number_format($details['iva'], 2) }}</td>
+                        </tr>
+                        @endif
+                    @endforeach
                     <tr>
                         <td class="bold text-left">Servicio %:</td>
                         <td class="text-right">${{ number_format((float)$infoFactura->propina, 2) }}</td>
