@@ -41,8 +41,8 @@ export default {
   data() {
     return {
       loginForm: {
-        email: 'client@example.com', // Default for easy testing
-        password: '123456789',   // Default for easy testing
+        email: '',
+        password: '',
       },
       loginError: '',
       isLoggingIn: false,
