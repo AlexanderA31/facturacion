@@ -12,17 +12,6 @@ use DOMDocument;
 
 class AnexoTransaccionalService
 {
-    private $logs = [];
-
-    private function log(string $message)
-    {
-        $this->logs[] = '[' . now()->toDateTimeString() . '] ' . $message;
-    }
-
-    public function getLogs(): array
-    {
-        return $this->logs;
-    }
 
     /**
      * Generate the XML for the ATS report.
@@ -33,45 +22,35 @@ class AnexoTransaccionalService
      */
     public function generarXml(int $year, int $month): string
     {
-        $this->log("Iniciando generación de Anexo Transaccional para {$year}-{$month}.");
         $user = Auth::user();
-        $this->log("Usuario obtenido: " . $user->id);
 
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
 
         $iva = $dom->createElement('iva');
-        $iva->setAttribute('version', '1.0.0');
         $dom->appendChild($iva);
 
-        $this->log("Añadiendo cabecera...");
+        // Header
         $this->appendHeader($dom, $iva, $user, $year, $month);
-        $this->log("Cabecera añadida.");
 
-        $this->log("Añadiendo ventas...");
+        // Ventas
         $this->appendVentas($dom, $iva, $user, $year, $month);
-        $this->log("Ventas añadidas.");
 
-        $this->log("Añadiendo compras...");
+        // Compras
         $this->appendCompras($dom, $iva, $user, $year, $month);
-        $this->log("Compras añadidas.");
 
-        $this->log("Añadiendo retenciones...");
+        // Retenciones
         $this->appendRetenciones($dom, $iva, $user, $year, $month);
-        $this->log("Retenciones añadidas.");
 
         $xml = $dom->saveXML();
-        $this->log("XML generado. Procediendo a la validación...");
 
         XmlValidator::validateATS($xml);
-        $this->log("XML validado exitosamente.");
 
         return $xml;
     }
 
     private function appendHeader(DOMDocument $dom, \DOMElement $iva, User $user, int $year, int $month)
     {
-        $this->log("Obteniendo total de ventas para la cabecera...");
         $iva->appendChild($dom->createElement('TipoIDInformante', 'R'));
         $iva->appendChild($dom->createElement('IdInformante', $user->ruc));
         $iva->appendChild($dom->createElement('razonSocial', $user->razonSocial));
@@ -95,7 +74,6 @@ class AnexoTransaccionalService
 
     private function appendVentas(DOMDocument $dom, \DOMElement $iva, User $user, int $year, int $month)
     {
-        $this->log("Iniciando appendVentas.");
         $ventas = $dom->createElement('ventas');
         $iva->appendChild($ventas);
 
@@ -152,7 +130,6 @@ class AnexoTransaccionalService
 
     private function appendCompras(DOMDocument $dom, \DOMElement $iva, User $user, int $year, int $month)
     {
-        $this->log("Iniciando appendCompras.");
         $comprasNode = $dom->createElement('compras');
         $iva->appendChild($comprasNode);
 
@@ -219,7 +196,6 @@ class AnexoTransaccionalService
 
     private function appendRetenciones(DOMDocument $dom, \DOMElement $iva, User $user, int $year, int $month)
     {
-        $this->log("Iniciando appendRetenciones.");
         $retencionesNode = $dom->createElement('retenciones');
         $iva->appendChild($retencionesNode);
 
