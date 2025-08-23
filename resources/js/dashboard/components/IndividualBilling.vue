@@ -164,12 +164,16 @@ export default {
       selectedPuntoEmisionId: null,
       userProfile: {
         tipo_impuesto: '2',
-        codigo_porcentaje_iva: '9',
+        codigo_porcentaje_iva: '4',
       },
       taxOptions: [
-        { value: '9', text: 'IVA 15%' },
+        { value: '4', text: 'IVA 15%' },
         { value: '0', text: 'IVA 0%' },
+        { value: '5', text: 'IVA 5%' },
         { value: '8', text: 'IVA 8%' },
+        { value: '2', text: 'IVA 12%' },
+        { value: '10', text: 'IVA 13%' },
+        { value: '3', text: 'IVA 14%' },
       ]
     };
   },
@@ -254,12 +258,12 @@ export default {
     getTarifaFromCodigoPorcentaje(codigo) {
         const map = {
             '0': 0,
-            '2': 12,
-            '3': 14,
-            '6': 0,
-            '7': 0,
+            '5': 5,
             '8': 8,
-            '9': 15,
+            '2': 12,
+            '10': 13,
+            '3': 14,
+            '4': 15,
         };
         return map[codigo] || 0;
     },
@@ -278,7 +282,7 @@ export default {
       } catch (error) {
         console.error('Error fetching user profile:', error);
         // Use default values if profile fetch fails
-        this.userProfile = { tipo_impuesto: '2', codigo_porcentaje_iva: '9' };
+        this.userProfile = { tipo_impuesto: '2', codigo_porcentaje_iva: '4' };
       }
     },
     async fetchEstablecimientos() {
