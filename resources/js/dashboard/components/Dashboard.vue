@@ -303,6 +303,7 @@ export default {
     this.fetchUserProfile();
     this.fetchEstablecimientos();
     this.fetchPuntosEmision();
+    this.$emitter.on('profile-updated', this.fetchUserProfile);
   },
   methods: {
     getTarifaFromCodigoPorcentaje(codigo) {
@@ -663,6 +664,7 @@ export default {
   },
   beforeUnmount() {
     this.stopPolling();
+    this.$emitter.off('profile-updated', this.fetchUserProfile);
   },
 };
 </script>

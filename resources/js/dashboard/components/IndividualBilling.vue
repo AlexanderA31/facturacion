@@ -237,6 +237,10 @@ export default {
     this.fetchUserProfile();
     this.fetchEstablecimientos();
     this.fetchPuntosEmision();
+    this.$emitter.on('profile-updated', this.fetchUserProfile);
+  },
+  beforeUnmount() {
+    this.$emitter.off('profile-updated', this.fetchUserProfile);
   },
   methods: {
     addItem() {

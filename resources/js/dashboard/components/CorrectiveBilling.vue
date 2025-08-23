@@ -247,9 +247,11 @@ export default {
     this.fetchUserProfile();
     this.fetchEstablecimientos();
     this.fetchPuntosEmision();
+    this.$emitter.on('profile-updated', this.fetchUserProfile);
   },
   beforeUnmount() {
     window.removeEventListener('corrective-billing-update', this.loadState);
+    this.$emitter.off('profile-updated', this.fetchUserProfile);
   },
   methods: {
     sortBy(key) {

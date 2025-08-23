@@ -219,6 +219,7 @@ export default {
           headers: { 'Authorization': `Bearer ${this.token}` },
         });
         this.$emitter.emit('show-alert', { type: 'success', message: 'Configuración guardada exitosamente.' });
+        this.$emitter.emit('profile-updated');
       } catch (error) {
         console.error('Error al guardar la configuración:', error);
         if (error.response && error.response.status === 422) {
