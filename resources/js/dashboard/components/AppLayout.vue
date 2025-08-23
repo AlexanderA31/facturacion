@@ -22,7 +22,7 @@
 
     <div class="relative z-10 flex flex-col flex-1 transition-all duration-300 ease-in-out" :class="isSidebarOpen ? 'ml-64' : 'ml-20'">
       <!-- Header -->
-      <header class="flex justify-between items-center p-4 bg-white border-b-2 border-gray-200">
+      <header class="sticky top-0 z-20 flex justify-between items-center p-4 bg-white border-b-2 border-gray-200">
         <button @click="$emit('toggle-sidebar')" class="text-gray-500 focus:outline-none">
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
