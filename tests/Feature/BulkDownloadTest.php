@@ -7,12 +7,14 @@ use App\Models\BulkDownloadJob;
 use App\Models\User;
 use App\Models\Comprobante;
 use App\Services\FileGenerationService;
+use App\Services\SriComprobanteService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use App\Enums\EstadosComprobanteEnum;
 use App\Enums\BulkDownloadStatusEnum;
+use Mockery\MockInterface;
 
 class BulkDownloadTest extends TestCase
 {
@@ -22,7 +24,7 @@ class BulkDownloadTest extends TestCase
     {
         parent::setUp();
         Bus::fake();
-        Storage::fake('local');
+        Storage::fake('public');
     }
 
     public function test_can_initiate_bulk_download_and_dispatches_job()
@@ -74,9 +76,9 @@ class BulkDownloadTest extends TestCase
         $user = User::factory()->create();
         $job = BulkDownloadJob::factory()->for($user)->create([
             'status' => BulkDownloadStatusEnum::COMPLETED,
-            'file_path' => 'test.zip',
+            'file_path' => 'bulk-downloads/test.zip',
         ]);
-        Storage::disk('local')->put('test.zip', 'zip content');
+        Storage::disk('public')->put('bulk-downloads/test.zip', 'zip content');
 
         // 2. Action
         $response = $this->actingAs($user)->get("/api/comprobantes/descargar-masivo/{$job->id}/download");
@@ -86,7 +88,7 @@ class BulkDownloadTest extends TestCase
         $response->assertHeader('Content-Type', 'application/zip');
     }
 
-    public function test_job_creates_zip_file_correctly()
+    public function test_job_creates_zip_and_caches_pdfs_correctly()
     {
         // Use the real Bus for this test
         Bus::fake([CreateBulkDownloadZipJob::class]);
@@ -97,19 +99,23 @@ class BulkDownloadTest extends TestCase
             'estado' => EstadosComprobanteEnum::AUTORIZADO->value,
         ]);
         $clavesAcceso = $comprobantes->pluck('clave_acceso')->toArray();
+        $xmlString = file_get_contents(base_path('tests/fixtures/sample_invoice.xml'));
+
+        // Mock the SriComprobanteService to be called for each PDF generation
+        $sriMock = $this->mock(SriComprobanteService::class);
+        $sriMock->shouldReceive('consultarXmlAutorizado')->times(2)->andReturn($xmlString);
 
         $jobModel = BulkDownloadJob::create([
             'user_id' => $user->id,
-            'format' => 'xml',
+            'format' => 'pdf',
             'total_files' => 2,
         ]);
 
-        $fileGenerationServiceMock = $this->mock(FileGenerationService::class);
-        $fileGenerationServiceMock->shouldReceive('generateXmlContent')->andReturn('dummy xml content');
-
         // 2. Action
         $job = new CreateBulkDownloadZipJob($jobModel, $clavesAcceso);
-        $job->handle($fileGenerationServiceMock);
+        // We need the real FileGenerationService, but with a mocked SriComprobanteService
+        $fileGenerationService = new FileGenerationService($sriMock);
+        $job->handle($fileGenerationService);
 
         // 3. Assertions
         $jobModel->refresh();
@@ -117,6 +123,12 @@ class BulkDownloadTest extends TestCase
         $this->assertEquals(2, $jobModel->processed_files);
         $this->assertNotNull($jobModel->file_path);
 
-        Storage::disk('local')->assertExists($jobModel->file_path);
+        // Assert that the final zip file exists
+        Storage::disk('public')->assertExists($jobModel->file_path);
+
+        // Assert that the individual PDFs were cached
+        foreach ($comprobantes as $comprobante) {
+            Storage::disk('public')->assertExists("pdfs/{$comprobante->clave_acceso}.pdf");
+        }
     }
 }

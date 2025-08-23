@@ -40,6 +40,13 @@ class FileGenerationService
         Gate::authorize('view', $comprobante);
 
         $clave_acceso = $comprobante->clave_acceso;
+        $facturaNumero = $comprobante->establecimiento . '-' . $comprobante->punto_emision . '-' . $comprobante->secuencial;
+        $fileName = 'FAC-' . $facturaNumero . '.pdf';
+        $cachedPdfPath = "pdfs/{$clave_acceso}.pdf";
+
+        if (Storage::disk('public')->exists($cachedPdfPath)) {
+            return Storage::disk('public')->get($cachedPdfPath);
+        }
 
         $barcodePath = "barcodes/{$clave_acceso}.png";
         if (!Storage::disk('public')->exists($barcodePath)) {
@@ -64,9 +71,10 @@ class FileGenerationService
         ];
 
         $pdf = PDF::loadView('pdf.invoice', $data);
-        $facturaNumero = $xmlObject->infoTributaria->estab . '-' . $xmlObject->infoTributaria->ptoEmi . '-' . $xmlObject->infoTributaria->secuencial;
-        $fileName = 'FAC-' . $facturaNumero . '.pdf';
+        $pdfContent = $pdf->output();
 
-        return $pdf->output();
+        Storage::disk('public')->put($cachedPdfPath, $pdfContent);
+
+        return $pdfContent;
     }
 }
