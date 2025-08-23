@@ -167,13 +167,14 @@ export default {
         codigo_porcentaje_iva: '4',
       },
       taxOptions: [
-        { value: '4', text: 'IVA 15%' },
-        { value: '0', text: 'IVA 0%' },
+        { value: '9', text: 'IVA 15% (general vigente)' },
         { value: '5', text: 'IVA 5%' },
-        { value: '8', text: 'IVA 8%' },
-        { value: '2', text: 'IVA 12%' },
-        { value: '10', text: 'IVA 13%' },
-        { value: '3', text: 'IVA 14%' },
+        { value: '8', text: 'IVA 8% (diferenciado)' },
+        { value: '0', text: 'IVA 0%' },
+        { value: '6', text: 'No objeto de IVA' },
+        { value: '7', text: 'Exento de IVA' },
+        { value: '2', text: 'IVA 12% (histórico)' },
+        { value: '3', text: 'IVA 14% (histórico)' },
       ]
     };
   },
@@ -258,12 +259,13 @@ export default {
     getTarifaFromCodigoPorcentaje(codigo) {
         const map = {
             '0': 0,
-            '5': 5,
-            '8': 8,
             '2': 12,
-            '10': 13,
             '3': 14,
-            '4': 15,
+            '5': 5,
+            '6': 0, // No objeto de IVA
+            '7': 0, // Exento de IVA
+            '8': 8,
+            '9': 15,
         };
         return map[codigo] || 0;
     },

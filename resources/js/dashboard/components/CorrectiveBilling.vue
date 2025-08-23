@@ -263,12 +263,13 @@ export default {
     getTarifaFromCodigoPorcentaje(codigo) {
         const map = {
             '0': 0,
-            '5': 5,
-            '8': 8,
             '2': 12,
-            '10': 13,
             '3': 14,
-            '4': 15,
+            '5': 5,
+            '6': 0, // No objeto de IVA
+            '7': 0, // Exento de IVA
+            '8': 8,
+            '9': 15,
         };
         return map[codigo] || 0;
     },
