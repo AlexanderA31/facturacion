@@ -164,10 +164,10 @@ export default {
       selectedPuntoEmisionId: null,
       userProfile: {
         tipo_impuesto: '2',
-        codigo_porcentaje_iva: '2',
+        codigo_porcentaje_iva: '9',
       },
       taxOptions: [
-        { value: '2', text: 'IVA 12%' },
+        { value: '9', text: 'IVA 15%' },
         { value: '0', text: 'IVA 0%' },
         { value: '8', text: 'IVA 8%' },
       ]
@@ -277,6 +277,8 @@ export default {
         });
       } catch (error) {
         console.error('Error fetching user profile:', error);
+        // Use default values if profile fetch fails
+        this.userProfile = { tipo_impuesto: '2', codigo_porcentaje_iva: '9' };
       }
     },
     async fetchEstablecimientos() {
