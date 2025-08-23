@@ -1,6 +1,9 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-100">
-    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+  <div
+    class="flex items-center justify-center min-h-screen bg-cover bg-center"
+    style="background-image: url('https://www.exact.com.pe/assets/uploads/noticias/8-beneficios-del-sistema-de-facturacion-online.jpg');"
+  >
+    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md bg-opacity-80">
       <h1 class="text-2xl font-bold text-center text-gray-900">Iniciar Sesión</h1>
       <form @submit.prevent="handleLogin" class="space-y-6">
         <div>
