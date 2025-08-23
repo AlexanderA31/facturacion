@@ -27,7 +27,7 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public a` down(): void
+    public function down(): void
     {
         Schema::dropIfExists('withholding_vat_lines');
     }
