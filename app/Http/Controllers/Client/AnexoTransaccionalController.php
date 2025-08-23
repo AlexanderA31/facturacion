@@ -35,7 +35,10 @@ class AnexoTransaccionalController extends Controller
                 'Content-Disposition' => 'attachment; filename="ats.xml"',
             ]);
         } catch (\Exception $e) {
-            return $this->sendError('Error al generar el anexo', $e->getMessage(), 500);
+            return response()->json([
+                'message' => 'Error al generar el anexo: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ], 500);
         }
     }
 }
