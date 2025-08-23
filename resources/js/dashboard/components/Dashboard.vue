@@ -133,6 +133,11 @@
       <CorrectiveBilling :is-sidebar-open="isSidebarOpen" />
     </div>
 
+    <!-- Individual Billing Section -->
+    <div v-if="currentDashboardView === 'individual-billing'">
+      <IndividualBilling :token="token" />
+    </div>
+
     <!-- Configuration Section -->
     <div v-if="currentDashboardView === 'configuration'">
       <Configuration :is-sidebar-open="isSidebarOpen" />
@@ -148,6 +153,7 @@ import DataTable from './DataTable.vue';
 import StatusChecker from './StatusChecker.vue';
 import MyInvoices from './MyInvoices.vue';
 import CorrectiveBilling from './CorrectiveBilling.vue';
+import IndividualBilling from './IndividualBilling.vue';
 import Pagination from './Pagination.vue';
 import BaseButton from './BaseButton.vue';
 import Configuration from './Configuration.vue';
@@ -159,6 +165,9 @@ import { parsePaymentMethods } from '../utils/paymentMethods.js';
 
 const IconBilling = {
   render() { return h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' }, [ h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': 2, d: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }) ]); }
+};
+const IconIndividualBilling = {
+  render() { return h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' }, [ h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': 2, d: 'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536l12.232-12.232z' }) ]); }
 };
 const IconStatus = {
   render() { return h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' }, [ h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': 2, d: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }) ]); }
@@ -182,6 +191,7 @@ export default {
     StatusChecker,
     MyInvoices,
     CorrectiveBilling,
+    IndividualBilling,
     Pagination,
     BaseButton,
     Configuration,
@@ -213,6 +223,7 @@ export default {
       ],
       navigation: [
         { name: 'Facturación Masiva', view: 'billing', icon: IconBilling },
+        { name: 'Facturación Individual', view: 'individual-billing', icon: IconIndividualBilling },
         { name: 'Estado de factura', view: 'status', icon: IconStatus },
         { name: 'Mis Comprobantes', view: 'my-invoices', icon: IconInvoices },
         { name: 'Facturación Correctiva', view: 'corrective', icon: IconCorrective },
