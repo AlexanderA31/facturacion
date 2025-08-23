@@ -39,6 +39,7 @@ class JWTAuthController extends Controller
             $validated['password'] = bcrypt($validated['password']);
             $validated['tarifa'] = TarifasEnum::COMPROBANTE->value;
             $validated['ambiente'] = AmbientesEnum::PRUEBAS->value;
+            $validated['active_account'] = false;
 
             $user = User::create($validated);
             $user->assignRole(RolesEnum::CLIENTE);

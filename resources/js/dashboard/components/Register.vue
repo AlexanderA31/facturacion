@@ -1,6 +1,9 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-100">
-    <div class="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-md">
+  <div
+    class="flex items-center justify-center min-h-screen bg-cover bg-center"
+    style="background-image: url('https://www.exact.com.pe/assets/uploads/noticias/8-beneficios-del-sistema-de-facturacion-online.jpg');"
+  >
+    <div class="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-2xl bg-opacity-80 border border-gray-200">
       <h2 class="text-2xl font-bold text-center text-gray-900">Crear una cuenta</h2>
       <form @submit.prevent="handleRegister">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
