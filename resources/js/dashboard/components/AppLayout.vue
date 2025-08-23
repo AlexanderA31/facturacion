@@ -11,9 +11,9 @@
           <component :is="item.icon" :class="['w-6 h-6 transition-all duration-300 flex-shrink-0', isSidebarOpen ? 'mr-3' : 'mx-auto']" />
           <span class="relative whitespace-nowrap transition-all duration-300" :class="isSidebarOpen ? '' : 'opacity-0'">
             {{ item.name }}
-            <span v-if="item.count > 0" class="absolute -top-1 -right-3 text-xs bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center">
-              {{ item.count }}
-            </span>
+                  <span v-if="item.count > 0" class="absolute -top-2 -right-3 bg-red-500 text-white rounded-full w-3 h-3 flex items-center justify-center" style="font-size: 0.6rem;">
+          {{ item.count }}
+        </span>
           </span>
         </a>
       </nav>
