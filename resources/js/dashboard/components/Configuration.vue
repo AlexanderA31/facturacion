@@ -168,7 +168,7 @@ export default {
         { value: '6', text: 'IMPUESTO VERDE' },
       ],
       codigoPorcentajeIvaOptions: [
-        { value: '9', text: 'IVA 15% (general vigente)' },
+        { value: '4', text: 'IVA 15% (general vigente)' },
         { value: '5', text: 'IVA 5%' },
         { value: '8', text: 'IVA 8% (diferenciado)' },
         { value: '0', text: 'IVA 0%' },
@@ -176,6 +176,7 @@ export default {
         { value: '7', text: 'Exento de IVA' },
         { value: '2', text: 'IVA 12% (histórico)' },
         { value: '3', text: 'IVA 14% (histórico)' },
+        { value: '10', text: 'IVA 13% (histórico)' },
       ],
       token: localStorage.getItem('jwt_token'),
     };
