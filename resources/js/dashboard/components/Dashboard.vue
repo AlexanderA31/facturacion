@@ -216,7 +216,7 @@ export default {
         tipo_impuesto: '2',
         codigo_porcentaje_iva: '2',
       },
-      isSidebarOpen: false,
+      isSidebarOpen: true,
       currentDashboardView: 'billing',
       tableData: [],
       tableHeaders: [
