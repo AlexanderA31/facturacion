@@ -99,7 +99,7 @@ class AnexoTransaccionalService
             $venta->appendChild($dom->createElement('establecimiento', $comprobante->establecimiento));
             $venta->appendChild($dom->createElement('puntoEmision', $comprobante->punto_emision));
             $venta->appendChild($dom->createElement('secuencial', $comprobante->secuencial));
-            $venta->appendChild($dom->createElement('fechaEmision', $comprobante->fecha_emision->format('d/m/Y')));
+            $venta->appendChild($dom->createElement('fechaEmision', $comprobante->fecha_emision->format('Y-m-d')));
             $venta->appendChild($dom->createElement('autorizacion', $comprobante->clave_acceso));
 
             $baseNoGraIva = 0;
@@ -151,11 +151,11 @@ class AnexoTransaccionalService
             $compraNode->appendChild($dom->createElement('razonSocialProv', $compra->supplier->razon_social));
             $compraNode->appendChild($dom->createElement('tipoComprobante', $compra->tipo_comprobante));
             $compraNode->appendChild($dom->createElement('parteRel', $compra->parte_relacionada));
-            $compraNode->appendChild($dom->createElement('fechaRegistro', $compra->fecha_registro->format('d/m/Y')));
+            $compraNode->appendChild($dom->createElement('fechaRegistro', $compra->fecha_registro->format('Y-m-d')));
             $compraNode->appendChild($dom->createElement('establecimiento', $compra->establecimiento));
             $compraNode->appendChild($dom->createElement('puntoEmision', $compra->punto_emision));
             $compraNode->appendChild($dom->createElement('secuencial', $compra->secuencial));
-            $compraNode->appendChild($dom->createElement('fechaEmision', $compra->fecha_emision->format('d/m/Y')));
+            $compraNode->appendChild($dom->createElement('fechaEmision', $compra->fecha_emision->format('Y-m-d')));
             $compraNode->appendChild($dom->createElement('autorizacion', $compra->autorizacion));
 
             $baseNoGraIva = 0;
@@ -218,7 +218,7 @@ class AnexoTransaccionalService
             $retencionNode->appendChild($dom->createElement('ptoEmiRetencion1', $retencion->punto_emision));
             $retencionNode->appendChild($dom->createElement('secRetencion1', $retencion->secuencial));
             $retencionNode->appendChild($dom->createElement('autRetencion1', $retencion->autorizacion));
-            $retencionNode->appendChild($dom->createElement('fechaEmisionRet1', $retencion->fecha_emision->format('d/m/Y')));
+            $retencionNode->appendChild($dom->createElement('fechaEmisionRet1', $retencion->fecha_emision->format('Y-m-d')));
 
             $detalleAir = $dom->createElement('detalleAir');
             $retencionNode->appendChild($detalleAir);
@@ -234,7 +234,7 @@ class AnexoTransaccionalService
                 $retencionNode->appendChild($dom->createElement('ptoEmiFactura', $retencion->purchaseInvoice->punto_emision));
                 $retencionNode->appendChild($dom->createElement('secFactura', $retencion->purchaseInvoice->secuencial));
                 $retencionNode->appendChild($dom->createElement('autFactura', $retencion->purchaseInvoice->autorizacion));
-                $retencionNode->appendChild($dom->createElement('fechaEmisionFactura', $retencion->purchaseInvoice->fecha_emision->format('d/m/Y')));
+                $retencionNode->appendChild($dom->createElement('fechaEmisionFactura', $retencion->purchaseInvoice->fecha_emision->format('Y-m-d')));
             }
 
             $retIva = $dom->createElement('retIva');
