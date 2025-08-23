@@ -1,0 +1,46 @@
+{
+    "tipoIdentificacionComprador": "05",
+    "razonSocialComprador": "PRUEBAS SERVICIO DE RENTAS INTERNAS",
+    "identificacionComprador": "9999999999999",
+    "direccionComprador": "DIRECCION PRUEBAS",
+    "totalSinImpuestos": "100.00",
+    "totalDescuento": "0.00",
+    "totalConImpuestos": [
+        {
+            "codigo": "2",
+            "codigoPorcentaje": "2",
+            "baseImponible": "100.00",
+            "valor": "12.00"
+        }
+    ],
+    "importeTotal": "112.00",
+    "pagos": [
+        {
+            "formaPago": "01",
+            "total": "112.00"
+        }
+    ],
+    "detalles": [
+        {
+            "codigoPrincipal": "PROD001",
+            "descripcion": "Producto de prueba",
+            "cantidad": "1.00",
+            "precioUnitario": "100.00",
+            "descuento": "0.00",
+            "precioTotalSinImpuesto": "100.00",
+            "impuestos": [
+                {
+                    "codigo": "2",
+                    "codigoPorcentaje": "2",
+                    "tarifa": 12,
+                    "baseImponible": "100.00",
+                    "valor": "12.00"
+                }
+            ]
+        }
+    ],
+    "infoAdicional": {
+        "email": "test@example.com",
+        "telefono": "0999999999"
+    }
+}

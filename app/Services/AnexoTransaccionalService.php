@@ -64,7 +64,8 @@ class AnexoTransaccionalService
             ->whereMonth('fecha_emision', $month)
             ->get()
             ->sum(function ($comprobante) {
-                return $comprobante->payload['totalSinImpuestos'];
+                $payload = is_string($comprobante->payload) ? json_decode($comprobante->payload, true) : $comprobante->payload;
+                return $payload['totalSinImpuestos'] ?? 0;
             });
 
         $iva->appendChild($dom->createElement('totalVentas', number_format($totalVentas, 2, '.', '')));
@@ -89,7 +90,7 @@ class AnexoTransaccionalService
             $venta = $dom->createElement('venta');
             $detalleVentas->appendChild($venta);
 
-            $payload = $comprobante->payload;
+            $payload = is_string($comprobante->payload) ? json_decode($comprobante->payload, true) : $comprobante->payload;
 
             $venta->appendChild($dom->createElement('tpIdCliente', $payload['tipoIdentificacionComprador']));
             $venta->appendChild($dom->createElement('idCliente', $payload['identificacionComprador']));

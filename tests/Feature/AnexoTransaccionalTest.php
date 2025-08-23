@@ -33,11 +33,9 @@ class AnexoTransaccionalTest extends TestCase
 
         // Create sales data
         Comprobante::factory()->for($user)->create([
-            'tipo_comprobante' => TipoComprobanteEnum::FACTURA->value,
             'fecha_emision' => '2025-08-15',
             'establecimiento' => $establecimiento->numero,
             'punto_emision' => $puntoEmision->numero,
-            'payload' => json_decode(file_get_contents(base_path('tests/fixtures/sample_invoice.xml')), true),
         ]);
 
         // Create purchase data

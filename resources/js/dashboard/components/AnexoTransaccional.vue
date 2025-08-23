@@ -75,7 +75,21 @@ export default {
         link.remove();
       } catch (error) {
         console.error('Error generating Anexo Transaccional:', error);
-        const errorMessage = error.response?.data?.message || 'Error al generar el anexo.';
+        let errorMessage = 'Error al generar el anexo.';
+        if (error.response && error.response.data) {
+          // If the response is a blob, it needs to be read as text
+          if (error.response.data instanceof Blob) {
+            try {
+              const errorText = await error.response.data.text();
+              const errorJson = JSON.parse(errorText);
+              errorMessage = errorJson.message || errorMessage;
+            } catch (e) {
+              // Could not parse blob, stick to default error
+            }
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          }
+        }
         this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
       }
     },
