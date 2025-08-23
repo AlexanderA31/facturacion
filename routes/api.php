@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\JWTAuthController;
 use App\Http\Controllers\Admin\AdminUsersController;
 use App\Http\Controllers\Admin\AdminClientsController;
 use App\Http\Controllers\Client\ComprobantesController;
+use App\Http\Controllers\Client\AnexoTransaccionalController;
 use App\Http\Controllers\Client\EstablecimientoController;
 use App\Http\Controllers\Client\PuntoEmisionController;
 use App\Http\Controllers\Client\PerfilClientController;
@@ -87,5 +88,10 @@ Route::group(['middleware' => ['json.response']], function () {
         Route::get('/descargar-masivo/{jobId}/download', [ComprobantesController::class, 'downloadBulkZip']);
         // Route::post('/notas-credito/{punto_emision_id}/emitir', [FacturaController::class, 'generateNotaCredito']);
         // Route::post('/retenciones/{punto_emision_id}/emitir', [FacturaController::class, 'generateRetencion']);
+    });
+
+    /* ---------------------------------- Rutas de Anexo Transaccional ---------------------------------- */
+    Route::prefix('anexo-transaccional')->middleware(['jwt', 'role:client'])->group(function () {
+        Route::get('/{year}/{month}', [AnexoTransaccionalController::class, 'generarAnexo']);
     });
 });
