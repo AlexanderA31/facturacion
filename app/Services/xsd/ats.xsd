@@ -1360,4 +1360,5 @@ Razon o denominacion social del beneficiario
 <xsd:length value="2"/>
 <xsd:pattern value="\d{2}"/>
 </xsd:restriction>
+</xsd:simpleType>
 </xsd:schema>
