@@ -169,7 +169,7 @@ export default {
       taxOptions: [
         { value: '2', text: 'IVA 12%' },
         { value: '0', text: 'IVA 0%' },
-        { value: '8', text: 'IVA 5%' },
+        { value: '8', text: 'IVA 8%' },
       ]
     };
   },
@@ -258,7 +258,7 @@ export default {
             '3': 14,
             '6': 0,
             '7': 0,
-            '8': 5,
+            '8': 8,
             '9': 15,
         };
         return map[codigo] || 0;
