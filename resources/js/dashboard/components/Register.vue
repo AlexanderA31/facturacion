@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex items-center justify-center min-h-screen bg-cover bg-center"
+    class="flex items-center justify-center min-h-screen bg-cover bg-center grayscale"
     style="background-image: url('https://i0.wp.com/picjumbo.com/wp-content/uploads/business-meeting-in-the-office-free-photo.jpg');"
   >
     <div class="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-2xl bg-opacity-80 border border-gray-200">
