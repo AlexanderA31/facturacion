@@ -7,9 +7,9 @@
       </div>
       <nav class="flex-grow px-4 py-2 space-y-2">
         <a v-for="item in navigation" :key="item.name" href="#" @click.prevent="$emit('navigate', item.view)"
-           :class="['flex items-center px-4 py-2 rounded-md transition-colors', currentView === item.view ? 'bg-gray-700' : 'hover:bg-gray-700']">
+           :class="['flex items-center px-4 py-2 rounded-md transition-colors overflow-hidden', currentView === item.view ? 'bg-gray-700' : 'hover:bg-gray-700']">
           <component :is="item.icon" :class="['w-6 h-6 transition-all duration-300 flex-shrink-0', isSidebarOpen ? 'mr-3' : 'mx-auto']" />
-          <span class="flex-grow whitespace-nowrap transition-all duration-300 overflow-hidden" :class="isSidebarOpen ? 'max-w-xs' : 'opacity-0 max-w-0'">{{ item.name }}</span>
+          <span class="flex-grow whitespace-nowrap transition-all duration-300" :class="isSidebarOpen ? '' : 'opacity-0'">{{ item.name }}</span>
           <span v-if="item.count > 0" class="ml-2 flex-shrink-0 inline-block py-0.5 px-2 text-xs font-bold text-white bg-red-500 rounded-full">
             {{ item.count }}
           </span>
