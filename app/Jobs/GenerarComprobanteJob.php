@@ -13,7 +13,6 @@ use App\Enums\EstadosComprobanteEnum;
 use App\Models\PuntoEmision;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -23,7 +22,7 @@ use Illuminate\Support\Str;
 use App\Services\EmittoEmailService;
 use App\Services\PdfGeneratorService;
 
-class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
+class GenerarComprobanteJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
