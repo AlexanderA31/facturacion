@@ -46,7 +46,10 @@ class SuppliersController extends Controller
 
             return $this->sendResponse('Proveedor creado exitosamente', $supplier, 201);
         } catch (\Exception $e) {
-            return $this->sendError('Error al crear el proveedor', $e->getMessage(), 500);
+            return response()->json([
+                'message' => 'Error al crear el proveedor: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ], 500);
         }
     }
 

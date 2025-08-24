@@ -165,6 +165,8 @@ export default {
                 await this.fetchSuppliers();
             } catch (error) {
                 console.error('Error creating supplier:', error);
+                const errorMessage = error.response?.data?.message || 'Error al crear el proveedor.';
+                this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
             } finally {
                 this.isSubmitting = false;
             }
