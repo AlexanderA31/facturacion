@@ -87,46 +87,55 @@ export default {
         try {
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
+          let allJsonData = [];
 
-          const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+          for (const sheetName of workbook.SheetNames) {
+            const worksheet = workbook.Sheets[sheetName];
+            const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
-          if (sheetData.length === 0) {
-            this.error = 'El archivo Excel está vacío.';
-            return;
-          }
-
-          // Find the header row by looking for key columns
-          let headerRowIndex = -1;
-          let headers = [];
-          for (let i = 0; i < sheetData.length; i++) {
-            const row = sheetData[i];
-            const normalizedRow = row.map(h => typeof h === 'string' ? h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '');
-            if (normalizedRow.includes('codigo') && normalizedRow.includes('cedula')) {
-              headerRowIndex = i;
-              headers = row;
-              break;
+            if (sheetData.length === 0) {
+              continue; // Skip empty sheets
             }
+
+            // Find the header row by looking for key columns
+            let headerRowIndex = -1;
+            let headers = [];
+            for (let i = 0; i < sheetData.length; i++) {
+              const row = sheetData[i];
+              const normalizedRow = row.map(h => typeof h === 'string' ? h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '');
+              if (normalizedRow.includes('codigo') && normalizedRow.includes('cedula')) {
+                headerRowIndex = i;
+                headers = row;
+                break;
+              }
+            }
+
+            if (headerRowIndex === -1) {
+              // If no header found in this sheet, skip it.
+              // This allows for sheets that are not data tables.
+              continue;
+            }
+
+            const dataRows = sheetData.slice(headerRowIndex + 1);
+            const jsonData = dataRows.map(row => {
+              let rowData = {};
+              headers.forEach((header, index) => {
+                if (header) { // Only add if header is not empty
+                  rowData[header] = row[index];
+                }
+              });
+              return rowData;
+            }).filter(row => Object.values(row).some(val => val)); // Filter out completely empty rows
+
+            allJsonData.push(...jsonData);
           }
 
-          if (headerRowIndex === -1) {
-            this.error = 'No se pudo encontrar la fila de encabezados en el archivo Excel. Asegúrate de que contiene las columnas "Código" y "Cédula".';
+          if (allJsonData.length === 0) {
+            this.error = 'No se encontraron datos válidos en ninguna de las hojas del archivo Excel. Asegúrate de que al menos una hoja contenga las columnas "Código" y "Cédula".';
             return;
           }
 
-          const dataRows = sheetData.slice(headerRowIndex + 1);
-          const jsonData = dataRows.map(row => {
-            let rowData = {};
-            headers.forEach((header, index) => {
-              if (header) { // Only add if header is not empty
-                rowData[header] = row[index];
-              }
-            });
-            return rowData;
-          }).filter(row => Object.values(row).some(val => val)); // Filter out completely empty rows
-
-          this.$emit('file-parsed', jsonData);
+          this.$emit('file-parsed', allJsonData);
         } catch (err) {
           this.error = 'Error al procesar el archivo Excel. Asegúrate de que el formato es correcto.';
           console.error(err);
