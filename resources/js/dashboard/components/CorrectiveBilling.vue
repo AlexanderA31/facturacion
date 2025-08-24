@@ -276,6 +276,26 @@ export default {
         };
         return map[codigo] || 0;
     },
+    normalizePhoneNumber(phone) {
+        if (!phone) {
+            return '';
+        }
+        let cleaned = String(phone).replace(/\s+/g, ''); // Ensure it's a string and remove spaces
+        if (cleaned.startsWith('+593')) {
+            return cleaned;
+        }
+        if (cleaned.startsWith('593')) {
+            return `+${cleaned}`;
+        }
+        if (cleaned.length === 10 && cleaned.startsWith('0')) {
+            return `+593${cleaned.substring(1)}`;
+        }
+        if (cleaned.length === 9) {
+            // Numbers from some regions might be reported missing the leading '0'
+            return `+593${cleaned}`;
+        }
+        return phone; // Return original if no rule matches
+    },
     async fetchUserProfile() {
       try {
         const response = await axios.get('/api/profile', {
@@ -390,20 +410,12 @@ export default {
       const codigo = findValue('Código');
       const evento = findValue('Evento');
       const email = findValue('Email');
-      let telefono = findValue('Teléfono');
+      const telefono = this.normalizePhoneNumber(findValue('Teléfono'));
       const precio = parseFloat(formatToString(findValue('Precio')));
 
       // Validations
       if (!cedula || (String(cedula).length !== 10 && String(cedula).length !== 13)) {
         throw new Error('Cédula no válida');
-      }
-
-      telefono = String(telefono || '').replace(/\s+/g, ''); // Clean up spaces
-      if (telefono.length === 9) {
-        telefono = '0' + telefono;
-      }
-      if (telefono.length !== 10) {
-        throw new Error('Teléfono no válido');
       }
 
       if (!precio || precio <= 0) {
@@ -469,8 +481,6 @@ export default {
         let friendlyMessage = errorMessage;
         if (error.message === 'Cédula no válida') {
           friendlyMessage = 'Cédula debe tener 10 o 13 dígitos.';
-        } else if (error.message === 'Teléfono no válido') {
-          friendlyMessage = 'Teléfono debe tener 10 dígitos (o 9 para corrección).';
         } else if (error.message === 'Precio no válido') {
           friendlyMessage = 'El Precio debe ser un número mayor a 0.';
         } else if (error.message.includes('columnas requeridas')) {

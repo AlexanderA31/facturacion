@@ -40,6 +40,10 @@
           <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
           <input type="email" id="email" v-model="client.email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
         </div>
+        <div>
+          <label for="phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
+          <input type="tel" id="phone" v-model="client.telefono" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
       </div>
 
       <!-- Invoice Items -->
@@ -149,7 +153,8 @@ export default {
         ruc: '',
         name: '',
         address: '',
-        email: ''
+        email: '',
+        telefono: ''
       },
       items: [
         {
@@ -274,6 +279,26 @@ export default {
         };
         return map[codigo] || 0;
     },
+    normalizePhoneNumber(phone) {
+        if (!phone) {
+            return '';
+        }
+        let cleaned = phone.replace(/\s+/g, ''); // Remove spaces
+        if (cleaned.startsWith('+593')) {
+            return cleaned;
+        }
+        if (cleaned.startsWith('593')) {
+            return `+${cleaned}`;
+        }
+        if (cleaned.length === 10 && cleaned.startsWith('0')) {
+            return `+593${cleaned.substring(1)}`;
+        }
+        if (cleaned.length === 9) {
+            // Numbers from some regions might be reported missing the leading '0'
+            return `+593${cleaned}`;
+        }
+        return phone; // Return original if no rule matches
+    },
     async fetchUserProfile() {
       try {
         const response = await axios.get('/api/profile', {
@@ -353,6 +378,14 @@ export default {
         };
       });
 
+      const infoAdicional = {
+        email: this.client.email,
+      };
+
+      if (this.client.telefono) {
+          infoAdicional.telefono = this.normalizePhoneNumber(this.client.telefono);
+      }
+
       const payload = {
         tipoIdentificacionComprador: String(this.client.ruc).length === 13 ? '04' : '05',
         razonSocialComprador: this.client.name,
@@ -364,7 +397,7 @@ export default {
         importeTotal: this.totals.total,
         pagos: [{ formaPago: '01', total: this.totals.total }], // Assuming cash payment for now
         detalles: detalles,
-        infoAdicional: { email: this.client.email },
+        infoAdicional: infoAdicional,
       };
 
       try {
@@ -373,7 +406,7 @@ export default {
         });
         this.$emitter.emit('show-alert', { type: 'success', message: 'Factura generada exitosamente. Se está procesando.' });
         // Reset form
-        this.client = { ruc: '', name: '', address: '', email: '' };
+        this.client = { ruc: '', name: '', address: '', email: '', telefono: '' };
         this.items = [{ description: '', quantity: 1, price: 0, discount: 0, tax: this.userProfile.codigo_porcentaje_iva }];
       } catch (error) {
         console.error('Error generating invoice:', error);
