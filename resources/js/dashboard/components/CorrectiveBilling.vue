@@ -474,7 +474,10 @@ export default {
           headers: { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'application/json' },
         });
         // On success, remove the row from the corrective table
-        this.failedRows = this.failedRows.filter(item => item.id !== row.id);
+        const index = this.failedRows.findIndex(item => item.id === row.id);
+        if (index !== -1) {
+            this.failedRows.splice(index, 1);
+        }
         this.saveState();
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
