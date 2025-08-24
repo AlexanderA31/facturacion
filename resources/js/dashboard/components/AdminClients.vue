@@ -35,12 +35,14 @@
         </template>
     </DataTable>
 
-    <Pagination
-      :currentPage="pagination.currentPage"
-      :totalPages="pagination.totalPages"
-      @prev-page="handlePrevPage"
-      @next-page="handleNextPage"
-    />
+    <div class="py-4 px-6 flex justify-center">
+        <Pagination
+            :currentPage="pagination.currentPage"
+            :totalPages="pagination.totalPages"
+            @prev-page="handlePrevPage"
+            @next-page="handleNextPage"
+        />
+    </div>
 
     <ClientModal
       v-if="showClientModal"

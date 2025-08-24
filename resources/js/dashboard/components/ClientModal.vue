@@ -146,8 +146,17 @@ export default {
       handler(newVal) {
         this.formErrors = {};
         if (newVal) {
-          this.editableClient = { ...newVal };
-          this.form = { ...this.form, ...newVal };
+            this.editableClient = { ...newVal };
+            this.form.name = newVal.name || '';
+            this.form.email = newVal.email || '';
+            this.form.ruc = newVal.ruc || '';
+            this.form.razonSocial = newVal.razonSocial || '';
+            this.form.nombreComercial = newVal.nombreComercial || '';
+            this.form.dirMatriz = newVal.dirMatriz || '';
+            this.form.obligadoContabilidad = newVal.obligadoContabilidad || false;
+            this.form.tarifa = newVal.tarifa || 'comprobante';
+            this.form.ambiente = newVal.ambiente || '1';
+            this.form.password = '';
         } else {
           this.editableClient = null;
           this.resetForm();
