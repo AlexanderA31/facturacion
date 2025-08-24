@@ -31,7 +31,7 @@ class AdminUsersController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         try {
-            $perPage = $request->get('per_page', 15);
+            $perPage = $request->get('per_page', 10);
             $users = User::role(RolesEnum::ADMIN)
                 ->where('id', '!=', auth()->user()->id)
                 ->paginate($perPage);

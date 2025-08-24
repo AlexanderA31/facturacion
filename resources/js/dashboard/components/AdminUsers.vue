@@ -35,12 +35,23 @@
       </template>
     </DataTable>
 
-    <Pagination
-      :currentPage="pagination.currentPage"
-      :totalPages="pagination.totalPages"
-      @prev-page="handlePrevPage"
-      @next-page="handleNextPage"
-    />
+    <div class="flex justify-between items-center mt-4">
+      <div class="flex items-center space-x-2">
+        <label for="perPage" class="text-sm font-medium text-gray-700">Mostrar:</label>
+        <select id="perPage" v-model="perPage" @change="fetchUsers(1)" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+          <option>10</option>
+          <option>25</option>
+          <option>50</option>
+          <option>100</option>
+        </select>
+      </div>
+      <Pagination
+        :currentPage="pagination.currentPage"
+        :totalPages="pagination.totalPages"
+        @prev-page="handlePrevPage"
+        @next-page="handleNextPage"
+      />
+    </div>
 
     <UserModal
       v-if="showUserModal"
@@ -97,6 +108,7 @@ export default {
         currentPage: 1,
         totalPages: 1,
       },
+      perPage: 10,
     };
   },
   mounted() {
@@ -115,7 +127,7 @@ export default {
     async fetchUsers(page) {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/admin/users?page=${page}`, {
+        const response = await axios.get(`/api/admin/users?page=${page}&per_page=${this.perPage}`, {
           headers: { Authorization: `Bearer ${this.token}` },
         });
         const paginatedData = response.data.data;
