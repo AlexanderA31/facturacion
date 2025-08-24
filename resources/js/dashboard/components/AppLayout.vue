@@ -2,8 +2,9 @@
   <div>
     <!-- Sidebar -->
     <div :class="['fixed inset-y-0 left-0 z-30 bg-gray-800 text-white transition-all duration-300 ease-in-out flex flex-col h-full', isSidebarOpen ? 'w-64' : 'w-20']">
-      <div class="px-8 py-6 text-center overflow-hidden">
-        <h2 class="text-2xl font-semibold whitespace-nowrap transition-all duration-300" :class="isSidebarOpen ? 'max-w-xs' : 'opacity-0 max-w-0'">{{ sidebarTitle }}</h2>
+      <div class="px-8 py-6 text-center overflow-hidden h-20 flex items-center justify-center">
+        <img v-if="userProfile && userProfile.logo_path" :src="`/storage/${userProfile.logo_path}`" alt="Logo" class="h-16 w-auto mx-auto transition-all duration-300" :class="isSidebarOpen ? 'max-w-xs' : 'opacity-0 max-w-0'">
+        <h2 v-else class="text-2xl font-semibold whitespace-nowrap transition-all duration-300" :class="isSidebarOpen ? 'max-w-xs' : 'opacity-0 max-w-0'">{{ sidebarTitle }}</h2>
       </div>
       <nav class="flex-grow px-4 py-2 space-y-2">
         <a v-for="item in navigation" :key="item.name" href="#" @click.prevent="$emit('navigate', item.view)"
@@ -73,6 +74,10 @@ import downloadStore from '../utils/downloadStore.js';
 export default {
     name: 'AppLayout',
     props: {
+        userProfile: {
+            type: Object,
+            default: () => ({})
+        },
         navigation: {
             type: Array,
             required: true,

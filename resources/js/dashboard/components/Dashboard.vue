@@ -5,6 +5,7 @@
     :is-sidebar-open="isSidebarOpen"
     header-title="Facturación de Clientes"
     sidebar-title="Cliente"
+    :user-profile="userProfile"
     @navigate="currentDashboardView = $event"
     @logout="handleLogout"
     @toggle-sidebar="isSidebarOpen = !isSidebarOpen"

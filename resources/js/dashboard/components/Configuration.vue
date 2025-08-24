@@ -254,6 +254,7 @@ export default {
         this.logoFile = null;
         this.$refs.logoInput.value = ''; // Reset file input element
         this.$emitter.emit('show-alert', { type: 'success', message: 'Logo actualizado exitosamente.' });
+        this.$emitter.emit('profile-updated');
       } catch (error) {
         console.error('Error al subir el logo:', error);
         const errorMessage = error.response?.data?.errors?.logo?.[0] || 'No se pudo subir el logo.';

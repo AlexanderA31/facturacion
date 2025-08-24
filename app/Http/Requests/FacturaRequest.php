@@ -67,6 +67,7 @@ class FacturaRequest extends FormRequest
             "detalles.*.impuestos.*.valor" => "required|numeric|min:0|max:1.0E+14",
 
             "infoAdicional" => "array",
+            "infoAdicional.telefono" => ['nullable', 'string', 'regex:/^\+593\d{9}$/'],
         ];
     }
 

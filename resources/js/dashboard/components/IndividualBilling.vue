@@ -279,6 +279,23 @@ export default {
         };
         return map[codigo] || 0;
     },
+    validatePhoneNumber(phone) {
+        if (!phone || phone.trim() === '') {
+            return true; // Optional field, valid if empty
+        }
+        const cleaned = phone.replace(/\s+/g, '');
+
+        if (cleaned.startsWith('+593')) {
+            return cleaned.length === 13;
+        }
+        if (cleaned.startsWith('593')) {
+            return cleaned.length === 12;
+        }
+        if (cleaned.startsWith('0')) {
+            return cleaned.length === 10;
+        }
+        return false;
+    },
     normalizePhoneNumber(phone) {
         if (!phone) {
             return '';
@@ -292,10 +309,6 @@ export default {
         }
         if (cleaned.length === 10 && cleaned.startsWith('0')) {
             return `+593${cleaned.substring(1)}`;
-        }
-        if (cleaned.length === 9) {
-            // Numbers from some regions might be reported missing the leading '0'
-            return `+593${cleaned}`;
         }
         return phone; // Return original if no rule matches
     },
@@ -348,6 +361,11 @@ export default {
         return;
       }
 
+      if (!this.validatePhoneNumber(this.client.telefono)) {
+        this.$emitter.emit('show-alert', { type: 'error', message: 'El número de teléfono no es válido. Formatos aceptados: +593..., 593... (12 dígitos), o 0... (10 dígitos).' });
+        return;
+      }
+
       const totalSinImpuestos = this.items.reduce((acc, item) => acc + (item.quantity * item.price) - item.discount, 0);
 
       const totalConImpuestos = Object.entries(this.totals.iva).map(([codigoPorcentaje, tax]) => ({
@@ -357,12 +375,12 @@ export default {
         valor: tax.valor.toFixed(2),
       }));
 
-      const detalles = this.items.map(item => {
+      const detalles = this.items.map((item, index) => {
         const itemSubtotal = item.quantity * item.price;
         const taxRate = this.getTarifaFromCodigoPorcentaje(item.tax);
         const taxValue = (itemSubtotal - item.discount) * (taxRate / 100);
         return {
-          codigoPrincipal: 'PROD' + Date.now(), // This should be improved
+          codigoPrincipal: 'PROD' + Date.now() + '-' + index,
           descripcion: item.description,
           cantidad: item.quantity,
           precioUnitario: item.price,
