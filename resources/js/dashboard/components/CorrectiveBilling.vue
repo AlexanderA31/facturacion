@@ -498,7 +498,7 @@ export default {
     },
     resumeBilling() {
         this.isPaused = false;
-        this.runBillingProcess();
+        // this.runBillingProcess(); // This is now handled by the for loop in startBilling
     },
     cancelBilling() {
         this.isBilling = false;
@@ -512,7 +512,7 @@ export default {
             }
         });
     },
-    startBilling() {
+    async startBilling() {
       this.rowsToBill = [...this.failedRows];
       if (this.rowsToBill.length === 0) return;
 
@@ -520,25 +520,15 @@ export default {
       this.isPaused = false;
       this.currentIndex = 0;
 
-      this.runBillingProcess();
-    },
-    async runBillingProcess() {
-        if (this.isPaused || !this.isBilling) {
-            return;
-        }
-
-        if (this.currentIndex >= this.rowsToBill.length) {
-            // Finished
-            this.isBilling = false;
-            return;
-        }
-
-        const row = this.rowsToBill[this.currentIndex];
+      for (const row of this.rowsToBill) {
+        if (!this.isBilling) break; // Allow cancellation
         await this.processSingleInvoice(row);
-
         this.currentIndex++;
+      }
 
-        requestAnimationFrame(this.runBillingProcess);
+      this.isBilling = false;
+      this.rowsToBill = [];
+      this.currentIndex = 0;
     },
     exportToExcel() {
         if (this.failedRows.length === 0) {
