@@ -57,25 +57,20 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
 
         $this->comprobante->update(['estado' => EstadosComprobanteEnum::PROCESANDO->value]);
 
-        $transactionStarted = false;
         $signedFilePath = null;
 
         try {
-            // Comenzar transacción
-            \DB::beginTransaction();
-            $transactionStarted = true;
+            // --- Atomic transaction for sequential number ---
+            $preparedData = \DB::transaction(function () {
+                $puntoEmisionLocked = $this->bloquearPuntoEmision();
+                $preparedData = $this->prepararDatosComprobante($puntoEmisionLocked, json_decode($this->comprobante->payload, true));
+                $this->actualizarSecuencial($puntoEmisionLocked, $preparedData['secuencial']);
+                return $preparedData;
+            });
+            // --- Lock is released after this point ---
 
-            // Bloquear cambios en el punto de emisión
-            $puntoEmision = $this->bloquearPuntoEmision();
-
-            // Preparar los datos para el comprobante
-            $preparedData = $this->prepararDatosComprobante($puntoEmision, json_decode($this->comprobante->payload, true));
-
-            // Actualizar secuencial
-            $this->actualizarSecuencial($puntoEmision, $preparedData['secuencial']);
-
-            // Generar XML
-            $generado = $this->generarXML($comprobanteGenerator, $preparedData, $puntoEmision);
+            // Generate XML
+            $generado = $this->generarXML($comprobanteGenerator, $preparedData, $this->puntoEmision);
             $this->claveAcceso = $generado['accessKey'];
 
             // Guardar XML temporal
@@ -84,19 +79,13 @@ class GenerarComprobanteJob implements ShouldQueue, ShouldBeUnique
             // Firmar XML
             $signedFilePath = $this->firmarComprobante($xmlFilePath);
 
-            // Guardar cambios
-            \DB::commit();
-
             // Actualizar estado
             $this->actualizarEstadoFirmado($preparedData);
 
             // Enviar y autorizar
             $this->autorizarComprobanteFirmado($signedFilePath, $emittoEmailService, $pdfGenerator);
-        } catch (\Throwable $e) {
-            if ($transactionStarted) {
-                \DB::rollBack();
-            }
 
+        } catch (\Throwable $e) {
             $this->comprobante->update([
                 'estado' => EstadosComprobanteEnum::FALLIDO->value,
                 'error_message' => $e->getMessage(),

@@ -617,7 +617,9 @@ export default {
 
         this.currentIndex++;
 
-        requestAnimationFrame(this.runBillingProcess);
+        setTimeout(() => {
+            requestAnimationFrame(this.runBillingProcess);
+        }, 250); // Add a small delay
     },
     startPolling() {
       if (this.pollingIntervalId) clearInterval(this.pollingIntervalId);
