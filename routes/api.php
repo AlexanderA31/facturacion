@@ -6,6 +6,9 @@ use App\Http\Controllers\Admin\AdminUsersController;
 use App\Http\Controllers\Admin\AdminClientsController;
 use App\Http\Controllers\Client\ComprobantesController;
 use App\Http\Controllers\Client\AnexoTransaccionalController;
+use App\Http\Controllers\Client\SuppliersController;
+use App\Http\Controllers\Client\PurchaseInvoicesController;
+use App\Http\Controllers\Client\WithholdingVouchersController;
 use App\Http\Controllers\Client\EstablecimientoController;
 use App\Http\Controllers\Client\PuntoEmisionController;
 use App\Http\Controllers\Client\PerfilClientController;
@@ -93,5 +96,20 @@ Route::group(['middleware' => ['json.response']], function () {
     /* ---------------------------------- Rutas de Anexo Transaccional ---------------------------------- */
     Route::prefix('anexo-transaccional')->middleware(['jwt', 'role:client'])->group(function () {
         Route::get('/{year}/{month}', [AnexoTransaccionalController::class, 'generarAnexo']);
+    });
+
+    /* ---------------------------------- Rutas de Proveedores ---------------------------------- */
+    Route::middleware(['jwt', 'role:client'])->group(function () {
+        Route::resource('suppliers', SuppliersController::class)->except(['create', 'edit']);
+    });
+
+    /* ---------------------------------- Rutas de Facturas de Compra ---------------------------------- */
+    Route::middleware(['jwt', 'role:client'])->group(function () {
+        Route::resource('purchase-invoices', PurchaseInvoicesController::class)->except(['create', 'edit']);
+    });
+
+    /* ---------------------------------- Rutas de Retenciones ---------------------------------- */
+    Route::middleware(['jwt', 'role:client'])->group(function () {
+        Route::resource('withholding-vouchers', WithholdingVouchersController::class)->except(['create', 'edit']);
     });
 });
