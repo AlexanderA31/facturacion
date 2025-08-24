@@ -474,7 +474,9 @@ export default {
         await axios.post(`/api/comprobantes/factura/${this.selectedPuntoEmisionId}`, payload, {
           headers: { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'application/json' },
         });
-        return true;
+        // On success, remove the row from the corrective table
+        this.failedRows = this.failedRows.filter(item => item.id !== row.id);
+        this.saveState();
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
         let friendlyMessage = errorMessage;
@@ -485,8 +487,8 @@ export default {
         } else if (error.message.includes('columnas requeridas')) {
           friendlyMessage = 'Datos incompletos en la fila.';
         }
+        // Update the row with the new error but keep it in the table
         this.updateRowStatus(row.id, 'No Facturado', friendlyMessage);
-        return false;
       }
     },
     pauseBilling() {
@@ -494,46 +496,49 @@ export default {
     },
     resumeBilling() {
         this.isPaused = false;
-        // this.runBillingProcess(); is handled by the for loop in startBilling
+        this.runBillingProcess();
     },
     cancelBilling() {
         this.isBilling = false;
         this.isPaused = false;
         this.rowsToBill = [];
         this.currentIndex = 0;
+        // Revert any 'Procesando' rows back to 'Pendiente'
         this.failedRows.forEach(row => {
             if (row.Estado === 'Procesando') {
                 this.updateRowStatus(row.id, 'No Facturado', 'Proceso cancelado por el usuario.');
             }
         });
     },
-    async startBilling() {
+    startBilling() {
       this.rowsToBill = [...this.failedRows];
       if (this.rowsToBill.length === 0) return;
 
       this.isBilling = true;
       this.isPaused = false;
       this.currentIndex = 0;
-      this.processedIds = [];
 
-      for (const row of this.rowsToBill) {
-        if (!this.isBilling) break;
-
-        const success = await this.processSingleInvoice(row);
-        if (success) {
-          this.processedIds.push(row.id);
+      this.runBillingProcess();
+    },
+    async runBillingProcess() {
+        if (this.isPaused || !this.isBilling) {
+            return;
         }
+
+        if (this.currentIndex >= this.rowsToBill.length) {
+            // Finished
+            this.isBilling = false;
+            return;
+        }
+
+        const row = this.rowsToBill[this.currentIndex];
+        await this.processSingleInvoice(row);
+
         this.currentIndex++;
-      }
 
-      if (this.processedIds.length > 0) {
-        this.failedRows = this.failedRows.filter(row => !this.processedIds.includes(row.id));
-        this.saveState();
-      }
-
-      this.isBilling = false;
-      this.rowsToBill = [];
-      this.currentIndex = 0;
+        setTimeout(() => {
+            requestAnimationFrame(this.runBillingProcess);
+        }, 500);
     },
     exportToExcel() {
         if (this.failedRows.length === 0) {
