@@ -42,7 +42,7 @@ export default {
   },
   data() {
     return {
-      isSidebarOpen: false,
+      isSidebarOpen: true,
       currentView: 'users',
       navigation: [
         { name: 'Gestionar Usuarios', view: 'users', icon: IconUsers },
