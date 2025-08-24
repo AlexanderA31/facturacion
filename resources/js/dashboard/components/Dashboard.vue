@@ -574,13 +574,11 @@ export default {
     },
     resumeBilling() {
         this.isPaused = false;
-        this.runBillingProcess();
+        // The loop in runBillingProcess will automatically resume.
     },
     cancelBilling() {
         this.isBilling = false;
         this.isPaused = false;
-        this.rowsToBill = [];
-        this.currentIndex = 0;
         // Revert any 'Procesando' rows back to 'Pendiente'
         this.tableData.forEach(row => {
             if (row.Estado === 'Procesando') {
@@ -596,30 +594,37 @@ export default {
       this.isPaused = false;
       this.currentIndex = 0;
 
+      // runBillingProcess is now non-blocking and will run in the background
       this.runBillingProcess();
     },
     async runBillingProcess() {
-        if (this.isPaused || !this.isBilling) {
-            return;
-        }
+        while (this.currentIndex < this.rowsToBill.length) {
+            if (!this.isBilling) break; // Canceled by user
 
-        if (this.currentIndex >= this.rowsToBill.length) {
-            // Finished
-            this.isBilling = false;
-            if (!this.pollingIntervalId) {
-                this.startPolling();
+            if (this.isPaused) {
+                // Wait for a moment before checking if we should resume
+                await new Promise(resolve => setTimeout(resolve, 500));
+                continue;
             }
-            return;
+
+            const row = this.rowsToBill[this.currentIndex];
+            await this.processSingleInvoice(row);
+
+            this.currentIndex++;
+
+            // Optional: small delay between requests to avoid overwhelming the server
+            await new Promise(resolve => setTimeout(resolve, 250));
         }
 
-        const row = this.rowsToBill[this.currentIndex];
-        await this.processSingleInvoice(row);
+        // Cleanup after the loop is finished or cancelled
+        this.isBilling = false;
+        this.isPaused = false;
+        // Don't reset currentIndex here, so the progress bar stays at 100%
+        // this.currentIndex = 0;
 
-        this.currentIndex++;
-
-        setTimeout(() => {
-            requestAnimationFrame(this.runBillingProcess);
-        }, 250); // Add a small delay
+        if (!this.pollingIntervalId) {
+            this.startPolling();
+        }
     },
     startPolling() {
       if (this.pollingIntervalId) clearInterval(this.pollingIntervalId);

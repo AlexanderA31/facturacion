@@ -496,14 +496,12 @@ export default {
     },
     resumeBilling() {
         this.isPaused = false;
-        this.runBillingProcess();
+        // The loop in runBillingProcess will automatically resume.
     },
     cancelBilling() {
         this.isBilling = false;
         this.isPaused = false;
-        this.rowsToBill = [];
-        this.currentIndex = 0;
-        // Revert any 'Procesando' rows back to 'Pendiente'
+        // Revert any 'Procesando' rows back to their previous state
         this.failedRows.forEach(row => {
             if (row.Estado === 'Procesando') {
                 this.updateRowStatus(row.id, 'No Facturado', 'Proceso cancelado por el usuario.');
@@ -518,27 +516,34 @@ export default {
       this.isPaused = false;
       this.currentIndex = 0;
 
+      // runBillingProcess is now non-blocking
       this.runBillingProcess();
     },
     async runBillingProcess() {
-        if (this.isPaused || !this.isBilling) {
-            return;
+        while (this.currentIndex < this.rowsToBill.length) {
+            if (!this.isBilling) break; // Canceled
+
+            if (this.isPaused) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                continue;
+            }
+
+            const row = this.rowsToBill[this.currentIndex];
+            await this.processSingleInvoice(row);
+
+            // If the row was processed successfully, it's removed from failedRows,
+            // so we might need to adjust our loop. However, since we are iterating
+            // over a copy (`rowsToBill`), we just continue. The UI will update reactively.
+
+            this.currentIndex++;
+
+            // Add a delay
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
 
-        if (this.currentIndex >= this.rowsToBill.length) {
-            // Finished
-            this.isBilling = false;
-            return;
-        }
-
-        const row = this.rowsToBill[this.currentIndex];
-        await this.processSingleInvoice(row);
-
-        this.currentIndex++;
-
-        setTimeout(() => {
-            requestAnimationFrame(this.runBillingProcess);
-        }, 500);
+        // Cleanup
+        this.isBilling = false;
+        this.isPaused = false;
     },
     exportToExcel() {
         if (this.failedRows.length === 0) {
