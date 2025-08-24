@@ -134,8 +134,10 @@ export default {
       return !!this.editableClient;
     },
     isClientCreated() {
-        // True if we are editing an existing client OR if we just created one
-        return this.isEditMode && this.client;
+        // This should only be true after a client is created within the modal,
+        // to disable the form and encourage signature upload.
+        // It should NOT be true when opening the modal for an existing client.
+        return this.isEditMode && !this.client;
     },
     formTitle() {
       return this.isEditMode ? 'Editar Cliente' : 'Crear Cliente';
