@@ -477,6 +477,7 @@ export default {
         // On success, remove the row from the corrective table
         this.failedRows = this.failedRows.filter(item => item.id !== row.id);
         this.saveState();
+        window.dispatchEvent(new Event('corrective-billing-update'));
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
         let friendlyMessage = errorMessage;
