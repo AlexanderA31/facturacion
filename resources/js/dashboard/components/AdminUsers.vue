@@ -22,7 +22,7 @@
       </template>
       <template #cell(actions)="{ row }">
         <div class="flex items-center space-x-2">
-          <button @click="toggleUserStatus(row)" :title="row.active_account ? 'Desactivar' : 'Activar'" class="p-1 transition-colors" :class="row.active_account ? 'text-gray-500 hover:text-red-600' : 'text-gray-500 hover:text-green-600'">
+          <button @click="toggleUserStatus(row)" :title="row.active_account ? 'Desactivar' : 'Activar'" class="p-1 rounded-full transition-colors" :class="row.active_account ? 'text-red-500 hover:bg-red-100 hover:text-red-700' : 'text-green-500 hover:bg-green-100 hover:text-green-700'">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
           </button>
           <button @click="editUser(row)" title="Editar" class="p-1 text-yellow-600 hover:text-yellow-800 transition-colors">
