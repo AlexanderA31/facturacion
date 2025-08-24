@@ -167,6 +167,7 @@ export default {
       isPaused: false,
       currentIndex: 0,
       rowsToBill: [],
+      processedIds: [],
       token: localStorage.getItem('jwt_token'),
       establecimientos: [],
       puntosEmision: [],
@@ -473,12 +474,7 @@ export default {
         await axios.post(`/api/comprobantes/factura/${this.selectedPuntoEmisionId}`, payload, {
           headers: { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'application/json' },
         });
-        // On success, remove the row from the corrective table
-        const index = this.failedRows.findIndex(item => item.id === row.id);
-        if (index !== -1) {
-            this.failedRows.splice(index, 1);
-        }
-        this.saveState();
+        return true;
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
         let friendlyMessage = errorMessage;
@@ -489,8 +485,8 @@ export default {
         } else if (error.message.includes('columnas requeridas')) {
           friendlyMessage = 'Datos incompletos en la fila.';
         }
-        // Update the row with the new error but keep it in the table
         this.updateRowStatus(row.id, 'No Facturado', friendlyMessage);
+        return false;
       }
     },
     pauseBilling() {
@@ -498,14 +494,13 @@ export default {
     },
     resumeBilling() {
         this.isPaused = false;
-        // this.runBillingProcess(); // This is now handled by the for loop in startBilling
+        // this.runBillingProcess(); is handled by the for loop in startBilling
     },
     cancelBilling() {
         this.isBilling = false;
         this.isPaused = false;
         this.rowsToBill = [];
         this.currentIndex = 0;
-        // Revert any 'Procesando' rows back to 'Pendiente'
         this.failedRows.forEach(row => {
             if (row.Estado === 'Procesando') {
                 this.updateRowStatus(row.id, 'No Facturado', 'Proceso cancelado por el usuario.');
@@ -519,11 +514,21 @@ export default {
       this.isBilling = true;
       this.isPaused = false;
       this.currentIndex = 0;
+      this.processedIds = [];
 
       for (const row of this.rowsToBill) {
-        if (!this.isBilling) break; // Allow cancellation
-        await this.processSingleInvoice(row);
+        if (!this.isBilling) break;
+
+        const success = await this.processSingleInvoice(row);
+        if (success) {
+          this.processedIds.push(row.id);
+        }
         this.currentIndex++;
+      }
+
+      if (this.processedIds.length > 0) {
+        this.failedRows = this.failedRows.filter(row => !this.processedIds.includes(row.id));
+        this.saveState();
       }
 
       this.isBilling = false;
