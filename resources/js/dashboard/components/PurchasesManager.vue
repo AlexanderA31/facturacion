@@ -170,6 +170,17 @@ export default {
                 await this.fetchPurchases();
             } catch (error) {
                 console.error('Error creating purchase:', error);
+                if (error.response && error.response.status === 422) {
+                    const errors = error.response.data.errors;
+                    let errorMessage = 'Error de validación:<br>';
+                    for (const key in errors) {
+                        errorMessage += `- ${errors[key][0]}<br>`;
+                    }
+                    this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
+                } else {
+                    const errorMessage = error.response?.data?.message || 'Error al crear la factura de compra.';
+                    this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
+                }
             } finally {
                 this.isSubmitting = false;
             }
