@@ -97,6 +97,7 @@ import RefreshButton from './RefreshButton.vue';
 import PdfPreviewModal from './PdfPreviewModal.vue';
 import downloadStore from '../utils/downloadStore.js';
 import * as XLSX from 'xlsx';
+import BaseButton from './BaseButton.vue';
 
 export default {
   name: 'MyInvoices',
@@ -106,6 +107,7 @@ export default {
     TableSkeleton,
     RefreshButton,
     PdfPreviewModal,
+    BaseButton,
   },
   props: {
     token: {
