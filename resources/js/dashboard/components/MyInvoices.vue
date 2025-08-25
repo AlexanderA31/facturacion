@@ -20,7 +20,7 @@
                     </div>
                 </div>
             </div>
-            <BaseButton v-if="currentTab === 'authorized'" @click="exportToExcel" variant="secondary">
+            <BaseButton v-if="currentTab === 'authorized'" @click="openExportModal" variant="secondary">
                 <template #icon>
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M2.5 4A1.5 1.5 0 014 2.5h12A1.5 1.5 0 0117.5 4v12A1.5 1.5 0 0116 17.5H4A1.5 1.5 0 012.5 16V4zM4 4v12h12V4H4z" />
@@ -31,18 +31,6 @@
                 Exportar a Excel
             </BaseButton>
             <RefreshButton :is-loading="isLoading" @click="getInvoices(false)" />
-        </div>
-    </div>
-
-    <!-- Filtros de fecha para exportación -->
-    <div v-if="currentTab === 'authorized'" class="flex items-center space-x-4 mb-4 px-4 sm:px-6 lg:px-8">
-        <div class="flex-1">
-            <label for="fecha_desde_export" class="block text-sm font-medium text-gray-700">Desde</label>
-            <input type="date" id="fecha_desde_export" v-model="fecha_desde_export" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-        </div>
-        <div class="flex-1">
-            <label for="fecha_hasta_export" class="block text-sm font-medium text-gray-700">Hasta</label>
-            <input type="date" id="fecha_hasta_export" v-model="fecha_hasta_export" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
         </div>
     </div>
 
@@ -97,6 +85,13 @@
       :is-sidebar-open="isSidebarOpen"
       @close="closePdfModal"
     />
+
+    <ExportExcelModal
+      :show="isExportModalVisible"
+      @close="isExportModalVisible = false"
+      @export-by-date="handleExportByDate"
+      @export-all="handleExportAll"
+    />
   </div>
 </template>
 
@@ -110,6 +105,7 @@ import PdfPreviewModal from './PdfPreviewModal.vue';
 import downloadStore from '../utils/downloadStore.js';
 import * as XLSX from 'xlsx';
 import BaseButton from './BaseButton.vue';
+import ExportExcelModal from './ExportExcelModal.vue';
 
 export default {
   name: 'MyInvoices',
@@ -120,6 +116,7 @@ export default {
     RefreshButton,
     PdfPreviewModal,
     BaseButton,
+    ExportExcelModal,
   },
   props: {
     token: {
@@ -146,8 +143,7 @@ export default {
       isPdfModalOpen: false,
       selectedPdfUrl: '',
       isPreviewLoading: false,
-      fecha_desde_export: '',
-      fecha_hasta_export: '',
+      isExportModalVisible: false,
     };
   },
   computed: {
@@ -423,19 +419,25 @@ export default {
         downloadStore.downloadAll(this.processedInvoices, format);
     },
 
-    async exportToExcel() {
-        this.isDropdownOpen = false;
+    openExportModal() {
+      this.isExportModalVisible = true;
+    },
+
+    handleExportByDate(payload) {
+      this.triggerExcelExport({
+        fecha_desde: payload.from,
+        fecha_hasta: payload.to
+      });
+    },
+
+    handleExportAll() {
+      this.triggerExcelExport();
+    },
+
+    async triggerExcelExport(params = {}) {
         this.$emitter.emit('show-alert', { type: 'info', message: 'Preparando descarga de Excel...' });
 
         try {
-            const params = {};
-            if (this.fecha_desde_export) {
-                params.fecha_desde = this.fecha_desde_export;
-            }
-            if (this.fecha_hasta_export) {
-                params.fecha_hasta = this.fecha_hasta_export;
-            }
-
             const response = await axios.get('/api/comprobantes/export/authorized', {
                 headers: { 'Authorization': `Bearer ${this.token}` },
                 params: params,
