@@ -34,6 +34,18 @@
         </div>
     </div>
 
+    <!-- Filtros de fecha para exportación -->
+    <div v-if="currentTab === 'authorized'" class="flex items-center space-x-4 mb-4 px-4 sm:px-6 lg:px-8">
+        <div class="flex-1">
+            <label for="fecha_desde_export" class="block text-sm font-medium text-gray-700">Desde</label>
+            <input type="date" id="fecha_desde_export" v-model="fecha_desde_export" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+        </div>
+        <div class="flex-1">
+            <label for="fecha_hasta_export" class="block text-sm font-medium text-gray-700">Hasta</label>
+            <input type="date" id="fecha_hasta_export" v-model="fecha_hasta_export" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+        </div>
+    </div>
+
     <div class="mb-4 border-b border-gray-200">
         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
             <a href="#" @click.prevent="currentTab = 'all'" :class="['whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm', currentTab === 'all' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']">
@@ -134,6 +146,8 @@ export default {
       isPdfModalOpen: false,
       selectedPdfUrl: '',
       isPreviewLoading: false,
+      fecha_desde_export: '',
+      fecha_hasta_export: '',
     };
   },
   computed: {
@@ -414,8 +428,17 @@ export default {
         this.$emitter.emit('show-alert', { type: 'info', message: 'Preparando descarga de Excel...' });
 
         try {
+            const params = {};
+            if (this.fecha_desde_export) {
+                params.fecha_desde = this.fecha_desde_export;
+            }
+            if (this.fecha_hasta_export) {
+                params.fecha_hasta = this.fecha_hasta_export;
+            }
+
             const response = await axios.get('/api/comprobantes/export/authorized', {
                 headers: { 'Authorization': `Bearer ${this.token}` },
+                params: params,
             });
 
             const invoices = response.data.data;

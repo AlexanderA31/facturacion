@@ -110,11 +110,29 @@ class ComprobantesController extends Controller
         }
     }
 
-    public function exportAuthorized()
+    public function exportAuthorized(Request $request)
     {
         try {
+            $validator = \Validator::make($request->all(), [
+                'fecha_desde' => ['nullable', 'date'],
+                'fecha_hasta' => ['nullable', 'date', 'after_or_equal:fecha_desde'],
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError(
+                    'Parámetros no válidos',
+                    $validator->errors(),
+                    422
+                );
+            }
+
             $user = auth()->user();
             $query = Comprobante::where('user_id', $user->id)->where('estado', 'autorizado');
+
+            if ($request->filled('fecha_desde') && $request->filled('fecha_hasta')) {
+                $query->whereBetween('fecha_autorizacion', [$request->fecha_desde, $request->fecha_hasta]);
+            }
+
             $comprobantes = $query->orderByDesc('fecha_emision')->get();
 
             return $this->sendResponse(
