@@ -24,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use PDF;
 use ZipArchive;
+use Carbon\Carbon;
 
 
 class ComprobantesController extends Controller
@@ -130,7 +131,9 @@ class ComprobantesController extends Controller
             $query = Comprobante::where('user_id', $user->id)->where('estado', 'autorizado');
 
             if ($request->filled('fecha_desde') && $request->filled('fecha_hasta')) {
-                $query->whereBetween('fecha_autorizacion', [$request->fecha_desde, $request->fecha_hasta]);
+                $fecha_desde = Carbon::parse($request->fecha_desde)->startOfDay();
+                $fecha_hasta = Carbon::parse($request->fecha_hasta)->endOfDay();
+                $query->whereBetween('fecha_autorizacion', [$fecha_desde, $fecha_hasta]);
             }
 
             $comprobantes = $query->orderByDesc('fecha_emision')->get();
