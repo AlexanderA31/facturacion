@@ -56,7 +56,20 @@ class CertificadoFirma
             $certRuc = preg_replace('/[^0-9]/', '', $certRuc);
             Log::info("RUC limpiado del certificado: " . $certRuc . ". RUC esperado del usuario: " . $expectedRuc);
 
-            if (substr($expectedRuc, 0, 10) !== $certRuc) {
+            $rucMatch = false;
+            // Caso 1: El RUC del usuario (13 dígitos) comienza con el RUC/Cédula del certificado (10 dígitos).
+            // Esto cubre el caso de personas naturales donde el RUC es Cédula + '001'.
+            if (strlen($expectedRuc) == 13 && strlen($certRuc) == 10 && str_starts_with($expectedRuc, $certRuc)) {
+                $rucMatch = true;
+            }
+
+            // Caso 2: El RUC del usuario (13 dígitos) es idéntico al RUC del certificado (13 dígitos).
+            // Esto cubre el caso de empresas donde el certificado contiene el RUC completo.
+            if (strlen($expectedRuc) == 13 && strlen($certRuc) == 13 && $expectedRuc === $certRuc) {
+                $rucMatch = true;
+            }
+
+            if (!$rucMatch) {
                 Log::error("El RUC no coincide. Certificado: " . $certRuc . " | Usuario: " . $expectedRuc);
                 throw new Exception("El RUC del certificado ($certRuc) no coincide con el RUC del usuario ($expectedRuc).");
             }
