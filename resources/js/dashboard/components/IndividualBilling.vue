@@ -235,6 +235,11 @@ export default {
   watch: {
     selectedEstablecimientoId() {
       this.selectedPuntoEmisionId = null;
+    },
+    puntoEmisionOptions(newOptions) {
+      if (newOptions.length > 0 && !this.selectedPuntoEmisionId) {
+        this.selectedPuntoEmisionId = newOptions[0].value;
+      }
     }
   },
   mounted() {
@@ -336,6 +341,9 @@ export default {
           headers: { 'Authorization': `Bearer ${this.token}` }
         });
         this.establecimientos = response.data.data.data;
+        if (this.establecimientos.length > 0) {
+          this.selectedEstablecimientoId = this.establecimientos[0].id;
+        }
       } catch (error) {
         console.error('Error fetching establecimientos:', error);
       }
