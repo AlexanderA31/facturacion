@@ -435,7 +435,7 @@ export default {
                     'Estado': invoice.estado,
                     'Fecha de Autorización': this.formatDateTime(invoice.fecha_autorizacion),
                     'Clave de Acceso': invoice.clave_acceso,
-                    'Evento': invoice.error_message || '',
+                    'Evento': payload.detalles && payload.detalles[0] ? payload.detalles[0].descripcion : (invoice.error_message || ''),
                 };
             });
 
