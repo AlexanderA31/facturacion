@@ -10,6 +10,6 @@ Artisan::command('inspire', function () {
 
 Schedule::command('invoices:sync-status')->everyFiveMinutes();
 
-Schedule::command('app:cleanup-old-invoices')->daily();
+// Schedule::command('app:cleanup-old-invoices')->daily();
 
 Schedule::command('app:cleanup-generated-files')->daily();

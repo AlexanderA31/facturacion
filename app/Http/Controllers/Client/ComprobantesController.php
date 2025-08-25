@@ -110,6 +110,23 @@ class ComprobantesController extends Controller
         }
     }
 
+    public function exportAuthorized()
+    {
+        try {
+            $user = auth()->user();
+            $query = Comprobante::where('user_id', $user->id)->where('estado', 'autorizado');
+            $comprobantes = $query->orderByDesc('fecha_emision')->get();
+
+            return $this->sendResponse(
+                'Comprobantes autorizados recuperados exitosamente para exportación.',
+                $comprobantes,
+                200
+            );
+        } catch (\Exception $e) {
+            return $this->sendError('Error al obtener los comprobantes para exportación', $e->getMessage(), 500);
+        }
+    }
+
 
     public function show(string $clave_acceso)
     {

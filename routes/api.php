@@ -74,6 +74,7 @@ Route::group(['middleware' => ['json.response']], function () {
     /* ---------------------------------- Rutas de comprobantes ---------------------------------- */
     Route::prefix('comprobantes')->middleware(['jwt', 'role:client'])->group(function () {
         Route::get('/', [ComprobantesController::class, 'index']);
+        Route::get('/export/authorized', [ComprobantesController::class, 'exportAuthorized']);
 
         Route::get('/{clave_acceso}', [ComprobantesController::class, 'show']);
         Route::get('/{clave_acceso}/estado', [ComprobantesController::class, 'getEstado']);

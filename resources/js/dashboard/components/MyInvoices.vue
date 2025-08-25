@@ -17,6 +17,7 @@
                     <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                         <a href="#" @click.prevent="downloadAll('xml')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Descargar todo (XML)</a>
                         <a href="#" @click.prevent="downloadAll('pdf')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Descargar todo (PDF)</a>
+                        <a href="#" @click.prevent="exportToExcel" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Descargar todo (Excel)</a>
                     </div>
                 </div>
             </div>
@@ -86,6 +87,7 @@ import TableSkeleton from './TableSkeleton.vue';
 import RefreshButton from './RefreshButton.vue';
 import PdfPreviewModal from './PdfPreviewModal.vue';
 import downloadStore from '../utils/downloadStore.js';
+import * as XLSX from 'xlsx';
 
 export default {
   name: 'MyInvoices',
@@ -394,6 +396,61 @@ export default {
     downloadAll(format) {
         this.isDropdownOpen = false;
         downloadStore.downloadAll(this.processedInvoices, format);
+    },
+
+    async exportToExcel() {
+        this.isDropdownOpen = false;
+        this.$emitter.emit('show-alert', { type: 'info', message: 'Preparando descarga de Excel...' });
+
+        try {
+            const response = await axios.get('/api/comprobantes/export/authorized', {
+                headers: { 'Authorization': `Bearer ${this.token}` },
+            });
+
+            const invoices = response.data.data;
+
+            if (invoices.length === 0) {
+                this.$emitter.emit('show-alert', { type: 'warning', message: 'No hay comprobantes autorizados para exportar.' });
+                return;
+            }
+
+            const dataToExport = invoices.map(invoice => {
+                let payload = {};
+                try {
+                    if (typeof invoice.payload === 'string') {
+                        payload = JSON.parse(invoice.payload);
+                    } else {
+                        payload = invoice.payload || {};
+                    }
+                } catch (e) {
+                    console.error('Error parsing invoice payload for export:', e);
+                    payload = {};
+                }
+
+                return {
+                    'Número de Factura': `${invoice.establecimiento}-${invoice.punto_emision}-${invoice.secuencial}`,
+                    'Cliente': payload.razonSocialComprador || 'N/A',
+                    'Fecha de Emisión': this.formatDateTime(invoice.fecha_emision),
+                    'Valor': payload.importeTotal || 0,
+                    'Estado': invoice.estado,
+                    'Fecha de Autorización': this.formatDateTime(invoice.fecha_autorizacion),
+                    'Clave de Acceso': invoice.clave_acceso,
+                    'Evento': invoice.error_message || '',
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Comprobantes Autorizados");
+            XLSX.writeFile(workbook, "comprobantes_autorizados.xlsx");
+
+            this.$emitter.emit('show-alert', { type: 'success', message: 'La descarga de Excel ha comenzado.' });
+
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            const errorMessage = error.response?.data?.message || 'Ocurrió un error inesperado.';
+            this.$emitter.emit('show-alert', { type: 'error', message: `Error al exportar a Excel: ${errorMessage}` });
+        }
     },
   },
 };
