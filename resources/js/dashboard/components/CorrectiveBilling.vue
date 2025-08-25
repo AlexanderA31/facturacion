@@ -240,6 +240,11 @@ export default {
     },
     selectedEstablecimientoId() {
         this.selectedPuntoEmisionId = null;
+    },
+    puntoEmisionOptions(newOptions) {
+      if (newOptions.length > 0 && !this.selectedPuntoEmisionId) {
+        this.selectedPuntoEmisionId = newOptions[0].value;
+      }
     }
   },
   mounted() {
@@ -315,6 +320,9 @@ export default {
             });
             // The API returns a paginated response, the items are in the `data` property
             this.establecimientos = response.data.data.data;
+            if (this.establecimientos.length > 0) {
+                this.selectedEstablecimientoId = this.establecimientos[0].id;
+            }
         } catch (error) {
             console.error('Error fetching establecimientos:', error);
             this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudieron cargar los establecimientos.' });
