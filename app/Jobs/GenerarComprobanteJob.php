@@ -238,8 +238,16 @@ class GenerarComprobanteJob implements ShouldQueue
                         $pdfUrl = Storage::disk('public')->url($relativePath);
 
                         // Prepare data for the email template
+                        $logoUrl = null;
+                        if ($this->user->logo_path) {
+                            $logoUrl = Storage::disk('public')->url($this->user->logo_path);
+                            Log::info("[Comprobante {$this->claveAcceso}] Generada URL para el logo: '{$logoUrl}'");
+                        } else {
+                            Log::warning("[Comprobante {$this->claveAcceso}] No se encontró `logo_path` para el usuario. El logo no se incluirá en el correo.");
+                        }
+
                         $emailData = [
-                            'logoUrl' => $this->user->logo_path ? Storage::url($this->user->logo_path) : null,
+                            'logoUrl' => $logoUrl,
                             'claveAcceso' => $this->claveAcceso,
                             'total' => $this->getImporteTotal($payload),
                             'pdfUrl' => $pdfUrl,
