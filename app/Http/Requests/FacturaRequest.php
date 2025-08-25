@@ -68,6 +68,7 @@ class FacturaRequest extends FormRequest
 
             "infoAdicional" => "array",
             "infoAdicional.telefono" => ['nullable', 'string', 'regex:/^\+593\d{9}$/'],
+            "infoAdicional.email" => "nullable|email|max:100",
         ];
     }
 

@@ -55,21 +55,7 @@
                 <p class="text-gray-600">Revise los datos cargados y proceda a emitir las facturas.</p>
               </div>
               <div class="flex items-center space-x-4">
-                <div class="relative">
-                  <label for="status-filter" class="sr-only">Filtrar por estado</label>
-                  <select id="status-filter" v-model="filterStatus" class="appearance-none mt-4 sm:mt-0 block w-full sm:w-auto pl-4 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
-                    <option value="Todos">Todos los Estados</option>
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Pago Pendiente">Pago Pendiente</option>
-                    <option value="Procesando">Procesando</option>
-                    <option value="Facturado">Facturado</option>
-                    <option value="No Facturado">No Facturado</option>
-                    <option value="Enviado">Enviado</option>
-                  </select>
-                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                  </div>
-                </div>
+               
                 <!-- Action Buttons -->
                 <div v-if="!isBilling" class="flex items-center space-x-2">
                     <BaseButton @click="clearState" :disabled="tableData.length === 0" variant="danger">
