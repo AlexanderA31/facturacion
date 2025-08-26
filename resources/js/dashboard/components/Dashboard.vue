@@ -305,6 +305,7 @@ export default {
     this.fetchPuntosEmision();
     this.$emitter.on('profile-updated', this.fetchUserProfile);
     this.$emitter.on('establishments-updated', this.fetchEstablecimientos);
+    this.$emitter.on('puntos-emision-updated', this.fetchPuntosEmision);
     this.updateCorrectiveCount();
     window.addEventListener('corrective-billing-update', this.updateCorrectiveCount);
   },
@@ -312,6 +313,7 @@ export default {
     this.stopPolling();
     this.$emitter.off('profile-updated', this.fetchUserProfile);
     this.$emitter.off('establishments-updated', this.fetchEstablecimientos);
+    this.$emitter.off('puntos-emision-updated', this.fetchPuntosEmision);
     window.removeEventListener('corrective-billing-update', this.updateCorrectiveCount);
   },
   methods: {

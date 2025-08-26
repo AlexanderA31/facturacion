@@ -215,6 +215,7 @@ export default {
                 });
                 this.closeSecuencialModal();
                 await this.fetchPuntosEmision();
+                this.$emitter.emit('puntos-emision-updated');
                 this.$emitter.emit('show-alert', { type: 'success', message: 'Secuencial actualizado exitosamente.' });
             } catch (error) {
                 console.error('Error updating secuencial:', error);
@@ -239,6 +240,7 @@ export default {
                 });
                 this.closeModal();
                 await this.fetchPuntosEmision();
+                this.$emitter.emit('puntos-emision-updated');
             } catch (error) {
                 console.error('Error creating punto de emision:', error);
             } finally {
@@ -253,6 +255,7 @@ export default {
                 });
                 this.closeModal();
                 await this.fetchPuntosEmision();
+                this.$emitter.emit('puntos-emision-updated');
             } catch (error) {
                 console.error('Error updating punto de emision:', error);
             } finally {
@@ -266,6 +269,7 @@ export default {
                         headers: { 'Authorization': `Bearer ${this.token}` }
                     });
                     await this.fetchPuntosEmision();
+                    this.$emitter.emit('puntos-emision-updated');
                     this.$emitter.emit('show-alert', { type: 'success', message: 'Punto de emisión eliminado exitosamente.' });
                 } catch (error) {
                     console.error('Error deleting punto de emision:', error);
