@@ -8,7 +8,7 @@
       <form @submit.prevent="handleRegister">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label for="name" class="block text-sm font-medium text-gray-700">Nombre</label>
+            <label for="name" class="block text-sm font-medium text-gray-700">Nombres</label>
             <input v-model="form.name" id="name" name="name" type="text" required
                    class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
             <span v-if="errors.name" class="text-sm text-red-600">{{ translateError(errors.name[0]) }}</span>
