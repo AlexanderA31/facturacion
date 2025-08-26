@@ -271,8 +271,14 @@ class GenerarComprobanteJob implements ShouldQueue
                 $this->release();
                 return;
             }
-            $this->comprobante->update(['estado' => EstadosComprobanteEnum::RECHAZADO->value, 'error_message' => $errorMessage]);
-            Log::error("❌ Comprobante rechazado por el SRI [{$this->claveAcceso}]: " . $errorMessage);
+
+            // Si el error es una falla de autorización definitiva, mover a corrección
+            $finalErrorMessage = "No autorizado por el SRI después de varios intentos.";
+            $this->comprobante->update([
+                'estado' => EstadosComprobanteEnum::NECESITA_CORRECCION->value,
+                'error_message' => $finalErrorMessage
+            ]);
+            Log::error("⚠️ Comprobante requiere corrección [{$this->claveAcceso}]: " . $errorMessage);
         } catch (\Exception $e) {
             $this->comprobante->update(['estado' => EstadosComprobanteEnum::FALLIDO->value, 'error_message' => $e->getMessage()]);
             Log::error("🔥 Error inesperado en autorización [{$this->claveAcceso}]: " . $e->getMessage());

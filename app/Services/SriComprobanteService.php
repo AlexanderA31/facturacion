@@ -212,8 +212,12 @@ class SriComprobanteService
                 ]);
             }
 
+            // Pausa para dar tiempo al SRI a procesar
+            sleep(2);
+
             // 👉 Autorización
-            return $this->enviarComprobanteAutorizacion($claveAcceso);
+            $ambiente = $this->leerAmbienteDesdeXml($xmlString);
+            return $this->enviarComprobanteAutorizacion($claveAcceso, $ambiente);
 
         } catch (SriException $e) {
             throw $e;
