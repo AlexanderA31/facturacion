@@ -304,12 +304,14 @@ export default {
     this.fetchEstablecimientos();
     this.fetchPuntosEmision();
     this.$emitter.on('profile-updated', this.fetchUserProfile);
+    this.$emitter.on('establishments-updated', this.fetchEstablecimientos);
     this.updateCorrectiveCount();
     window.addEventListener('corrective-billing-update', this.updateCorrectiveCount);
   },
   beforeUnmount() {
     this.stopPolling();
     this.$emitter.off('profile-updated', this.fetchUserProfile);
+    this.$emitter.off('establishments-updated', this.fetchEstablecimientos);
     window.removeEventListener('corrective-billing-update', this.updateCorrectiveCount);
   },
   methods: {
@@ -691,10 +693,6 @@ export default {
         this.tableData.splice(index, 1, updatedRow);
       }
     },
-  },
-  beforeUnmount() {
-    this.stopPolling();
-    this.$emitter.off('profile-updated', this.fetchUserProfile);
   },
 };
 </script>

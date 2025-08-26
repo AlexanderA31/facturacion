@@ -172,6 +172,7 @@ export default {
                 });
                 this.closeModal();
                 await this.fetchEstablecimientos(); // Refresh list
+                this.$emitter.emit('establishments-updated');
             } catch (error) {
                 console.error('Error creating establecimiento:', error);
                 // TODO: Show user-friendly error message
@@ -187,6 +188,7 @@ export default {
                 });
                 this.closeModal();
                 await this.fetchEstablecimientos(); // Refresh list
+                this.$emitter.emit('establishments-updated');
             } catch (error) {
                 console.error('Error updating establecimiento:', error);
                 // TODO: Show user-friendly error message
@@ -202,6 +204,7 @@ export default {
                         headers: { 'Authorization': `Bearer ${this.token}` }
                     });
                     await this.fetchEstablecimientos(); // Refresh list
+                    this.$emitter.emit('establishments-updated');
                 } catch (error) {
                     console.error('Error deleting establecimiento:', error);
                     // TODO: Show user-friendly error message
