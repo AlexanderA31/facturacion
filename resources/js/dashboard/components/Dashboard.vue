@@ -22,7 +22,7 @@
         <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
           <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-3">Cargar Archivo de Datos</h3>
           <p class="text-gray-600 mb-4">Seleccione un archivo de Excel (.xlsx, .xls) con los datos de los clientes y las facturas a emitir.</p>
-          <a href="/plantilla_facturacion.xls" download class="text-blue-500 hover:text-blue-700 underline mb-4 block">
+          <a href="/plantilla_facturacion.xlsx" download class="text-blue-500 hover:text-blue-700 underline mb-4 block">
             Descargar plantilla de Excel
           </a>
           <FileUpload @file-parsed="handleFileParsed" @parsing-start="isParsingFile = true" @parsing-complete="isParsingFile = false" />
