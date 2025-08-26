@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use phpseclib3\File\PKCS12;
+use phpseclib3\File\X509;
 
 class CertificadoFirma
 {
@@ -13,51 +15,45 @@ class CertificadoFirma
         Log::info("Servicio CertificadoFirma: Iniciando manejo de certificado.");
 
         try {
-            // Cargar configuración de OpenSSL personalizada para habilitar el proveedor legacy.
-            // Esto es un workaround para certificados antiguos.
-            $customOpenSSLConf = base_path('config/openssl.cnf');
-            if (file_exists($customOpenSSLConf)) {
-                putenv('OPENSSL_CONF=' . $customOpenSSLConf);
-                Log::info('Cargando configuración de OpenSSL personalizada: ' . $customOpenSSLConf);
-            }
-
             // 1. Validar y leer el contenido del certificado
             Log::info("Paso 1: Leyendo contenido del certificado.");
             $certificateContent = file_get_contents($certificateFile->getRealPath());
-            $certData = [];
 
-            Log::info("Intentando leer el archivo PKCS12 con openssl_pkcs12_read.");
-            if (!openssl_pkcs12_read($certificateContent, $certData, $certificateKey)) {
-                Log::error("Fallo en openssl_pkcs12_read. La clave o el archivo son inválidos.");
-                // Añadimos un log más detallado para entender la causa raíz del fallo.
-                while ($error = openssl_error_string()) {
-                    Log::error("Detalle de OpenSSL: " . $error);
-                }
+            Log::info("Intentando leer el archivo PKCS12 con phpseclib.");
+            // Permitir algoritmos MAC antiguos que pueden estar en algunos certificados.
+            PKCS12::setEnableLegacyMac(true);
+            $certData = PKCS12::load($certificateContent, $certificateKey);
+
+            if (empty($certData) || !isset($certData['cert'])) {
+                Log::error("Fallo al cargar el archivo PKCS12 con phpseclib. El archivo o la clave son inválidos.");
                 throw new Exception('El archivo del certificado o la clave son inválidos.');
             }
-            Log::info("openssl_pkcs12_read exitoso.");
+            Log::info("Lectura de PKCS12 con phpseclib exitosa.");
 
-            // 2. Validar la fecha de expiración
-            Log::info("Paso 2: Validando fecha de expiración.");
-            $x509Cert = $certData['cert'];
-            $parsedCert = openssl_x509_parse($x509Cert);
-            if (!$parsedCert) {
-                Log::error("Fallo en openssl_x509_parse. No se pudo analizar el certificado.");
+            // 2. Validar la fecha de expiración y el RUC usando phpseclib
+            Log::info("Paso 2: Validando certificado con phpseclib.");
+            $x509 = new X509();
+            if (!$x509->loadX509($certData['cert'])) {
+                Log::error("Fallo al cargar el certificado X509 con phpseclib.");
                 throw new Exception('No se pudo analizar el certificado.');
             }
-            Log::info("openssl_x509_parse exitoso.");
 
-            $validTo = $parsedCert['validTo_time_t'];
-            Log::info("Fecha de expiración del certificado (timestamp): " . $validTo);
-            if (time() > $validTo) {
-                Log::error("El certificado ha caducado. Fecha de expiración: " . date('Y-m-d H:i:s', $validTo));
+            // Validar fecha de expiración
+            $validTo = $x509->getEndDate();
+            if ($validTo === false) {
+                Log::error("No se pudo obtener la fecha de expiración del certificado.");
+                throw new Exception('No se pudo analizar el certificado.');
+            }
+            if (new \DateTime() > $validTo) {
+                Log::error("El certificado ha caducado. Fecha de expiración: " . $validTo->format('Y-m-d H:i:s'));
                 throw new Exception('El certificado ha caducado.');
             }
             Log::info("Validación de fecha de expiración exitosa.");
 
             // 3. Validar que el RUC del certificado coincida con el del usuario
             Log::info("Paso 3: Validando RUC.");
-            $certRuc = $parsedCert['subject']['serialNumber'] ?? null;
+            $subjectDN = $x509->getSubjectDN(X509::DN_ARRAY);
+            $certRuc = $subjectDN['serialNumber'] ?? null;
 
             if (!$certRuc) {
                 Log::error("No se pudo encontrar el serialNumber en el certificado.");
@@ -102,7 +98,7 @@ class CertificadoFirma
             return [
                 'signature_path' => $filePath,
                 'signature_key' => encrypt($certificateKey),
-                'expires_at' => date('Y-m-d H:i:s', $validTo),
+                'expires_at' => $validTo->format('Y-m-d H:i:s'),
             ];
         } catch (Exception $e) {
             Log::error("Excepción capturada en handleCertificate: " . $e->getMessage());
