@@ -281,6 +281,7 @@
                     $ivaDetails = [];
                     $subtotal0 = 0;
                     $subtotalNoObjeto = 0;
+                    $subtotalExento = 0;
                     $ice = 0;
 
                     $tarifaMap = [
@@ -301,6 +302,8 @@
                                     $subtotal0 = (float)$impuesto->baseImponible;
                                 } elseif ($codigoPorcentaje === '6') {
                                     $subtotalNoObjeto = (float)$impuesto->baseImponible;
+                                } elseif ($codigoPorcentaje === '7') {
+                                    $subtotalExento = (float)$impuesto->baseImponible;
                                 } else {
                                     $tarifa = $tarifaMap[$codigoPorcentaje] ?? $codigoPorcentaje;
                                     $ivaDetails[$tarifa] = [
@@ -335,6 +338,12 @@
                         <td class="bold text-left">Subtotal No Objeto IVA:</td>
                         <td class="text-right">${{ number_format($subtotalNoObjeto, 2) }}</td>
                     </tr>
+                    @if($subtotalExento > 0)
+                    <tr>
+                        <td class="bold text-left">Subtotal Exento de IVA:</td>
+                        <td class="text-right">${{ number_format($subtotalExento, 2) }}</td>
+                    </tr>
+                    @endif
                     <tr>
                         <td class="bold text-left">Descuentos:</td>
                         <td class="text-right">${{ number_format((float)$infoFactura->totalDescuento, 2) }}</td>
