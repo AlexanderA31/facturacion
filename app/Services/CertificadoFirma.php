@@ -13,6 +13,14 @@ class CertificadoFirma
         Log::info("Servicio CertificadoFirma: Iniciando manejo de certificado.");
 
         try {
+            // Cargar configuración de OpenSSL personalizada para habilitar el proveedor legacy.
+            // Esto es un workaround para certificados antiguos.
+            $customOpenSSLConf = base_path('config/openssl.cnf');
+            if (file_exists($customOpenSSLConf)) {
+                putenv('OPENSSL_CONF=' . $customOpenSSLConf);
+                Log::info('Cargando configuración de OpenSSL personalizada: ' . $customOpenSSLConf);
+            }
+
             // 1. Validar y leer el contenido del certificado
             Log::info("Paso 1: Leyendo contenido del certificado.");
             $certificateContent = file_get_contents($certificateFile->getRealPath());
@@ -21,6 +29,10 @@ class CertificadoFirma
             Log::info("Intentando leer el archivo PKCS12 con openssl_pkcs12_read.");
             if (!openssl_pkcs12_read($certificateContent, $certData, $certificateKey)) {
                 Log::error("Fallo en openssl_pkcs12_read. La clave o el archivo son inválidos.");
+                // Añadimos un log más detallado para entender la causa raíz del fallo.
+                while ($error = openssl_error_string()) {
+                    Log::error("Detalle de OpenSSL: " . $error);
+                }
                 throw new Exception('El archivo del certificado o la clave son inválidos.');
             }
             Log::info("openssl_pkcs12_read exitoso.");
