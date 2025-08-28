@@ -15,6 +15,10 @@ class XmlBlockGenerator
 
     public function addInfoTributaria(array $data, string $accessKey): Element
     {
+        if (empty($data["razonSocial"])) {
+            throw new \InvalidArgumentException("La Razón Social es un campo obligatorio y no está configurado en el perfil del emisor.");
+        }
+
         return Element::make(self::filterNullValues([
             "ambiente" => $data["ambiente"],
             "tipoEmision" => 1, // FIJO
