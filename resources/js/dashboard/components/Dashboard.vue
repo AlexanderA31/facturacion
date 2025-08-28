@@ -125,17 +125,17 @@
 
     <!-- Corrective Billing Section -->
     <div v-if="currentDashboardView === 'corrective'">
-      <CorrectiveBilling :is-sidebar-open="isSidebarOpen" :user-profile="userProfile" />
+      <CorrectiveBilling :is-sidebar-open="isSidebarOpen" />
     </div>
 
     <!-- Individual Billing Section -->
     <div v-if="currentDashboardView === 'individual-billing'">
-      <IndividualBilling :token="token" :user-profile="userProfile" />
+      <IndividualBilling :token="token" />
     </div>
 
     <!-- Configuration Section -->
     <div v-if="currentDashboardView === 'configuration'">
-      <Configuration :is-sidebar-open="isSidebarOpen" @request-profile-update="fetchUserProfile" />
+      <Configuration :is-sidebar-open="isSidebarOpen" />
     </div>
   </AppLayout>
 </template>
@@ -360,7 +360,6 @@ export default {
       try {
         const response = await axios.get('/api/profile', {
           headers: { 'Authorization': `Bearer ${this.token}` },
-          params: { t: new Date().getTime() }
         });
         this.userProfile = response.data.data;
       } catch (error) {

@@ -172,10 +172,6 @@ export default {
       type: String,
       required: true,
     },
-    userProfile: {
-      type: Object,
-      required: true,
-    }
   },
   data() {
     return {
@@ -199,6 +195,11 @@ export default {
       puntosEmision: [],
       selectedEstablecimientoId: null,
       selectedPuntoEmisionId: null,
+      userProfile: {
+        tipo_impuesto: '2',
+        codigo_porcentaje_iva: '4',
+        forma_pago_defecto: '01',
+      },
       taxOptions: [
         { value: '4', text: 'IVA 15% (general vigente)' },
         { value: '5', text: 'IVA 5%' },
@@ -270,17 +271,16 @@ export default {
       if (newOptions.length > 0 && !this.selectedPuntoEmisionId) {
         this.selectedPuntoEmisionId = newOptions[0].value;
       }
-    },
-    'userProfile.forma_pago_defecto': function(newVal) {
-      this.selectedPaymentMethod = newVal;
     }
   },
   mounted() {
-    this.selectedPaymentMethod = this.userProfile.forma_pago_defecto || '01';
+    this.fetchUserProfile();
     this.fetchEstablecimientos();
     this.fetchPuntosEmision();
+    this.$emitter.on('profile-updated', this.fetchUserProfile);
   },
   beforeUnmount() {
+    this.$emitter.off('profile-updated', this.fetchUserProfile);
   },
   methods: {
     addInfoAdicional() {
@@ -354,6 +354,24 @@ export default {
         }
         return phone; // Return original if no rule matches
     },
+    async fetchUserProfile() {
+      try {
+        const response = await axios.get('/api/profile', {
+          headers: { 'Authorization': `Bearer ${this.token}` },
+        });
+        this.userProfile = response.data.data;
+        // Set default tax for new items
+        this.items.forEach(item => {
+          if (!item.tax) {
+            item.tax = this.userProfile.codigo_porcentaje_iva;
+          }
+        });
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        // Use default values if profile fetch fails
+        this.userProfile = { tipo_impuesto: '2', codigo_porcentaje_iva: '4' };
+      }
+    },
     async fetchEstablecimientos() {
       try {
         const response = await axios.get('/api/establecimientos', {
@@ -378,24 +396,18 @@ export default {
       }
     },
     async generateInvoice() {
-      if (this.isSubmitting) return;
-      this.isSubmitting = true;
-
       if (!this.selectedPuntoEmisionId) {
         this.$emitter.emit('show-alert', { type: 'error', message: 'Por favor, seleccione un punto de emisión.' });
-        this.isSubmitting = false;
         return;
       }
 
       if (this.client.ruc.length !== 10 && this.client.ruc.length !== 13) {
         this.$emitter.emit('show-alert', { type: 'error', message: 'El RUC/CI debe tener 10 o 13 dígitos.' });
-        this.isSubmitting = false;
         return;
       }
 
       if (!this.validatePhoneNumber(this.client.telefono)) {
         this.$emitter.emit('show-alert', { type: 'error', message: 'El número de teléfono no es válido. Formatos aceptados: +593..., 593... (12 dígitos), o 0... (10 dígitos).' });
-        this.isSubmitting = false;
         return;
       }
 
@@ -437,12 +449,6 @@ export default {
           infoAdicional.telefono = this.normalizePhoneNumber(this.client.telefono);
       }
 
-      this.infoAdicional.forEach(info => {
-          if (info.nombre && info.valor) {
-              infoAdicional[info.nombre] = info.valor;
-          }
-      });
-
       const payload = {
         tipoIdentificacionComprador: String(this.client.ruc).length === 13 ? '04' : '05',
         razonSocialComprador: this.client.name,
@@ -452,7 +458,7 @@ export default {
         totalDescuento: this.totals.discount,
         totalConImpuestos: totalConImpuestos,
         importeTotal: this.totals.total,
-        pagos: [{ formaPago: this.selectedPaymentMethod, total: this.totals.total }],
+        pagos: [{ formaPago: '01', total: this.totals.total }], // Assuming cash payment for now
         detalles: detalles,
         infoAdicional: infoAdicional,
       };
@@ -465,14 +471,10 @@ export default {
         // Reset form
         this.client = { ruc: '', name: '', address: '', email: '', telefono: '' };
         this.items = [{ description: '', quantity: 1, price: 0, discount: 0, tax: this.userProfile.codigo_porcentaje_iva }];
-        this.infoAdicional = [];
-        this.selectedPaymentMethod = this.userProfile.forma_pago_defecto || '01';
       } catch (error) {
         console.error('Error generating invoice:', error);
         const errorMessage = error.response?.data?.message || 'Error al generar la factura.';
         this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
-      } finally {
-        this.isSubmitting = false;
       }
     }
   }

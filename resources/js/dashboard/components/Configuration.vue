@@ -140,10 +140,6 @@ export default {
     isSidebarOpen: {
       type: Boolean,
       default: false,
-    },
-    userProfile: {
-      type: Object,
-      required: true,
     }
   },
   components: {
@@ -194,44 +190,46 @@ export default {
       token: localStorage.getItem('jwt_token'),
     };
   },
-  watch: {
-    userProfile: {
-      handler(newProfile) {
-        // Solo actualizar el formulario si el perfil es un objeto completo (tiene un id)
-        if (newProfile && newProfile.id) {
-          this.form = {
-            razonSocial: newProfile.razonSocial,
-            nombreComercial: newProfile.nombreComercial,
-            dirMatriz: newProfile.dirMatriz,
-            contribuyenteEspecial: newProfile.contribuyenteEspecial,
-            obligadoContabilidad: newProfile.obligadoContabilidad,
-            ambiente: newProfile.ambiente,
-            enviar_factura_por_correo: newProfile.enviar_factura_por_correo,
-            from_email: newProfile.from_email,
-            logo_path: newProfile.logo_path,
-            tipo_impuesto: newProfile.tipo_impuesto,
-            codigo_porcentaje_iva: newProfile.codigo_porcentaje_iva,
-            forma_pago_defecto: newProfile.forma_pago_defecto,
-          };
-          if (newProfile.logo_path) {
-            this.logoPreview = `/storage/${newProfile.logo_path}`;
-          } else {
-            this.logoPreview = null;
-          }
-        }
-      },
-      immediate: true,
-      deep: true,
-    }
+  mounted() {
+    this.loadConfiguration();
   },
   methods: {
+    async loadConfiguration() {
+      try {
+        const response = await axios.get('/api/profile', {
+          headers: { 'Authorization': `Bearer ${this.token}` },
+        });
+        const profile = response.data.data;
+        this.form = {
+            ...this.form,
+            razonSocial: profile.razonSocial,
+            nombreComercial: profile.nombreComercial,
+            dirMatriz: profile.dirMatriz,
+            contribuyenteEspecial: profile.contribuyenteEspecial,
+            obligadoContabilidad: profile.obligadoContabilidad,
+            ambiente: profile.ambiente,
+            enviar_factura_por_correo: profile.enviar_factura_por_correo,
+            from_email: profile.from_email,
+            logo_path: profile.logo_path,
+            tipo_impuesto: profile.tipo_impuesto,
+            codigo_porcentaje_iva: profile.codigo_porcentaje_iva,
+            forma_pago_defecto: profile.forma_pago_defecto,
+        };
+        if (profile.logo_path) {
+            this.logoPreview = `/storage/${profile.logo_path}`;
+        }
+      } catch (error) {
+        console.error('Error al cargar la configuración:', error);
+        this.$emitter.emit('show-alert', { type: 'error', message: 'No se pudo cargar la configuración del perfil.' });
+      }
+    },
     async saveConfiguration() {
       try {
         await axios.put('/api/profile', this.form, {
           headers: { 'Authorization': `Bearer ${this.token}` },
         });
         this.$emitter.emit('show-alert', { type: 'success', message: 'Configuración guardada exitosamente.' });
-        this.$emit('request-profile-update');
+        this.$emitter.emit('profile-updated');
       } catch (error) {
         console.error('Error al guardar la configuración:', error);
         if (error.response && error.response.status === 422) {
@@ -269,7 +267,7 @@ export default {
         this.logoFile = null;
         this.$refs.logoInput.value = ''; // Reset file input element
         this.$emitter.emit('show-alert', { type: 'success', message: 'Logo actualizado exitosamente.' });
-        this.$emit('request-profile-update');
+        this.$emitter.emit('profile-updated');
       } catch (error) {
         console.error('Error al subir el logo:', error);
         const errorMessage = error.response?.data?.errors?.logo?.[0] || 'No se pudo subir el logo.';

@@ -332,16 +332,6 @@ class ComprobantesController extends Controller
                 $validated_data['fechaEmision'] = now()->format('Y-m-d H:i:s');
             }
 
-            // Si no se proporcionan pagos, usar el método de pago por defecto del usuario
-            if (empty($validated_data['pagos'])) {
-                $validated_data['pagos'] = [
-                    [
-                        'formaPago' => $user->forma_pago_defecto ?? '01',
-                        'total' => $validated_data['importeTotal'],
-                    ]
-                ];
-            }
-
             // 4. Generar comprobante
             try {
                 $comprobante = Comprobante::create([
