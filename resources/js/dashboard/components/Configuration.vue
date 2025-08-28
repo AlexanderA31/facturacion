@@ -132,6 +132,7 @@ import EstablecimientosManager from './EstablecimientosManager.vue';
 import PuntosEmisionManager from './PuntosEmisionManager.vue';
 import BaseSelect from './BaseSelect.vue';
 import axios from 'axios';
+import { paymentMethodOptions } from '../utils/paymentMethods.js';
 
 export default {
   name: 'Configuration',
@@ -185,16 +186,7 @@ export default {
         { value: '6', text: 'No objeto de IVA' },
         { value: '7', text: 'Exento de IVA' },
       ],
-      paymentMethodOptions: [
-        { value: '01', text: 'SIN UTILIZACION DEL SISTEMA FINANCIERO' },
-        { value: '15', text: 'COMPENSACIÓN DE DEUDAS' },
-        { value: '16', text: 'TARJETA DE DÉBITO' },
-        { value: '17', text: 'DINERO ELECTRÓNICO' },
-        { value: '18', text: 'TARJETA PREPAGO' },
-        { value: '19', text: 'TARJETA DE CRÉDITO' },
-        { value: '20', text: 'OTROS CON UTILIZACION DEL SISTEMA FINANCIERO' },
-        { value: '21', text: 'ENDOSO DE TÍTULOS' },
-      ],
+      paymentMethodOptions,
       token: localStorage.getItem('jwt_token'),
     };
   },

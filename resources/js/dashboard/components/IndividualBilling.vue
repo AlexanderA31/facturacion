@@ -100,6 +100,31 @@
         </button>
       </div>
 
+      <!-- Payment Method -->
+      <div class="mb-6">
+        <BaseSelect
+          id="payment-method-select"
+          label="Método de Pago"
+          v-model="selectedPaymentMethod"
+          :options="paymentMethodOptions"
+        />
+      </div>
+
+      <!-- Additional Info -->
+        <div class="mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Información Adicional</h3>
+            <div v-for="(info, index) in infoAdicional" :key="index" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                <input type="text" v-model="info.nombre" placeholder="Nombre" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <input type="text" v-model="info.valor" placeholder="Valor" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <button @click="removeInfoAdicional(index)" class="text-red-600 hover:text-red-900" title="Eliminar">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
+            <button @click="addInfoAdicional" class="mt-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded">
+                <svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Agregar Información Adicional
+            </button>
+        </div>
+
       <!-- Totals -->
       <div class="flex justify-end mb-6">
         <div class="w-full max-w-sm">
@@ -135,6 +160,7 @@
 <script>
 import axios from 'axios';
 import BaseSelect from './BaseSelect.vue';
+import { paymentMethodOptions } from '../utils/paymentMethods.js';
 
 export default {
   name: 'IndividualBilling',
@@ -172,6 +198,7 @@ export default {
       userProfile: {
         tipo_impuesto: '2',
         codigo_porcentaje_iva: '4',
+        forma_pago_defecto: '01',
       },
       taxOptions: [
         { value: '4', text: 'IVA 15% (general vigente)' },
@@ -180,7 +207,10 @@ export default {
         { value: '0', text: 'IVA 0%' },
         { value: '6', text: 'No objeto de IVA' },
         { value: '7', text: 'Exento de IVA' },
-      ]
+      ],
+      paymentMethodOptions,
+      selectedPaymentMethod: '01',
+      infoAdicional: [],
     };
   },
   computed: {
@@ -240,6 +270,9 @@ export default {
       if (newOptions.length > 0 && !this.selectedPuntoEmisionId) {
         this.selectedPuntoEmisionId = newOptions[0].value;
       }
+    },
+    'userProfile.forma_pago_defecto': function(newVal) {
+      this.selectedPaymentMethod = newVal;
     }
   },
   mounted() {
@@ -252,6 +285,12 @@ export default {
     this.$emitter.off('profile-updated', this.fetchUserProfile);
   },
   methods: {
+    addInfoAdicional() {
+      this.infoAdicional.push({ nombre: '', valor: '' });
+    },
+    removeInfoAdicional(index) {
+      this.infoAdicional.splice(index, 1);
+    },
     addItem() {
       this.items.push({
         description: '',
@@ -323,6 +362,7 @@ export default {
           headers: { 'Authorization': `Bearer ${this.token}` },
         });
         this.userProfile = response.data.data;
+        this.selectedPaymentMethod = this.userProfile.forma_pago_defecto || '01';
         // Set default tax for new items
         this.items.forEach(item => {
           if (!item.tax) {
@@ -332,7 +372,7 @@ export default {
       } catch (error) {
         console.error('Error fetching user profile:', error);
         // Use default values if profile fetch fails
-        this.userProfile = { tipo_impuesto: '2', codigo_porcentaje_iva: '4' };
+        this.userProfile = { tipo_impuesto: '2', codigo_porcentaje_iva: '4', forma_pago_defecto: '01' };
       }
     },
     async fetchEstablecimientos() {
@@ -412,6 +452,12 @@ export default {
           infoAdicional.telefono = this.normalizePhoneNumber(this.client.telefono);
       }
 
+      this.infoAdicional.forEach(info => {
+          if (info.nombre && info.valor) {
+              infoAdicional[info.nombre] = info.valor;
+          }
+      });
+
       const payload = {
         tipoIdentificacionComprador: String(this.client.ruc).length === 13 ? '04' : '05',
         razonSocialComprador: this.client.name,
@@ -421,7 +467,7 @@ export default {
         totalDescuento: this.totals.discount,
         totalConImpuestos: totalConImpuestos,
         importeTotal: this.totals.total,
-        pagos: [{ formaPago: this.userProfile.forma_pago_defecto || '01', total: this.totals.total }],
+        pagos: [{ formaPago: this.selectedPaymentMethod, total: this.totals.total }],
         detalles: detalles,
         infoAdicional: infoAdicional,
       };
