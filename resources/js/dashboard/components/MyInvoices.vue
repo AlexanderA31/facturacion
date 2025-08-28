@@ -1,5 +1,5 @@
 <template>
-  <div :class="{ '-mx-4 sm:-mx-6 lg:-mx-8': currentTab === 'authorized' }">
+  <div>
     <div class="flex justify-between items-center mb-4 px-4 sm:px-6 lg:px-8">
       <h2 class="text-2xl font-bold text-gray-800">Mis Comprobantes</h2>
         <div class="flex items-center space-x-2">
@@ -151,7 +151,6 @@ export default {
         const baseHeaders = [
             { text: 'Número de Factura', value: 'numero_factura' },
             { text: 'Cliente', value: 'cliente' },
-            { text: 'Fecha de Emisión', value: 'fecha_emision' },
             { text: 'Valor', value: 'valor' },
             { text: 'Estado', value: 'estado' },
         ];
