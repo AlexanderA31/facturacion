@@ -11,10 +11,10 @@ use App\Models\Comprobante;
 use App\Models\PuntoEmision;
 use App\Http\Requests\FacturaRequest;
 use App\Jobs\CreateBulkDownloadZipJob;
-use App\Jobs\GenerarComprobanteJob;
 use App\Models\BulkDownloadJob;
 use App\Services\ClaveAccesoBarcode;
 use App\Services\FileGenerationService;
+use App\Services\SincronoComprobanteService;
 use App\Services\SriComprobanteService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -313,9 +313,8 @@ class ComprobantesController extends Controller
     }
 
 
-    public function generateFactura(FacturaRequest $request, PuntoEmision $puntoEmision)
+    public function generateFactura(FacturaRequest $request, PuntoEmision $puntoEmision, SincronoComprobanteService $sincronoService)
     {
-        $validated_data = null;
         try {
             // 1. Autorizar acceso a punto de emision de usuario
             Gate::authorize('view', $puntoEmision);
@@ -332,85 +331,30 @@ class ComprobantesController extends Controller
                 $validated_data['fechaEmision'] = now()->format('Y-m-d H:i:s');
             }
 
-            // 4. Generar comprobante
-            try {
-                $comprobante = Comprobante::create([
-                    'user_id' => $user->id,
-                    'tipo_comprobante' => TipoComprobanteEnum::FACTURA->value,
-                    'ambiente' => $user->ambiente,
-                    'cliente_email' => $validated_data['infoAdicional']['email'] ?? null,
-                    'cliente_ruc' => $validated_data['identificacionComprador'],
-                    'fecha_emision' => $validated_data['fechaEmision'],
-                    'payload' => json_encode($validated_data),
-                ]);
-            } catch (\Exception $e) {
-                throw new \Exception('Error al registrar el comprobante: ' . $e->getMessage());
-            }
-
-            // 5. Lanzar job de generación de comprobante
-            \Log::info("Llamando a job...");
-            $job = GenerarComprobanteJob::dispatch($comprobante, $user, $puntoEmision, TipoComprobanteEnum::FACTURA);
-
-            return $this->sendResponse('Tu comprobante se está procesando. Recibirás una notificación cuando esté listo');
-        } catch (AuthorizationException $e) {
-            return $this->sendError('Acceso denegado', $e->getMessage(), $e->status());
-        } catch (\Exception $e) {
-            return $this->sendError('Error al generar la factura', $e->getMessage(), 500, $validated_data);
-        }
-    }
-
-    public function reenviarComprobante(Request $request, $comprobanteId)
-    {
-        try {
-            $user = Auth::user();
-            $comprobante = Comprobante::where('id', $comprobanteId)
-                ->where('user_id', $user->id)
-                ->firstOrFail();
-
-            Gate::authorize('update', $comprobante);
-
-            if ($comprobante->estado !== EstadosComprobanteEnum::NECESITA_CORRECCION->value) {
-                return $this->sendError(
-                    'Estado de comprobante no válido',
-                    'Este comprobante no está en estado de "necesita corrección".',
-                    409 // Conflict
-                );
-            }
-
-            // Opcional: Actualizar el payload si se envía uno nuevo
-            if ($request->has('payload')) {
-                $comprobante->payload = json_encode($request->input('payload'));
-                // Aquí podrías re-validar el payload si es necesario
-            }
-
-            // Resetear el estado para re-procesamiento
-            $comprobante->estado = EstadosComprobanteEnum::PENDIENTE->value;
-            $comprobante->error_message = null;
-            $comprobante->save();
-
-            $puntoEmision = PuntoEmision::whereHas('establecimiento', function ($query) use ($user, $comprobante) {
-                $query->where('user_id', $user->id)->where('codigo', $comprobante->establecimiento);
-            })->where('codigo', $comprobante->punto_emision)->firstOrFail();
-
-            GenerarComprobanteJob::dispatch(
-                $comprobante,
+            // 4. Procesar comprobante de forma síncrona
+            $comprobante = $sincronoService->procesarComprobante(
+                $validated_data,
                 $user,
                 $puntoEmision,
-                TipoComprobanteEnum::from($comprobante->tipo_comprobante)
+                TipoComprobanteEnum::FACTURA
             );
 
             return $this->sendResponse(
-                'El comprobante ha sido reenviado para su procesamiento.',
-                ['comprobante_id' => $comprobante->id],
-                202
+                'Factura generada y autorizada exitosamente.',
+                $comprobante,
+                201
             );
 
-        } catch (ModelNotFoundException $e) {
-            return $this->sendError('Comprobante no encontrado', 'No se encontró el comprobante especificado.', 404);
         } catch (AuthorizationException $e) {
-            return $this->sendError('Acceso denegado', 'No tienes permiso para reenviar este comprobante.', 403);
+            return $this->sendError('Acceso denegado', $e->getMessage(), $e->status());
+        } catch (SriException $e) {
+            return $this->sendError(
+                'Error del SRI',
+                ['sri_error' => $e->getMessage()],
+                422 // Unprocessable Entity
+            );
         } catch (\Exception $e) {
-            return $this->sendError('Error al reenviar el comprobante', $e->getMessage(), 500);
+            return $this->sendError('Error al generar la factura', $e->getMessage(), 500);
         }
     }
 }
