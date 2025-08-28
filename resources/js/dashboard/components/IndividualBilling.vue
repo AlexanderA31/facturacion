@@ -1,23 +1,23 @@
 <template>
-  <div class="bg-gray-100 p-8 font-sans text-xs">
-    <div class="max-w-4xl mx-auto bg-white shadow-lg p-8 border border-gray-200">
+  <div class="bg-gray-100 p-8 font-sans text-sm">
+    <div class="max-w-6xl mx-auto bg-white shadow-lg p-8 border border-gray-200 rounded-lg">
 
       <!-- Header -->
       <div class="flex justify-between items-start mb-4 pb-4 border-b">
         <!-- Emitter Info -->
         <div class="w-1/2 pr-4">
-          <img v-if="userProfile.logo_path" :src="`/storage/${userProfile.logo_path}`" alt="Logo" class="max-w-xs max-h-20 mb-4">
+          <img v-if="userProfile.logo_path" :src="`/storage/${userProfile.logo_path}`" alt="Logo" class="max-w-xs max-h-20 mb-4 rounded-md">
           <p><span class="font-bold">Emisor:</span> {{ userProfile.name }}</p>
           <p><span class="font-bold">RUC:</span> {{ userProfile.ruc }}</p>
-          <p><span class="font-bold">Matriz:</span> {{ userProfile.direccion }}</p>
-          <p><span class="font-bold">Obligado a llevar contabilidad:</span> {{ userProfile.obligado_contabilidad ? 'SI' : 'NO' }}</p>
+          <p><span class="font-bold">Matriz:</span> {{ userProfile.dirMatriz }}</p>
+          <p><span class="font-bold">Obligado a llevar contabilidad:</span> {{ userProfile.obligadoContabilidad ? 'SI' : 'NO' }}</p>
         </div>
 
         <!-- Invoice Info -->
         <div class="w-1/2 pl-4 border-l">
           <div class="border border-gray-300 rounded-lg p-4">
-            <p class="text-lg font-bold">FACTURA</p>
-            <p class="text-red-600 font-bold text-lg">{{ getEstablecimientoCode() }}-{{ getPuntoEmisionCode() }}-{{ proximoSecuencial }}</p>
+            <p class="text-xl font-bold">FACTURA</p>
+            <p class="text-red-600 font-bold text-xl">{{ getEstablecimientoCode() }}-{{ getPuntoEmisionCode() }}-{{ proximoSecuencial }}</p>
             <p class="font-bold mt-4">Número de Autorización:</p>
             <p class="text-xs break-all">--</p>
             <p><span class="font-bold">Ambiente:</span> {{ userProfile.ambiente == '1' ? 'PRUEBAS' : 'PRODUCCIÓN' }}</p>
@@ -47,13 +47,13 @@
         <table class="w-full">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-2 py-2 text-left font-bold border">Código</th>
+              <th class="px-2 py-2 text-left font-bold border rounded-tl-lg">Código</th>
               <th class="px-2 py-2 text-left font-bold border w-2/5">Descripción</th>
               <th class="px-2 py-2 text-left font-bold border">Cantidad</th>
               <th class="px-2 py-2 text-left font-bold border">P. Unitario</th>
               <th class="px-2 py-2 text-left font-bold border">Descuento</th>
               <th class="px-2 py-2 text-left font-bold border">Total</th>
-              <th class="px-2 py-2 text-left font-bold border"></th>
+              <th class="px-2 py-2 text-left font-bold border rounded-tr-lg"></th>
             </tr>
           </thead>
           <tbody>
@@ -68,12 +68,16 @@
               <td class="border px-2 py-1"><input type="number" v-model.number="item.quantity" class="w-20 form-input-table text-right"></td>
               <td class="border px-2 py-1"><input type="number" v-model.number="item.price" class="w-24 form-input-table text-right"></td>
               <td class="border px-2 py-1"><input type="number" v-model.number="item.discount" class="w-20 form-input-table text-right"></td>
-              <td class="border px-2 py-1 text-right">{{ calculateItemTotal(item) }}</td>
-              <td class="border px-2 py-1 text-center"><button @click="removeItem(index)" class="text-red-500">&times;</button></td>
+              <td class="border px-2 py-1 text-right font-medium">${{ calculateItemTotal(item) }}</td>
+              <td class="border px-2 py-1 text-center">
+                <button @click="removeItem(index)" class="text-red-600 hover:text-red-800" title="Eliminar">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
-        <button @click="addItem" class="mt-2 text-sm text-indigo-600 font-bold">+ Agregar Item</button>
+        <button @click="addItem" class="mt-2 text-sm text-indigo-600 font-bold hover:text-indigo-800">+ Agregar Item</button>
       </div>
 
       <!-- Footer -->
@@ -84,10 +88,11 @@
             <p class="font-bold">Información Adicional</p>
             <div v-for="(info, index) in additionalInfo" :key="index" class="flex items-center">
               <input type="text" v-model="info.name" class="form-input-pdf-inline w-1/3" placeholder="Nombre">
+              <span class="mx-2">:</span>
               <input type="text" v-model="info.value" class="form-input-pdf-inline w-2/3" placeholder="Valor">
-              <button @click="removeAdditionalInfo(index)" class="text-red-500 ml-2">&times;</button>
+              <button @click="removeAdditionalInfo(index)" class="text-red-500 ml-2 hover:text-red-700">&times;</button>
             </div>
-            <button @click="addAdditionalInfo" class="mt-2 text-sm text-indigo-600 font-bold">+ Agregar Info</button>
+            <button @click="addAdditionalInfo" class="mt-2 text-sm text-indigo-600 font-bold hover:text-indigo-800">+ Agregar Info</button>
           </div>
           <div class="border rounded-lg p-4 bg-gray-50 mt-4">
             <p class="font-bold">Formas de Pago</p>
@@ -97,24 +102,24 @@
 
         <!-- Totals -->
         <div class="w-2/5">
-          <table class="w-full border">
+          <table class="w-full border rounded-lg overflow-hidden">
             <tr v-for="(tax, code) in totals.iva" :key="code">
-              <td class="px-2 py-1 border font-bold">Subtotal {{ getTarifaFromCodigoPorcentaje(code) }}%</td>
+              <td class="px-2 py-1 border font-bold bg-gray-50">Subtotal {{ getTarifaFromCodigoPorcentaje(code) }}%</td>
               <td class="px-2 py-1 border text-right">${{ tax.base.toFixed(2) }}</td>
             </tr>
-            <tr><td class="px-2 py-1 border font-bold">Descuento</td><td class="px-2 py-1 border text-right">${{ totals.discount }}</td></tr>
+            <tr><td class="px-2 py-1 border font-bold bg-gray-50">Descuento</td><td class="px-2 py-1 border text-right">${{ totals.discount }}</td></tr>
             <tr v-for="(tax, code) in totals.iva" :key="code">
-              <td class="px-2 py-1 border font-bold">IVA {{ getTarifaFromCodigoPorcentaje(code) }}%</td>
+              <td class="px-2 py-1 border font-bold bg-gray-50">IVA {{ getTarifaFromCodigoPorcentaje(code) }}%</td>
               <td class="px-2 py-1 border text-right">${{ tax.valor.toFixed(2) }}</td>
             </tr>
-            <tr class="bg-gray-100"><td class="px-2 py-2 border font-bold text-lg">Valor Total</td><td class="px-2 py-2 border text-right font-bold text-lg">${{ totals.total }}</td></tr>
+            <tr class="bg-gray-200"><td class="px-2 py-2 border font-bold text-lg">Valor Total</td><td class="px-2 py-2 border text-right font-bold text-lg">${{ totals.total }}</td></tr>
           </table>
         </div>
       </div>
 
       <!-- Actions -->
       <div class="flex justify-end mt-8">
-        <button @click="generateInvoice" :disabled="isSubmitting" class="bg-green-500 text-white font-bold py-2 px-4 rounded">
+        <button @click="generateInvoice" :disabled="isSubmitting" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md">
           <span v-if="isSubmitting">Generando...</span><span v-else>Generar Factura</span>
         </button>
       </div>
@@ -153,6 +158,7 @@ export default {
       products: [],
       activeAutocomplete: null,
       filteredProducts: [],
+      isSubmitting: false,
     };
   },
   computed: {
@@ -172,11 +178,13 @@ export default {
         const itemSubtotal = item.quantity * item.price;
         subtotal += itemSubtotal;
         discount += item.discount;
-        const taxRate = this.getTarifaFromCodigoPorcentaje(item.tax) / 100;
-        const taxValue = (itemSubtotal - item.discount) * taxRate;
-        if (!iva[item.tax]) iva[item.tax] = { base: 0, valor: 0 };
-        iva[item.tax].base += itemSubtotal - item.discount;
-        iva[item.tax].valor += taxValue;
+        if (item.tax) {
+            const taxRate = this.getTarifaFromCodigoPorcentaje(item.tax) / 100;
+            const taxValue = (itemSubtotal - item.discount) * taxRate;
+            if (!iva[item.tax]) iva[item.tax] = { base: 0, valor: 0 };
+            iva[item.tax].base += itemSubtotal - item.discount;
+            iva[item.tax].valor += taxValue;
+        }
       });
       const totalIva = Object.values(iva).reduce((acc, tax) => acc + tax.valor, 0);
       return { subtotal: subtotal.toFixed(2), discount: discount.toFixed(2), iva, total: (subtotal - discount + totalIva).toFixed(2) };
@@ -204,7 +212,7 @@ export default {
       const pto = this.puntosEmision.find(p => p.id === this.selectedPuntoEmisionId);
       return pto ? pto.numero : '000';
     },
-    handleClickOutside(event) { if (!this.$el.contains(event.target)) this.activeAutocomplete = null; },
+    handleClickOutside(event) { if (this.$el.contains(event.target) && !this.$el.querySelector('.relative').contains(event.target)) this.activeAutocomplete = null; },
     searchProducts(index) {
       const item = this.items[index];
       if (item.description.length < 1) { this.filteredProducts = []; return; }
@@ -327,6 +335,7 @@ export default {
   border-width: 0;
   background-color: transparent;
   padding: 2px;
+  width: 100%;
 }
 .form-input-table:focus {
   outline: none;
