@@ -563,6 +563,7 @@ export default {
         // Cleanup
         this.isBilling = false;
         this.isPaused = false;
+         this.failedRows = []; 
     },
     exportToExcel() {
         if (this.failedRows.length === 0) {
