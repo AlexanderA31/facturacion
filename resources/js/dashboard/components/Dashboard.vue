@@ -629,7 +629,7 @@ export default {
         }
 
         // Cleanup after the loop is finished or cancelled
-        this.isBilling = false;
+        this.clearState(); // This clears tableData and sets isBilling to false
         this.isPaused = false;
         // Don't reset currentIndex here, so the progress bar stays at 100%
         // this.currentIndex = 0;

@@ -156,8 +156,9 @@
 
       <!-- Actions -->
       <div class="flex justify-end">
-        <button @click="generateInvoice" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-          Generar Factura
+        <button @click="generateInvoice" :disabled="isSubmitting" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+            <span v-if="isSubmitting">Generando...</span>
+            <span v-else>Generar Factura</span>
         </button>
       </div>
     </div>
@@ -401,6 +402,8 @@ export default {
       }
     },
     async generateInvoice() {
+      if (this.isSubmitting) return;
+
       if (!this.selectedPuntoEmisionId) {
         this.$emitter.emit('show-alert', { type: 'error', message: 'Por favor, seleccione un punto de emisión.' });
         return;
@@ -416,65 +419,66 @@ export default {
         return;
       }
 
-      const totalSinImpuestos = this.items.reduce((acc, item) => acc + (item.quantity * item.price) - item.discount, 0);
-
-      const totalConImpuestos = Object.entries(this.totals.iva).map(([codigoPorcentaje, tax]) => ({
-        codigo: this.userProfile.tipo_impuesto,
-        codigoPorcentaje: codigoPorcentaje,
-        baseImponible: tax.base.toFixed(2),
-        valor: tax.valor.toFixed(2),
-      }));
-
-      const detalles = this.items.map((item, index) => {
-        const itemSubtotal = item.quantity * item.price;
-        const taxRate = this.getTarifaFromCodigoPorcentaje(item.tax);
-        const taxValue = (itemSubtotal - item.discount) * (taxRate / 100);
-        return {
-          codigoPrincipal: 'PROD' + Date.now() + '-' + index,
-          descripcion: item.description,
-          cantidad: item.quantity,
-          precioUnitario: item.price,
-          descuento: item.discount,
-          precioTotalSinImpuesto: (itemSubtotal - item.discount).toFixed(2),
-          impuestos: [{
-            codigo: this.userProfile.tipo_impuesto,
-            codigoPorcentaje: item.tax,
-            tarifa: taxRate,
-            baseImponible: (itemSubtotal - item.discount).toFixed(2),
-            valor: taxValue.toFixed(2),
-          }],
-        };
-      });
-
-      const infoAdicional = {
-        email: this.client.email,
-      };
-
-      if (this.client.telefono) {
-          infoAdicional.telefono = this.normalizePhoneNumber(this.client.telefono);
-      }
-
-      this.additionalInfo.forEach(info => {
-        if (info.name && info.value) {
-          infoAdicional[info.name] = info.value;
-        }
-      });
-
-      const payload = {
-        tipoIdentificacionComprador: String(this.client.ruc).length === 13 ? '04' : '05',
-        razonSocialComprador: this.client.name,
-        identificacionComprador: this.client.ruc,
-        direccionComprador: this.client.address,
-        totalSinImpuestos: totalSinImpuestos.toFixed(2),
-        totalDescuento: this.totals.discount,
-        totalConImpuestos: totalConImpuestos,
-        importeTotal: this.totals.total,
-        pagos: [{ formaPago: this.selectedPaymentMethod, total: this.totals.total }],
-        detalles: detalles,
-        infoAdicional: infoAdicional,
-      };
-
+      this.isSubmitting = true;
       try {
+        const totalSinImpuestos = this.items.reduce((acc, item) => acc + (item.quantity * item.price) - item.discount, 0);
+
+        const totalConImpuestos = Object.entries(this.totals.iva).map(([codigoPorcentaje, tax]) => ({
+          codigo: this.userProfile.tipo_impuesto,
+          codigoPorcentaje: codigoPorcentaje,
+          baseImponible: tax.base.toFixed(2),
+          valor: tax.valor.toFixed(2),
+        }));
+
+        const detalles = this.items.map((item, index) => {
+          const itemSubtotal = item.quantity * item.price;
+          const taxRate = this.getTarifaFromCodigoPorcentaje(item.tax);
+          const taxValue = (itemSubtotal - item.discount) * (taxRate / 100);
+          return {
+            codigoPrincipal: 'PROD' + Date.now() + '-' + index,
+            descripcion: item.description,
+            cantidad: item.quantity,
+            precioUnitario: item.price,
+            descuento: item.discount,
+            precioTotalSinImpuesto: (itemSubtotal - item.discount).toFixed(2),
+            impuestos: [{
+              codigo: this.userProfile.tipo_impuesto,
+              codigoPorcentaje: item.tax,
+              tarifa: taxRate,
+              baseImponible: (itemSubtotal - item.discount).toFixed(2),
+              valor: taxValue.toFixed(2),
+            }],
+          };
+        });
+
+        const infoAdicional = {
+          email: this.client.email,
+        };
+
+        if (this.client.telefono) {
+            infoAdicional.telefono = this.normalizePhoneNumber(this.client.telefono);
+        }
+
+        this.additionalInfo.forEach(info => {
+          if (info.name && info.value) {
+            infoAdicional[info.name] = info.value;
+          }
+        });
+
+        const payload = {
+          tipoIdentificacionComprador: String(this.client.ruc).length === 13 ? '04' : '05',
+          razonSocialComprador: this.client.name,
+          identificacionComprador: this.client.ruc,
+          direccionComprador: this.client.address,
+          totalSinImpuestos: totalSinImpuestos.toFixed(2),
+          totalDescuento: this.totals.discount,
+          totalConImpuestos: totalConImpuestos,
+          importeTotal: this.totals.total,
+          pagos: [{ formaPago: this.selectedPaymentMethod, total: this.totals.total }],
+          detalles: detalles,
+          infoAdicional: infoAdicional,
+        };
+
         await axios.post(`/api/comprobantes/factura/${this.selectedPuntoEmisionId}`, payload, {
           headers: { 'Authorization': `Bearer ${this.token}` }
         });
@@ -482,10 +486,13 @@ export default {
         // Reset form
         this.client = { ruc: '', name: '', address: '', email: '', telefono: '' };
         this.items = [{ description: '', quantity: 1, price: 0, discount: 0, tax: this.userProfile.codigo_porcentaje_iva }];
+        this.additionalInfo = [{ name: '', value: '' }];
       } catch (error) {
         console.error('Error generating invoice:', error);
         const errorMessage = error.response?.data?.message || 'Error al generar la factura.';
         this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
+      } finally {
+        this.isSubmitting = false;
       }
     }
   }
