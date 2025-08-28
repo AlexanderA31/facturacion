@@ -358,4 +358,59 @@ class ComprobantesController extends Controller
             return $this->sendError('Error al generar la factura', $e->getMessage(), 500, $validated_data);
         }
     }
+
+    public function reenviarComprobante(Request $request, $comprobanteId)
+    {
+        try {
+            $user = Auth::user();
+            $comprobante = Comprobante::where('id', $comprobanteId)
+                ->where('user_id', $user->id)
+                ->firstOrFail();
+
+            Gate::authorize('update', $comprobante);
+
+            if ($comprobante->estado !== EstadosComprobanteEnum::NECESITA_CORRECCION->value) {
+                return $this->sendError(
+                    'Estado de comprobante no válido',
+                    'Este comprobante no está en estado de "necesita corrección".',
+                    409 // Conflict
+                );
+            }
+
+            // Opcional: Actualizar el payload si se envía uno nuevo
+            if ($request->has('payload')) {
+                $comprobante->payload = json_encode($request->input('payload'));
+                // Aquí podrías re-validar el payload si es necesario
+            }
+
+            // Resetear el estado para re-procesamiento
+            $comprobante->estado = EstadosComprobanteEnum::PENDIENTE->value;
+            $comprobante->error_message = null;
+            $comprobante->save();
+
+            $puntoEmision = PuntoEmision::whereHas('establecimiento', function ($query) use ($user, $comprobante) {
+                $query->where('user_id', $user->id)->where('codigo', $comprobante->establecimiento);
+            })->where('codigo', $comprobante->punto_emision)->firstOrFail();
+
+            GenerarComprobanteJob::dispatch(
+                $comprobante,
+                $user,
+                $puntoEmision,
+                TipoComprobanteEnum::from($comprobante->tipo_comprobante)
+            );
+
+            return $this->sendResponse(
+                'El comprobante ha sido reenviado para su procesamiento.',
+                ['comprobante_id' => $comprobante->id],
+                202
+            );
+
+        } catch (ModelNotFoundException $e) {
+            return $this->sendError('Comprobante no encontrado', 'No se encontró el comprobante especificado.', 404);
+        } catch (AuthorizationException $e) {
+            return $this->sendError('Acceso denegado', 'No tienes permiso para reenviar este comprobante.', 403);
+        } catch (\Exception $e) {
+            return $this->sendError('Error al reenviar el comprobante', $e->getMessage(), 500);
+        }
+    }
 }

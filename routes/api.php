@@ -83,6 +83,7 @@ Route::group(['middleware' => ['json.response']], function () {
         // Route::get('/{clave_acceso}/anular', [ComprobantesController::class, 'show']);
 
         Route::post('/factura/{punto_emision}', [ComprobantesController::class, 'generateFactura']);
+        Route::post('/{comprobanteId}/reenviar', [ComprobantesController::class, 'reenviarComprobante']);
         Route::post('/descargar-masivo', [ComprobantesController::class, 'descargarMasivo']);
         Route::get('/descargar-masivo/{jobId}/status', [ComprobantesController::class, 'getBulkDownloadStatus']);
         Route::get('/descargar-masivo/{jobId}/download', [ComprobantesController::class, 'downloadBulkZip']);
