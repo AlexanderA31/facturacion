@@ -28,23 +28,23 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
           <div class="col-span-1">
             <label for="ruc" class="block text-sm font-medium text-gray-600">RUC/CI</label>
-            <input type="text" id="ruc" v-model="client.ruc" class="form-input-pdf">
+            <input type="text" id="ruc" v-model="client.ruc" class="mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm">
           </div>
           <div class="col-span-1">
             <label for="name" class="block text-sm font-medium text-gray-600">Razón Social / Nombres</label>
-            <input type="text" id="name" v-model="client.name" class="form-input-pdf">
+            <input type="text" id="name" v-model="client.name" class="mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm">
           </div>
           <div class="col-span-2">
             <label for="address" class="block text-sm font-medium text-gray-600">Dirección</label>
-            <input type="text" id="address" v-model="client.address" class="form-input-pdf">
+            <input type="text" id="address" v-model="client.address" class="mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm">
           </div>
           <div class="col-span-1">
             <label for="email" class="block text-sm font-medium text-gray-600">Email</label>
-            <input type="email" id="email" v-model="client.email" class="form-input-pdf">
+            <input type="email" id="email" v-model="client.email" class="mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm">
           </div>
           <div class="col-span-1">
             <label for="phone" class="block text-sm font-medium text-gray-600">Teléfono</label>
-            <input type="tel" id="phone" v-model="client.telefono" class="form-input-pdf">
+            <input type="tel" id="phone" v-model="client.telefono" class="mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm">
           </div>
           <div class="col-span-1">
               <BaseSelect
@@ -53,7 +53,7 @@
                   v-model="selectedPaymentMethod"
                   :options="paymentMethodOptions"
                   placeholder="Seleccione un método de pago"
-                  class="form-input-pdf"
+                  class="mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm"
               />
           </div>
         </div>
@@ -101,7 +101,7 @@
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-for="(item, index) in items" :key="index">
                 <td class="px-6 py-2 whitespace-nowrap relative">
-                  <input type="text" v-model="item.description" @input="searchProducts(index)" @focus="activeAutocomplete = index" class="form-input-pdf w-full">
+                  <input type="text" v-model="item.description" @input="searchProducts(index)" @focus="activeAutocomplete = index" class="mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm">
                   <div v-if="activeAutocomplete === index && filteredProducts.length" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1">
                     <ul>
                       <li v-for="product in filteredProducts" :key="product.id" @click="selectProduct(index, product)" class="px-3 py-2 cursor-pointer hover:bg-gray-100">
@@ -110,11 +110,11 @@
                     </ul>
                   </div>
                 </td>
-                <td class="px-6 py-2"><input type="number" v-model.number="item.quantity" class="form-input-pdf w-24"></td>
-                <td class="px-6 py-2"><input type="number" v-model.number="item.price" class="form-input-pdf w-32"></td>
-                <td class="px-6 py-2"><input type="number" v-model.number="item.discount" class="form-input-pdf w-24"></td>
+                <td class="px-6 py-2"><input type="number" v-model.number="item.quantity" class="mt-1 block w-24 border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm"></td>
+                <td class="px-6 py-2"><input type="number" v-model.number="item.price" class="mt-1 block w-32 border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm"></td>
+                <td class="px-6 py-2"><input type="number" v-model.number="item.discount" class="mt-1 block w-24 border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm"></td>
                 <td class="px-6 py-2">
-                  <select v-model="item.tax" class="form-input-pdf w-full">
+                  <select v-model="item.tax" class="mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm">
                     <option v-for="tax in taxOptions" :key="tax.value" :value="tax.value">{{ tax.text }}</option>
                   </select>
                 </td>
@@ -541,9 +541,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-.form-input-pdf {
-  @apply mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm;
-}
-</style>
