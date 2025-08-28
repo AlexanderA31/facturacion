@@ -360,6 +360,7 @@ export default {
       try {
         const response = await axios.get('/api/profile', {
           headers: { 'Authorization': `Bearer ${this.token}` },
+          params: { t: new Date().getTime() }
         });
         this.userProfile = response.data.data;
       } catch (error) {

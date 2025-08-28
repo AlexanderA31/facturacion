@@ -70,6 +70,7 @@ class PerfilClientController extends Controller implements HasMiddleware
 
             $validated = $validator->validated();
             $user->update($validated);
+            $user->refresh();
 
             return $this->sendResponse('Perfil actualizado exitosamente', new UserResource($user));
         } catch (\Exception $e) {
