@@ -131,6 +131,10 @@ export default {
     isSidebarOpen: {
       type: Boolean,
       default: false,
+    },
+    userProfile: {
+      type: Object,
+      required: true,
     }
   },
   components: {
@@ -143,10 +147,6 @@ export default {
   },
   data() {
     return {
-      userProfile: {
-        tipo_impuesto: '2',
-        codigo_porcentaje_iva: '2',
-      },
       failedRows: [],
       currentPage: 1,
       itemsPerPage: 10,
@@ -248,14 +248,11 @@ export default {
   mounted() {
     this.loadState();
     window.addEventListener('corrective-billing-update', this.loadState);
-    this.fetchUserProfile();
     this.fetchEstablecimientos();
     this.fetchPuntosEmision();
-    this.$emitter.on('profile-updated', this.fetchUserProfile);
   },
   beforeUnmount() {
     window.removeEventListener('corrective-billing-update', this.loadState);
-    this.$emitter.off('profile-updated', this.fetchUserProfile);
   },
   methods: {
     sortBy(key) {
@@ -299,17 +296,6 @@ export default {
             return `+593${cleaned}`;
         }
         return phone; // Return original if no rule matches
-    },
-    async fetchUserProfile() {
-      try {
-        const response = await axios.get('/api/profile', {
-          headers: { 'Authorization': `Bearer ${this.token}` },
-        });
-        this.userProfile = response.data.data;
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-        this.userProfile = { tipo_impuesto: '2', codigo_porcentaje_iva: '2' };
-      }
     },
     async fetchEstablecimientos() {
         try {

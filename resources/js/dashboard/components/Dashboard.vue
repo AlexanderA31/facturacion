@@ -125,17 +125,17 @@
 
     <!-- Corrective Billing Section -->
     <div v-if="currentDashboardView === 'corrective'">
-      <CorrectiveBilling :is-sidebar-open="isSidebarOpen" />
+      <CorrectiveBilling :is-sidebar-open="isSidebarOpen" :user-profile="userProfile" />
     </div>
 
     <!-- Individual Billing Section -->
     <div v-if="currentDashboardView === 'individual-billing'">
-      <IndividualBilling :token="token" />
+      <IndividualBilling :token="token" :user-profile="userProfile" />
     </div>
 
     <!-- Configuration Section -->
     <div v-if="currentDashboardView === 'configuration'">
-      <Configuration :is-sidebar-open="isSidebarOpen" />
+      <Configuration :is-sidebar-open="isSidebarOpen" @request-profile-update="fetchUserProfile" />
     </div>
   </AppLayout>
 </template>

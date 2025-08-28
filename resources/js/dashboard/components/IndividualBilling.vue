@@ -172,6 +172,10 @@ export default {
       type: String,
       required: true,
     },
+    userProfile: {
+      type: Object,
+      required: true,
+    }
   },
   data() {
     return {
@@ -195,11 +199,6 @@ export default {
       puntosEmision: [],
       selectedEstablecimientoId: null,
       selectedPuntoEmisionId: null,
-      userProfile: {
-        tipo_impuesto: '2',
-        codigo_porcentaje_iva: '4',
-        forma_pago_defecto: '01',
-      },
       taxOptions: [
         { value: '4', text: 'IVA 15% (general vigente)' },
         { value: '5', text: 'IVA 5%' },
@@ -277,13 +276,11 @@ export default {
     }
   },
   mounted() {
-    this.fetchUserProfile();
+    this.selectedPaymentMethod = this.userProfile.forma_pago_defecto || '01';
     this.fetchEstablecimientos();
     this.fetchPuntosEmision();
-    this.$emitter.on('profile-updated', this.fetchUserProfile);
   },
   beforeUnmount() {
-    this.$emitter.off('profile-updated', this.fetchUserProfile);
   },
   methods: {
     addInfoAdicional() {
@@ -356,25 +353,6 @@ export default {
             return `+593${cleaned.substring(1)}`;
         }
         return phone; // Return original if no rule matches
-    },
-    async fetchUserProfile() {
-      try {
-        const response = await axios.get('/api/profile', {
-          headers: { 'Authorization': `Bearer ${this.token}` },
-        });
-        this.userProfile = response.data.data;
-        this.selectedPaymentMethod = this.userProfile.forma_pago_defecto || '01';
-        // Set default tax for new items
-        this.items.forEach(item => {
-          if (!item.tax) {
-            item.tax = this.userProfile.codigo_porcentaje_iva;
-          }
-        });
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-        // Use default values if profile fetch fails
-        this.userProfile = { tipo_impuesto: '2', codigo_porcentaje_iva: '4', forma_pago_defecto: '01' };
-      }
     },
     async fetchEstablecimientos() {
       try {
