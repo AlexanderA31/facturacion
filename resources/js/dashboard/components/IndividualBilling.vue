@@ -149,8 +149,8 @@
 
       <!-- Actions -->
       <div class="flex justify-end">
-        <button @click="generateInvoice" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-          Generar Factura
+        <button @click="generateInvoice" :disabled="isSubmitting" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400">
+          {{ isSubmitting ? 'Procesando...' : 'Generar Factura' }}
         </button>
       </div>
     </div>
@@ -211,6 +211,7 @@ export default {
       paymentMethodOptions,
       selectedPaymentMethod: '01',
       infoAdicional: [],
+      isSubmitting: false,
     };
   },
   computed: {
@@ -399,18 +400,24 @@ export default {
       }
     },
     async generateInvoice() {
+      if (this.isSubmitting) return;
+      this.isSubmitting = true;
+
       if (!this.selectedPuntoEmisionId) {
         this.$emitter.emit('show-alert', { type: 'error', message: 'Por favor, seleccione un punto de emisión.' });
+        this.isSubmitting = false;
         return;
       }
 
       if (this.client.ruc.length !== 10 && this.client.ruc.length !== 13) {
         this.$emitter.emit('show-alert', { type: 'error', message: 'El RUC/CI debe tener 10 o 13 dígitos.' });
+        this.isSubmitting = false;
         return;
       }
 
       if (!this.validatePhoneNumber(this.client.telefono)) {
         this.$emitter.emit('show-alert', { type: 'error', message: 'El número de teléfono no es válido. Formatos aceptados: +593..., 593... (12 dígitos), o 0... (10 dígitos).' });
+        this.isSubmitting = false;
         return;
       }
 
@@ -480,10 +487,14 @@ export default {
         // Reset form
         this.client = { ruc: '', name: '', address: '', email: '', telefono: '' };
         this.items = [{ description: '', quantity: 1, price: 0, discount: 0, tax: this.userProfile.codigo_porcentaje_iva }];
+        this.infoAdicional = [];
+        this.selectedPaymentMethod = this.userProfile.forma_pago_defecto || '01';
       } catch (error) {
         console.error('Error generating invoice:', error);
         const errorMessage = error.response?.data?.message || 'Error al generar la factura.';
         this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
+      } finally {
+        this.isSubmitting = false;
       }
     }
   }
