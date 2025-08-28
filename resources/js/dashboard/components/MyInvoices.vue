@@ -106,6 +106,7 @@ import downloadStore from '../utils/downloadStore.js';
 import * as XLSX from 'xlsx';
 import BaseButton from './BaseButton.vue';
 import ExportExcelModal from './ExportExcelModal.vue';
+import { moveToCorrective } from '../utils/invoiceManager.js';
 
 export default {
   name: 'MyInvoices',
@@ -320,28 +321,37 @@ export default {
           params: { per_page: 100 } // Fetch a good number of invoices
         });
       
-        this.invoices = response.data.data.data.map(invoice => {
-          let payload = {};
-          try {
-            if (typeof invoice.payload === 'string') {
-                payload = JSON.parse(invoice.payload);
-            } else {
-                payload = invoice.payload || {};
-            }
-          } catch (e) {
-            console.error('Error parsing invoice payload:', e);
-            payload = {}; // Ensure payload is an object on error
-          }
+        const newInvoices = response.data.data.data;
+        const processedInvoices = [];
 
-          return {
-            ...invoice,
-            fecha_emision: this.formatDateTime(invoice.fecha_emision),
-            numero_factura: `${invoice.establecimiento}-${invoice.punto_emision}-${invoice.secuencial}`,
-            cliente: payload.razonSocialComprador || 'N/A',
-            valor: payload.importeTotal || 0,
-            isErrorExpanded: false,
-          };
+        newInvoices.forEach(invoice => {
+            if (invoice.estado === 'rechazado' && invoice.error_message !== 'ERROR SECUENCIAL REGISTRADO') {
+                moveToCorrective(invoice, invoice.error_message);
+            } else {
+                let payload = {};
+                try {
+                    if (typeof invoice.payload === 'string') {
+                        payload = JSON.parse(invoice.payload);
+                    } else {
+                        payload = invoice.payload || {};
+                    }
+                } catch (e) {
+                    console.error('Error parsing invoice payload:', e);
+                    payload = {}; // Ensure payload is an object on error
+                }
+
+                processedInvoices.push({
+                    ...invoice,
+                    fecha_emision: this.formatDateTime(invoice.fecha_emision),
+                    numero_factura: `${invoice.establecimiento}-${invoice.punto_emision}-${invoice.secuencial}`,
+                    cliente: payload.razonSocialComprador || 'N/A',
+                    valor: payload.importeTotal || 0,
+                    isErrorExpanded: false,
+                });
+            }
         });
+
+        this.invoices = processedInvoices;
       } catch (error) {
         console.error('Error fetching invoices:', error);
       } finally {
