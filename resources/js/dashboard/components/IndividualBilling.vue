@@ -9,6 +9,7 @@
           <img v-if="userProfile.logo_path" :src="`/storage/${userProfile.logo_path}`" alt="Logo" class="max-w-xs max-h-20 mb-4 rounded-md">
           <p><span class="font-bold">Emisor:</span> {{ userProfile.name }}</p>
           <p><span class="font-bold">RUC:</span> {{ userProfile.ruc }}</p>
+          <p><span class="font-bold">Correo:</span> {{ userProfile.email }}</p>
           <p><span class="font-bold">Matriz:</span> {{ userProfile.dirMatriz }}</p>
           <p><span class="font-bold">Obligado a llevar contabilidad:</span> {{ userProfile.obligadoContabilidad ? 'SI' : 'NO' }}</p>
         </div>
