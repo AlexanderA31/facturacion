@@ -515,6 +515,11 @@ export default {
           total: formatToString(precio)
       }];
 
+      const infoAdicional = { email: email };
+      if (telefono) {
+          infoAdicional.telefono = telefono;
+      }
+
       return {
         // fechaEmision is now set by the server
         tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
