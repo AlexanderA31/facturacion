@@ -197,9 +197,9 @@ export default {
   watch: {
     userProfile: {
       handler(newProfile) {
-        if (newProfile) {
+        // Solo actualizar el formulario si el perfil es un objeto completo (tiene un id)
+        if (newProfile && newProfile.id) {
           this.form = {
-            ...this.form,
             razonSocial: newProfile.razonSocial,
             nombreComercial: newProfile.nombreComercial,
             dirMatriz: newProfile.dirMatriz,
@@ -215,6 +215,8 @@ export default {
           };
           if (newProfile.logo_path) {
             this.logoPreview = `/storage/${newProfile.logo_path}`;
+          } else {
+            this.logoPreview = null;
           }
         }
       },
