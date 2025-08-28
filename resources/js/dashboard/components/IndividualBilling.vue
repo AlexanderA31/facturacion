@@ -544,6 +544,6 @@ export default {
 
 <style scoped>
 .form-input-pdf {
-  @apply mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 sm:text-sm;
+  @apply mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 text-sm;
 }
 </style>
