@@ -21,7 +21,7 @@
     <div class="bg-white rounded-xl shadow-lg">
         <div class="px-6 pt-6">
             <!-- Billing controls will go here -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div>
               <BaseSelect
                 id="corr-establecimiento-select"
@@ -40,6 +40,15 @@
                 :disabled="!selectedEstablecimientoId"
                 placeholder="Seleccione un punto de emisión"
               />
+          </div>
+          <div>
+            <BaseSelect
+                id="corr-payment-method-select"
+                label="Método de Pago (para todo el lote)"
+                v-model="selectedPaymentMethod"
+                :options="paymentMethodOptions"
+                placeholder="Seleccione un método de pago"
+            />
           </div>
       </div>
       <div class="mb-4 flex justify-end">
@@ -125,7 +134,7 @@ import RefreshButton from './RefreshButton.vue';
 import BaseSelect from './BaseSelect.vue';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
-import { parsePaymentMethods } from '../utils/paymentMethods.js';
+import { paymentMethodOptions } from '../utils/paymentMethods.js';
 
 export default {
   name: 'CorrectiveBilling',
@@ -173,6 +182,8 @@ export default {
       puntosEmision: [],
       selectedEstablecimientoId: null,
       selectedPuntoEmisionId: null,
+      selectedPaymentMethod: '01',
+      paymentMethodOptions: paymentMethodOptions,
       isLoading: false,
       searchQuery: '',
       sortKey: 'Nombres',
@@ -437,11 +448,10 @@ export default {
       const taxRate = 1 + (tarifa / 100);
       const totalSinImpuestos = precio / taxRate;
       const iva = precio - totalSinImpuestos;
-      const metodoPago = findValue('metodo de pago');
-      const pagos = parsePaymentMethods(metodoPago, precio).map(p => ({
-        ...p,
-        total: formatToString(p.total)
-      }));
+      const pagos = [{
+          formaPago: this.selectedPaymentMethod,
+          total: formatToString(precio)
+      }];
       return {
         tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
         razonSocialComprador: nombres,
