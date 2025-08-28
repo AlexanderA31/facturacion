@@ -489,7 +489,9 @@ export default {
         this.additionalInfo = [{ name: '', value: '' }];
       } catch (error) {
         console.error('Error generating invoice:', error);
-        const errorMessage = error.response?.data?.message || 'Error al generar la factura.';
+        const detailedError = error.response?.data?.data?.sri_error;
+        const genericError = error.response?.data?.message;
+        const errorMessage = detailedError || genericError || 'Error al generar la factura.';
         this.$emitter.emit('show-alert', { type: 'error', message: errorMessage });
       } finally {
         this.isSubmitting = false;

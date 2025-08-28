@@ -566,7 +566,10 @@ export default {
         this.tableData = this.tableData.filter(item => item.id !== row.id);
 
       } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message;
+        const detailedError = error.response?.data?.data?.sri_error;
+        const genericError = error.response?.data?.message;
+        const errorMessage = detailedError || genericError || error.message;
+
         if (error.message === 'Cédula no válida') {
           this.addFailedRowToCorrective(row, 'Cédula debe tener 10 o 13 dígitos.');
         } else if (error.message === 'Precio no válido') {

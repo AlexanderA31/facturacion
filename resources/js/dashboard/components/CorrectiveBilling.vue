@@ -497,7 +497,9 @@ export default {
         this.saveState();
         window.dispatchEvent(new Event('corrective-billing-update'));
       } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message;
+        const detailedError = error.response?.data?.data?.sri_error;
+        const genericError = error.response?.data?.message;
+        const errorMessage = detailedError || genericError || error.message;
         let friendlyMessage = errorMessage;
         if (error.message === 'Cédula no válida') {
           friendlyMessage = 'Cédula debe tener 10 o 13 dígitos.';
