@@ -45,9 +45,13 @@
             <label class="font-bold">Correo:</label>
             <input type="email" v-model="client.email" class="form-input-box">
           </div>
-          <div class="col-span-2">
+          <div>
             <label class="font-bold">Dirección:</label>
             <input type="text" v-model="client.address" class="form-input-box">
+          </div>
+          <div>
+            <label class="font-bold">Teléfono:</label>
+            <input type="tel" v-model="client.telefono" class="form-input-box">
           </div>
         </div>
       </div>
@@ -324,6 +328,13 @@ export default {
         };
         await axios.post(`/api/comprobantes/factura/${this.selectedPuntoEmisionId}`, payload, { headers: { 'Authorization': `Bearer ${this.token}` }});
         this.$emitter.emit('show-alert', { type: 'success', message: 'Factura generada exitosamente.' });
+        // Reset form for next invoice
+        this.client = {
+            ruc: '', name: '', address: '', email: '', telefono: '',
+            fechaEmision: new Date().toISOString().slice(0,10),
+        };
+        this.items = [{ description: '', quantity: 1, price: 0, discount: 0, tax: this.userProfile.codigo_porcentaje_iva, codigoPrincipal: '' }];
+        this.additionalInfo = [{ name: '', value: '' }];
       } catch (error) {
         const message = error.response?.data?.message || 'Error al generar la factura.';
         this.$emitter.emit('show-alert', { type: 'error', message: message });
