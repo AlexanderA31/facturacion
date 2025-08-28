@@ -257,6 +257,15 @@ export default {
       const map = { '0': 0, '2': 12, '3': 14, '4': 15, '5': 5, '8': 8, '10': 13 };
       return map[codigo] || 0;
     },
+    validatePhoneNumber(phone) {
+        if (!phone || phone.trim() === '') return true;
+        const cleaned = phone.replace(/\s+/g, '');
+        if (cleaned.startsWith('+593')) return cleaned.length === 13;
+        if (cleaned.startsWith('593')) return cleaned.length === 12;
+        if (cleaned.length === 10 && cleaned.startsWith('0')) return true;
+        if (cleaned.length === 9 && !cleaned.startsWith('0')) return true;
+        return false;
+    },
     normalizePhoneNumber(phone) {
         if (!phone) return '';
         let cleaned = String(phone).replace(/\s+/g, '');
@@ -294,6 +303,12 @@ export default {
     },
     async generateInvoice() {
       if (this.isSubmitting) return;
+
+      if (!this.validatePhoneNumber(this.client.telefono)) {
+        this.$emitter.emit('show-alert', { type: 'error', message: 'El formato del número de teléfono no es válido.' });
+        return;
+      }
+
       this.isSubmitting = true;
       try {
         const totalSinImpuestos = this.items.reduce((acc, item) => acc + (item.quantity * item.price) - item.discount, 0);

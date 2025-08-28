@@ -546,8 +546,44 @@ export default {
                 valor: formatToString(iva)
             }],
         }],
-        infoAdicional: { email: email, telefono: telefono },
-      };
+        const infoAdicional = { email: email };
+        if (telefono) {
+            infoAdicional.telefono = telefono;
+        }
+
+        return {
+            // fechaEmision is now set by the server
+            tipoIdentificacionComprador: String(cedula).length === 13 ? '04' : '05',
+            razonSocialComprador: nombres,
+            identificacionComprador: String(cedula),
+            direccionComprador: direccion,
+            totalSinImpuestos: formatToString(totalSinImpuestos),
+            totalDescuento: "0.00",
+            totalConImpuestos: [{
+                codigo: this.userProfile.tipo_impuesto,
+                codigoPorcentaje: this.userProfile.codigo_porcentaje_iva,
+                baseImponible: formatToString(totalSinImpuestos),
+                valor: formatToString(iva)
+            }],
+            importeTotal: formatToString(precio),
+            pagos: pagos,
+            detalles: [{
+              codigoPrincipal: String(codigo),
+              descripcion: evento,
+              cantidad: formatToString(1, 2),
+              precioUnitario: formatToString(totalSinImpuestos, 6),
+              descuento: "0.00",
+              precioTotalSinImpuesto: formatToString(totalSinImpuestos),
+              impuestos: [{
+                    codigo: this.userProfile.tipo_impuesto,
+                    codigoPorcentaje: this.userProfile.codigo_porcentaje_iva,
+                    tarifa: tarifa,
+                    baseImponible: formatToString(totalSinImpuestos),
+                    valor: formatToString(iva)
+                }],
+            }],
+            infoAdicional: infoAdicional,
+        };
     },
     addFailedRowToCorrective(row, errorMessage) {
         row.Estado = 'No Facturado';
