@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-gray-100 p-8 font-sans text-sm">
-    <div class="max-w-6xl mx-auto bg-white shadow-lg p-8 border border-gray-200 rounded-lg">
+  <div class="bg-gray-100 p-4 font-sans text-sm">
+    <div class="max-w-7xl mx-auto bg-white shadow-lg p-6 rounded-lg">
 
       <!-- Header -->
-      <div class="flex justify-between items-start mb-4 pb-4 border-b">
+      <div class="flex justify-between items-start mb-4 pb-4">
         <!-- Emitter Info -->
         <div class="w-1/2 pr-4">
           <img v-if="userProfile.logo_path" :src="`/storage/${userProfile.logo_path}`" alt="Logo" class="max-w-xs max-h-20 mb-4 rounded-md">
@@ -14,8 +14,8 @@
         </div>
 
         <!-- Invoice Info -->
-        <div class="w-1/2 pl-4 border-l">
-          <div class="border border-gray-300 rounded-lg p-4">
+        <div class="w-1/2 pl-4">
+          <div class="bg-gray-50 rounded-lg p-4">
             <p class="text-xl font-bold">FACTURA</p>
             <p class="text-red-600 font-bold text-xl">{{ getEstablecimientoCode() }}-{{ getPuntoEmisionCode() }}-{{ proximoSecuencial }}</p>
             <p class="font-bold mt-4">Número de Autorización:</p>
@@ -27,17 +27,27 @@
       </div>
 
       <!-- Client Information -->
-      <div class="mb-4 pb-4 border-b bg-gray-50 p-4 rounded-lg border">
-        <div class="flex justify-between">
-          <div class="w-1/2 pr-4">
-            <p><span class="font-bold">Razón Social:</span> <input type="text" v-model="client.name" class="form-input-pdf-inline"></p>
-            <p><span class="font-bold">RUC/CI:</span> <input type="text" v-model="client.ruc" class="form-input-pdf-inline"></p>
-            <p><span class="font-bold">Dirección:</span> <input type="text" v-model="client.address" class="form-input-pdf-inline"></p>
+      <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+        <div class="grid grid-cols-2 gap-x-8 gap-y-2">
+          <div>
+            <label class="font-bold">Razón Social / Nombres:</label>
+            <input type="text" v-model="client.name" class="form-input-box">
           </div>
-          <div class="w-1/2 pl-4">
-            <p><span class="font-bold">Fecha Emisión:</span> <input type="date" v-model="client.fechaEmision" class="form-input-pdf-inline"></p>
-            <p><span class="font-bold">Correo:</span> <input type="email" v-model="client.email" class="form-input-pdf-inline"></p>
-            <p><span class="font-bold">Teléfono:</span> <input type="tel" v-model="client.telefono" class="form-input-pdf-inline"></p>
+          <div>
+            <label class="font-bold">Fecha Emisión:</label>
+            <input type="date" v-model="client.fechaEmision" class="form-input-box" disabled>
+          </div>
+          <div>
+            <label class="font-bold">RUC / CI:</label>
+            <input type="text" v-model="client.ruc" class="form-input-box">
+          </div>
+          <div>
+            <label class="font-bold">Correo:</label>
+            <input type="email" v-model="client.email" class="form-input-box">
+          </div>
+          <div class="col-span-2">
+            <label class="font-bold">Dirección:</label>
+            <input type="text" v-model="client.address" class="form-input-box">
           </div>
         </div>
       </div>
@@ -47,29 +57,29 @@
         <table class="w-full">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-2 py-2 text-left font-bold border rounded-tl-lg">Código</th>
-              <th class="px-2 py-2 text-left font-bold border w-2/5">Descripción</th>
-              <th class="px-2 py-2 text-left font-bold border">Cantidad</th>
-              <th class="px-2 py-2 text-left font-bold border">P. Unitario</th>
-              <th class="px-2 py-2 text-left font-bold border">Descuento</th>
-              <th class="px-2 py-2 text-left font-bold border">Total</th>
-              <th class="px-2 py-2 text-left font-bold border rounded-tr-lg"></th>
+              <th class="px-2 py-2 text-left font-bold rounded-tl-lg">Código</th>
+              <th class="px-2 py-2 text-left font-bold w-2/5">Descripción</th>
+              <th class="px-2 py-2 text-left font-bold">Cantidad</th>
+              <th class="px-2 py-2 text-left font-bold">P. Unitario</th>
+              <th class="px-2 py-2 text-left font-bold">Descuento</th>
+              <th class="px-2 py-2 text-left font-bold">Total</th>
+              <th class="px-2 py-2 text-left font-bold rounded-tr-lg"></th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in items" :key="index">
-              <td class="border px-2 py-1"><input type="text" v-model="item.codigoPrincipal" class="w-full form-input-table"></td>
-              <td class="border px-2 py-1 relative">
+            <tr v-for="(item, index) in items" :key="index" class="border-b">
+              <td class="px-2 py-1"><input type="text" v-model="item.codigoPrincipal" class="w-full form-input-table"></td>
+              <td class="px-2 py-1 relative">
                 <input type="text" v-model="item.description" @input="searchProducts(index)" @focus="activeAutocomplete = index" class="w-full form-input-table">
                 <div v-if="activeAutocomplete === index && filteredProducts.length" class="absolute z-10 w-full bg-white border rounded shadow-lg mt-1">
                   <ul><li v-for="p in filteredProducts" :key="p.id" @click="selectProduct(index, p)" class="px-3 py-2 cursor-pointer hover:bg-gray-100">{{ p.description }}</li></ul>
                 </div>
               </td>
-              <td class="border px-2 py-1"><input type="number" v-model.number="item.quantity" class="w-20 form-input-table text-right"></td>
-              <td class="border px-2 py-1"><input type="number" v-model.number="item.price" class="w-24 form-input-table text-right"></td>
-              <td class="border px-2 py-1"><input type="number" v-model.number="item.discount" class="w-20 form-input-table text-right"></td>
-              <td class="border px-2 py-1 text-right font-medium">${{ calculateItemTotal(item) }}</td>
-              <td class="border px-2 py-1 text-center">
+              <td class="px-2 py-1"><input type="number" v-model.number="item.quantity" class="w-20 form-input-table text-right"></td>
+              <td class="px-2 py-1"><input type="number" v-model.number="item.price" class="w-24 form-input-table text-right"></td>
+              <td class="px-2 py-1"><input type="number" v-model.number="item.discount" class="w-20 form-input-table text-right"></td>
+              <td class="px-2 py-1 text-right font-medium">${{ calculateItemTotal(item) }}</td>
+              <td class="px-2 py-1 text-center">
                 <button @click="removeItem(index)" class="text-red-600 hover:text-red-800" title="Eliminar">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
@@ -83,18 +93,20 @@
       <!-- Footer -->
       <div class="flex justify-between mt-4">
         <!-- Additional Info & Payment -->
-        <div class="w-1/2 pr-4">
-          <div class="border rounded-lg p-4 bg-gray-50">
+        <div class="w-1/2 pr-4 space-y-4">
+          <div class="rounded-lg p-4 bg-gray-50">
             <p class="font-bold">Información Adicional</p>
-            <div v-for="(info, index) in additionalInfo" :key="index" class="flex items-center">
-              <input type="text" v-model="info.name" class="form-input-pdf-inline w-1/3" placeholder="Nombre">
+            <div v-for="(info, index) in additionalInfo" :key="index" class="flex items-center mt-1">
+              <input type="text" v-model="info.name" class="form-input-box w-1/3" placeholder="Nombre">
               <span class="mx-2">:</span>
-              <input type="text" v-model="info.value" class="form-input-pdf-inline w-2/3" placeholder="Valor">
-              <button @click="removeAdditionalInfo(index)" class="text-red-500 ml-2 hover:text-red-700">&times;</button>
+              <input type="text" v-model="info.value" class="form-input-box w-2/3" placeholder="Valor">
+              <button @click="removeAdditionalInfo(index)" class="text-red-600 hover:text-red-800 ml-2" title="Eliminar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
             </div>
             <button @click="addAdditionalInfo" class="mt-2 text-sm text-indigo-600 font-bold hover:text-indigo-800">+ Agregar Info</button>
           </div>
-          <div class="border rounded-lg p-4 bg-gray-50 mt-4">
+          <div class="rounded-lg p-4 bg-gray-50">
             <p class="font-bold">Formas de Pago</p>
             <BaseSelect v-model="selectedPaymentMethod" :options="paymentMethodOptions" class="w-full mt-2"/>
           </div>
@@ -102,7 +114,7 @@
 
         <!-- Totals -->
         <div class="w-2/5">
-          <table class="w-full border rounded-lg overflow-hidden">
+          <table class="w-full rounded-lg overflow-hidden">
             <tr v-for="(tax, code) in totals.iva" :key="code">
               <td class="px-2 py-1 border font-bold bg-gray-50">Subtotal {{ getTarifaFromCodigoPorcentaje(code) }}%</td>
               <td class="px-2 py-1 border text-right">${{ tax.base.toFixed(2) }}</td>
@@ -318,18 +330,19 @@ export default {
 </script>
 
 <style scoped>
-.form-input-pdf-inline {
-  border-width: 0;
-  border-bottom-width: 1px;
-  border-color: #d1d5db; /* gray-300 */
-  background-color: transparent;
-  padding: 2px 4px;
-  margin-left: 6px;
-  width: 70%;
+.form-input-box {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  background-color: #f9fafb; /* gray-50 */
+  border-radius: 6px;
+  border: 1px solid #d1d5db; /* gray-300 */
 }
-.form-input-pdf-inline:focus {
+.form-input-box:focus {
   outline: none;
   border-color: #6366f1; /* indigo-500 */
+  box-shadow: 0 0 0 1px #6366f1;
 }
 .form-input-table {
   border-width: 0;
