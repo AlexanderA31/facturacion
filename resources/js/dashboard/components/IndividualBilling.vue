@@ -17,7 +17,7 @@
         <div class="w-1/2 pl-4 border-l">
           <div class="border border-gray-300 rounded-lg p-4">
             <p class="text-lg font-bold">FACTURA</p>
-            <p class="text-red-600 font-bold text-lg">{{ getEstablecimientoCode() }}-{{ getPuntoEmisionCode() }}-<input type="text" placeholder="secuencial" class="w-24 form-input-pdf-inline"></p>
+            <p class="text-red-600 font-bold text-lg">{{ getEstablecimientoCode() }}-{{ getPuntoEmisionCode() }}-{{ proximoSecuencial }}</p>
             <p class="font-bold mt-4">Número de Autorización:</p>
             <p class="text-xs break-all">--</p>
             <p><span class="font-bold">Ambiente:</span> {{ userProfile.ambiente == '1' ? 'PRUEBAS' : 'PRODUCCIÓN' }}</p>
@@ -160,6 +160,11 @@ export default {
     puntoEmisionOptions() {
       if (!this.selectedEstablecimientoId) return [];
       return this.puntosEmision.filter(p => p.establecimiento_id == this.selectedEstablecimientoId).map(p => ({ value: p.id, text: `${p.numero} - ${p.nombre}` }));
+    },
+    proximoSecuencial() {
+      if (!this.selectedPuntoEmisionId) return '000000000';
+      const pto = this.puntosEmision.find(p => p.id === this.selectedPuntoEmisionId);
+      return pto ? String(pto.proximo_secuencial).padStart(9, '0') : '000000000';
     },
     totals() {
       let subtotal = 0, discount = 0, iva = {};
