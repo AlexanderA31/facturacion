@@ -62,22 +62,28 @@
               <th class="px-2 py-2 text-left font-bold">Cantidad</th>
               <th class="px-2 py-2 text-left font-bold">P. Unitario</th>
               <th class="px-2 py-2 text-left font-bold">Descuento</th>
+              <th class="px-2 py-2 text-left font-bold">Impuesto</th>
               <th class="px-2 py-2 text-left font-bold">Total</th>
               <th class="px-2 py-2 text-left font-bold rounded-tr-lg"></th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(item, index) in items" :key="index" class="border-b">
-              <td class="px-2 py-1"><input type="text" v-model="item.codigoPrincipal" class="w-full form-input-table"></td>
+              <td class="px-2 py-1"><input type="text" v-model="item.codigoPrincipal" class="form-input-box"></td>
               <td class="px-2 py-1 relative">
-                <input type="text" v-model="item.description" @input="searchProducts(index)" @focus="activeAutocomplete = index" class="w-full form-input-table">
+                <input type="text" v-model="item.description" @input="searchProducts(index)" @focus="activeAutocomplete = index" class="form-input-box">
                 <div v-if="activeAutocomplete === index && filteredProducts.length" class="absolute z-10 w-full bg-white border rounded shadow-lg mt-1">
                   <ul><li v-for="p in filteredProducts" :key="p.id" @click="selectProduct(index, p)" class="px-3 py-2 cursor-pointer hover:bg-gray-100">{{ p.description }}</li></ul>
                 </div>
               </td>
-              <td class="px-2 py-1"><input type="number" v-model.number="item.quantity" class="w-20 form-input-table text-right"></td>
-              <td class="px-2 py-1"><input type="number" v-model.number="item.price" class="w-24 form-input-table text-right"></td>
-              <td class="px-2 py-1"><input type="number" v-model.number="item.discount" class="w-20 form-input-table text-right"></td>
+              <td class="px-2 py-1"><input type="number" v-model.number="item.quantity" class="form-input-box w-24 text-right"></td>
+              <td class="px-2 py-1"><input type="number" v-model.number="item.price" class="form-input-box w-24 text-right"></td>
+              <td class="px-2 py-1"><input type="number" v-model.number="item.discount" class="form-input-box w-24 text-right"></td>
+              <td class="px-2 py-1">
+                <select v-model="item.tax" class="form-input-box w-full">
+                  <option v-for="tax in taxOptions" :key="tax.value" :value="tax.value">{{ tax.text }}</option>
+                </select>
+              </td>
               <td class="px-2 py-1 text-right font-medium">${{ calculateItemTotal(item) }}</td>
               <td class="px-2 py-1 text-center">
                 <button @click="removeItem(index)" class="text-red-600 hover:text-red-800" title="Eliminar">
