@@ -256,6 +256,15 @@ export default {
       const map = { '0': 0, '2': 12, '3': 14, '4': 15, '5': 5, '8': 8, '10': 13 };
       return map[codigo] || 0;
     },
+    normalizePhoneNumber(phone) {
+        if (!phone) return '';
+        let cleaned = String(phone).replace(/\s+/g, '');
+        if (cleaned.startsWith('+593')) return cleaned;
+        if (cleaned.startsWith('593')) return `+${cleaned}`;
+        if (cleaned.length === 10 && cleaned.startsWith('0')) return `+593${cleaned.substring(1)}`;
+        if (cleaned.length === 9) return `+593${cleaned}`;
+        return phone;
+    },
     async fetchUserProfile() {
       try {
         const response = await axios.get('/api/profile', { headers: { 'Authorization': `Bearer ${this.token}` }});
@@ -307,6 +316,13 @@ export default {
             }],
           };
         });
+        const infoAdicional = this.additionalInfo.reduce((acc, info) => {
+            if (info.name && info.value) acc[info.name] = info.value;
+            return acc;
+        }, {});
+        if (this.client.email) infoAdicional.email = this.client.email;
+        if (this.client.telefono) infoAdicional.telefono = this.normalizePhoneNumber(this.client.telefono);
+
         const payload = {
           fechaEmision: this.client.fechaEmision,
           tipoIdentificacionComprador: String(this.client.ruc).length === 13 ? '04' : '05',
@@ -324,7 +340,7 @@ export default {
           importeTotal: this.totals.total,
           pagos: [{ formaPago: this.selectedPaymentMethod, total: this.totals.total }],
           detalles: detalles,
-          infoAdicional: { email: this.client.email, telefono: this.client.telefono, ...this.additionalInfo.reduce((acc, info) => { if(info.name) acc[info.name] = info.value; return acc; }, {})},
+          infoAdicional: infoAdicional,
         };
         await axios.post(`/api/comprobantes/factura/${this.selectedPuntoEmisionId}`, payload, { headers: { 'Authorization': `Bearer ${this.token}` }});
         this.$emitter.emit('show-alert', { type: 'success', message: 'Factura generada exitosamente.' });
