@@ -148,12 +148,17 @@ export default {
   },
   computed: {
     headers() {
-        const baseHeaders = [
+        let baseHeaders = [
             { text: 'Número de Factura', value: 'numero_factura' },
             { text: 'Cliente', value: 'cliente' },
+            { text: 'Fecha de Emisión', value: 'fecha_emision' },
             { text: 'Valor', value: 'valor' },
             { text: 'Estado', value: 'estado' },
         ];
+
+        if (this.currentTab === 'authorized') {
+            baseHeaders = baseHeaders.filter(h => h.value !== 'fecha_emision');
+        }
 
         let finalHeaders = [...baseHeaders];
 
