@@ -146,6 +146,11 @@
     <div v-if="currentDashboardView === 'configuration'">
       <Configuration :is-sidebar-open="isSidebarOpen" />
     </div>
+
+    <!-- Products Section -->
+    <div v-if="currentDashboardView === 'products'">
+      <ProductsManager :is-sidebar-open="isSidebarOpen" />
+    </div>
   </AppLayout>
 </template>
 
@@ -161,6 +166,7 @@ import IndividualBilling from './IndividualBilling.vue';
 import Pagination from './Pagination.vue';
 import BaseButton from './BaseButton.vue';
 import Configuration from './Configuration.vue';
+import ProductsManager from './ProductsManager.vue';
 import BaseAlert from './BaseAlert.vue';
 import BaseSelect from './BaseSelect.vue';
 import AppLayout from './AppLayout.vue';
@@ -186,6 +192,10 @@ const IconConfig = {
   render() { return h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' }, [ h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': 2, d: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' }), h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': 2, d: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z' }) ]); }
 };
 
+const IconBox = {
+  render() { return h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' }, [ h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': 2, d: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-14L4 7m0 0v10l8 4m0-14L4 7' }) ]); }
+};
+
 export default {
   name: 'Dashboard',
   components: {
@@ -199,6 +209,7 @@ export default {
     Pagination,
     BaseButton,
     Configuration,
+    ProductsManager,
     BaseAlert,
     BaseSelect,
     AppLayout,
@@ -284,6 +295,7 @@ export default {
         { name: 'Estado de factura', view: 'status', icon: IconStatus },
         { name: 'Mis Comprobantes', view: 'my-invoices', icon: IconInvoices },
         { name: 'Facturación Correctiva', view: 'corrective', icon: IconCorrective, count: this.correctiveInvoicesCount },
+        { name: 'Productos', view: 'products', icon: IconBox },
         { name: 'Configuración', view: 'configuration', icon: IconConfig },
       ];
     },

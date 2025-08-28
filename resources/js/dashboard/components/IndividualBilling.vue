@@ -1,10 +1,10 @@
 <template>
-  <div>
-    <div class="bg-white rounded-xl shadow-lg p-6">
-      <h2 class="text-2xl font-bold text-gray-800 mb-4">Facturación Individual</h2>
+  <div class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+      <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Factura</h2>
 
       <!-- Establishment and Emission Point -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 border-b pb-8">
         <BaseSelect
           id="establecimiento-select"
           label="Establecimiento"
@@ -23,40 +23,44 @@
       </div>
 
       <!-- Client Information -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <label for="ruc" class="block text-sm font-medium text-gray-700">RUC/CI</label>
-          <input type="text" id="ruc" v-model="client.ruc" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-        <div>
-          <label for="name" class="block text-sm font-medium text-gray-700">Razón Social / Nombres</label>
-          <input type="text" id="name" v-model="client.name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-        <div>
-          <label for="address" class="block text-sm font-medium text-gray-700">Dirección</label>
-          <input type="text" id="address" v-model="client.address" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" id="email" v-model="client.email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-        <div>
-          <label for="phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
-          <input type="tel" id="phone" v-model="client.telefono" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-        <div>
-            <BaseSelect
-                id="payment-method-select-individual"
-                label="Método de Pago"
-                v-model="selectedPaymentMethod"
-                :options="paymentMethodOptions"
-                placeholder="Seleccione un método de pago"
-            />
+      <div class="mb-8 border-b pb-8">
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">Facturar a:</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+          <div class="col-span-1">
+            <label for="ruc" class="block text-sm font-medium text-gray-600">RUC/CI</label>
+            <input type="text" id="ruc" v-model="client.ruc" class="form-input-pdf">
+          </div>
+          <div class="col-span-1">
+            <label for="name" class="block text-sm font-medium text-gray-600">Razón Social / Nombres</label>
+            <input type="text" id="name" v-model="client.name" class="form-input-pdf">
+          </div>
+          <div class="col-span-2">
+            <label for="address" class="block text-sm font-medium text-gray-600">Dirección</label>
+            <input type="text" id="address" v-model="client.address" class="form-input-pdf">
+          </div>
+          <div class="col-span-1">
+            <label for="email" class="block text-sm font-medium text-gray-600">Email</label>
+            <input type="email" id="email" v-model="client.email" class="form-input-pdf">
+          </div>
+          <div class="col-span-1">
+            <label for="phone" class="block text-sm font-medium text-gray-600">Teléfono</label>
+            <input type="tel" id="phone" v-model="client.telefono" class="form-input-pdf">
+          </div>
+          <div class="col-span-1">
+              <BaseSelect
+                  id="payment-method-select-individual"
+                  label="Método de Pago"
+                  v-model="selectedPaymentMethod"
+                  :options="paymentMethodOptions"
+                  placeholder="Seleccione un método de pago"
+                  class="form-input-pdf"
+              />
+          </div>
         </div>
       </div>
 
       <!-- Additional Info -->
-      <div class="mb-6">
+      <div class="mb-8">
         <h3 class="text-xl font-bold text-gray-800 mb-4">Información Adicional</h3>
         <div v-for="(info, index) in additionalInfo" :key="index" class="grid grid-cols-1 md:grid-cols-11 gap-4 mb-2 items-center">
           <div class="md:col-span-5">
@@ -79,77 +83,74 @@
       </div>
 
       <!-- Invoice Items -->
-      <div class="mb-6">
-        <h3 class="text-xl font-bold text-gray-800 mb-4">Items de la Factura</h3>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+      <div class="mb-8">
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">Detalles</h3>
+        <div class="overflow-x-auto border rounded-lg">
+          <table class="min-w-full">
+            <thead class="bg-gray-100">
               <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Unitario</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descuento</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Impuestos</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                <th scope="col" class="relative px-6 py-3">
-                  <span class="sr-only">Eliminar</span>
-                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-2/5">Descripción</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Cantidad</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">P. Unitario</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Descuento</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Impuesto</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Total</th>
+                <th scope="col" class="relative px-6 py-3"><span class="sr-only">Eliminar</span></th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-for="(item, index) in items" :key="index">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <input type="text" v-model="item.description" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <td class="px-6 py-2 whitespace-nowrap relative">
+                  <input type="text" v-model="item.description" @input="searchProducts(index)" @focus="activeAutocomplete = index" class="form-input-pdf w-full">
+                  <div v-if="activeAutocomplete === index && filteredProducts.length" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1">
+                    <ul>
+                      <li v-for="product in filteredProducts" :key="product.id" @click="selectProduct(index, product)" class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                        {{ product.description }}
+                      </li>
+                    </ul>
+                  </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <input type="number" v-model.number="item.quantity" class="mt-1 block w-24 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <input type="number" v-model.number="item.price" class="mt-1 block w-32 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <input type="number" v-model.number="item.discount" class="mt-1 block w-24 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <select v-model="item.tax" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <td class="px-6 py-2"><input type="number" v-model.number="item.quantity" class="form-input-pdf w-24"></td>
+                <td class="px-6 py-2"><input type="number" v-model.number="item.price" class="form-input-pdf w-32"></td>
+                <td class="px-6 py-2"><input type="number" v-model.number="item.discount" class="form-input-pdf w-24"></td>
+                <td class="px-6 py-2">
+                  <select v-model="item.tax" class="form-input-pdf w-full">
                     <option v-for="tax in taxOptions" :key="tax.value" :value="tax.value">{{ tax.text }}</option>
                   </select>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ calculateItemTotal(item) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button @click="removeItem(index)" class="text-red-600 hover:text-red-900" title="Eliminar">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-800 font-medium">{{ calculateItemTotal(item) }}</td>
+                <td class="px-6 py-2 whitespace-nowrap text-right text-sm">
+                  <button @click="removeItem(index)" class="text-red-500 hover:text-red-700" title="Eliminar">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                   </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-        <button @click="addItem" class="mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded">
-          <svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Agregar Item
-        </button>
+        <button @click="addItem" class="mt-4 text-sm text-indigo-600 hover:text-indigo-800 font-medium">+ Agregar Item</button>
       </div>
 
       <!-- Totals -->
-      <div class="flex justify-end mb-6">
-        <div class="w-full max-w-sm">
-          <div class="flex justify-between py-2 border-b">
-            <span class="font-medium text-gray-600">Subtotal:</span>
-            <span class="font-bold text-gray-800">{{ totals.subtotal }}</span>
-          </div>
-          <div class="flex justify-between py-2 border-b">
-            <span class="font-medium text-gray-600">Descuento:</span>
-            <span class="font-bold text-gray-800">{{ totals.discount }}</span>
-          </div>
-          <div v-for="(tax, code) in totals.iva" :key="code" class="flex justify-between py-2 border-b">
-            <span class="font-medium text-gray-600">IVA ({{ getTarifaFromCodigoPorcentaje(code) }}%):</span>
-            <span class="font-bold text-gray-800">{{ tax.valor.toFixed(2) }}</span>
-          </div>
-          <div class="flex justify-between py-2">
-            <span class="text-xl font-bold text-gray-800">Total:</span>
-            <span class="text-xl font-bold text-gray-800">{{ totals.total }}</span>
+      <div class="flex justify-end mb-8">
+        <div class="w-full max-w-md">
+          <div class="bg-gray-50 rounded-lg p-6">
+            <div class="flex justify-between py-2 border-b border-gray-200">
+              <span class="text-gray-600">Subtotal:</span>
+              <span class="font-semibold text-gray-800">{{ totals.subtotal }}</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-gray-200">
+              <span class="text-gray-600">Descuento:</span>
+              <span class="font-semibold text-gray-800">{{ totals.discount }}</span>
+            </div>
+            <div v-for="(tax, code) in totals.iva" :key="code" class="flex justify-between py-2 border-b border-gray-200">
+              <span class="text-gray-600">IVA ({{ getTarifaFromCodigoPorcentaje(code) }}%):</span>
+              <span class="font-semibold text-gray-800">{{ tax.valor.toFixed(2) }}</span>
+            </div>
+            <div class="flex justify-between py-3 mt-2">
+              <span class="text-xl font-bold text-gray-800">Total:</span>
+              <span class="text-xl font-bold text-gray-800">{{ totals.total }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -196,7 +197,8 @@ export default {
           quantity: 1,
           price: 0,
           discount: 0,
-          taxes: []
+          tax: '4',
+          codigoPrincipal: '',
         }
       ],
       establecimientos: [],
@@ -217,7 +219,10 @@ export default {
         { value: '0', text: 'IVA 0%' },
         { value: '6', text: 'No objeto de IVA' },
         { value: '7', text: 'Exento de IVA' },
-      ]
+      ],
+      products: [],
+      activeAutocomplete: null,
+      filteredProducts: [],
     };
   },
   computed: {
@@ -283,12 +288,37 @@ export default {
     this.fetchUserProfile();
     this.fetchEstablecimientos();
     this.fetchPuntosEmision();
+    this.fetchProducts();
     this.$emitter.on('profile-updated', this.fetchUserProfile);
+    document.addEventListener('click', this.handleClickOutside);
   },
   beforeUnmount() {
     this.$emitter.off('profile-updated', this.fetchUserProfile);
+    document.removeEventListener('click', this.handleClickOutside);
   },
   methods: {
+    handleClickOutside(event) {
+      if (this.$el.contains(event.target)) return;
+      this.activeAutocomplete = null;
+    },
+    searchProducts(index) {
+      const item = this.items[index];
+      if (item.description.length < 2) {
+        this.filteredProducts = [];
+        return;
+      }
+      this.filteredProducts = this.products.filter(p =>
+        p.description.toLowerCase().includes(item.description.toLowerCase())
+      );
+    },
+    selectProduct(index, product) {
+      this.items[index].description = product.description;
+      this.items[index].price = product.unit_price;
+      this.items[index].tax = product.tax_code;
+      this.items[index].codigoPrincipal = product.code;
+      this.activeAutocomplete = null;
+      this.filteredProducts = [];
+    },
     addAdditionalInfo() {
       this.additionalInfo.push({ name: '', value: '' });
     },
@@ -301,7 +331,8 @@ export default {
         quantity: 1,
         price: 0,
         discount: 0,
-        tax: this.userProfile.codigo_porcentaje_iva
+        tax: this.userProfile.codigo_porcentaje_iva,
+        codigoPrincipal: '',
       });
     },
     removeItem(index) {
@@ -401,6 +432,16 @@ export default {
         console.error('Error fetching puntos de emision:', error);
       }
     },
+    async fetchProducts() {
+      try {
+        const response = await axios.get('/api/products', {
+          headers: { 'Authorization': `Bearer ${this.token}` }
+        });
+        this.products = response.data.data;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    },
     async generateInvoice() {
       if (this.isSubmitting) return;
 
@@ -435,7 +476,7 @@ export default {
           const taxRate = this.getTarifaFromCodigoPorcentaje(item.tax);
           const taxValue = (itemSubtotal - item.discount) * (taxRate / 100);
           return {
-            codigoPrincipal: 'PROD' + Date.now() + '-' + index,
+            codigoPrincipal: item.codigoPrincipal || 'PROD' + Date.now() + '-' + index,
             descripcion: item.description,
             cantidad: item.quantity,
             precioUnitario: item.price,
@@ -500,3 +541,9 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.form-input-pdf {
+  @apply mt-1 block w-full border-0 border-b-2 border-gray-300 bg-gray-50 py-2 px-3 focus:outline-none focus:ring-0 focus:border-indigo-500 sm:text-sm;
+}
+</style>

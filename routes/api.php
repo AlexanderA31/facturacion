@@ -8,6 +8,7 @@ use App\Http\Controllers\Client\ComprobantesController;
 use App\Http\Controllers\Client\EstablecimientoController;
 use App\Http\Controllers\Client\PuntoEmisionController;
 use App\Http\Controllers\Client\PerfilClientController;
+use App\Http\Controllers\Client\ProductController;
 
 
 Route::group(['middleware' => ['json.response']], function () {
@@ -69,6 +70,11 @@ Route::group(['middleware' => ['json.response']], function () {
         Route::put('/puntos-emision/{punto_emision}/secuencial', [PuntoEmisionController::class, 'updateSecuencial']);
         /* --------------------------- Rutas para Reseteo --------------------------- */
         Route::post('/puntos-emision/reset/{punto_emision}', [PuntoEmisionController::class, 'reset']);
+    });
+
+    /* ---------------------------------- Rutas Productos ---------------------------------- */
+    Route::middleware(['jwt', 'role:client'])->group(function () {
+        Route::resource('products', ProductController::class)->except(['create', 'edit']);
     });
 
     /* ---------------------------------- Rutas de comprobantes ---------------------------------- */
