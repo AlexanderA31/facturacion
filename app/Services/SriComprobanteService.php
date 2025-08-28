@@ -213,7 +213,7 @@ class SriComprobanteService
             }
 
             // Pausa para dar tiempo al SRI a procesar
-            sleep(2);
+            sleep(3);
 
             // 👉 Autorización
             $ambiente = $this->leerAmbienteDesdeXml($xmlString);
