@@ -44,6 +44,38 @@
           <label for="phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
           <input type="tel" id="phone" v-model="client.telefono" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
         </div>
+        <div>
+            <BaseSelect
+                id="payment-method-select-individual"
+                label="Método de Pago"
+                v-model="selectedPaymentMethod"
+                :options="paymentMethodOptions"
+                placeholder="Seleccione un método de pago"
+            />
+        </div>
+      </div>
+
+      <!-- Additional Info -->
+      <div class="mb-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Información Adicional</h3>
+        <div v-for="(info, index) in additionalInfo" :key="index" class="grid grid-cols-1 md:grid-cols-11 gap-4 mb-2 items-center">
+          <div class="md:col-span-5">
+            <label class="text-sm font-medium text-gray-700">Nombre</label>
+            <input type="text" v-model="info.name" placeholder="Ej: Correo Alternativo" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          </div>
+          <div class="md:col-span-5">
+            <label class="text-sm font-medium text-gray-700">Valor</label>
+            <input type="text" v-model="info.value" placeholder="Ej: micorreo@dominio.com" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          </div>
+          <div class="md:col-span-1 flex items-end">
+            <button @click="removeAdditionalInfo(index)" class="mt-6 text-red-600 hover:text-red-900" title="Eliminar Info">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          </div>
+        </div>
+        <button @click="addAdditionalInfo" class="mt-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded">
+          <svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Agregar Información
+        </button>
       </div>
 
       <!-- Invoice Items -->
@@ -135,6 +167,7 @@
 <script>
 import axios from 'axios';
 import BaseSelect from './BaseSelect.vue';
+import { paymentMethodOptions } from '../utils/paymentMethods.js';
 
 export default {
   name: 'IndividualBilling',
@@ -169,6 +202,9 @@ export default {
       puntosEmision: [],
       selectedEstablecimientoId: null,
       selectedPuntoEmisionId: null,
+      selectedPaymentMethod: '01',
+      paymentMethodOptions: paymentMethodOptions,
+      additionalInfo: [{ name: '', value: '' }],
       userProfile: {
         tipo_impuesto: '2',
         codigo_porcentaje_iva: '4',
@@ -252,6 +288,12 @@ export default {
     this.$emitter.off('profile-updated', this.fetchUserProfile);
   },
   methods: {
+    addAdditionalInfo() {
+      this.additionalInfo.push({ name: '', value: '' });
+    },
+    removeAdditionalInfo(index) {
+      this.additionalInfo.splice(index, 1);
+    },
     addItem() {
       this.items.push({
         description: '',
@@ -412,6 +454,12 @@ export default {
           infoAdicional.telefono = this.normalizePhoneNumber(this.client.telefono);
       }
 
+      this.additionalInfo.forEach(info => {
+        if (info.name && info.value) {
+          infoAdicional[info.name] = info.value;
+        }
+      });
+
       const payload = {
         tipoIdentificacionComprador: String(this.client.ruc).length === 13 ? '04' : '05',
         razonSocialComprador: this.client.name,
@@ -421,7 +469,7 @@ export default {
         totalDescuento: this.totals.discount,
         totalConImpuestos: totalConImpuestos,
         importeTotal: this.totals.total,
-        pagos: [{ formaPago: '01', total: this.totals.total }], // Assuming cash payment for now
+        pagos: [{ formaPago: this.selectedPaymentMethod, total: this.totals.total }],
         detalles: detalles,
         infoAdicional: infoAdicional,
       };

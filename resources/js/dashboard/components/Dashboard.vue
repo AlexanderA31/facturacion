@@ -31,7 +31,7 @@
 
       <div class="bg-white rounded-xl shadow-lg">
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div>
                     <BaseSelect
                         id="establecimiento-select"
@@ -49,6 +49,15 @@
                         :options="puntoEmisionOptions"
                         :disabled="!selectedEstablecimientoId"
                         placeholder="Seleccione un punto de emisión"
+                    />
+                </div>
+                <div>
+                    <BaseSelect
+                        id="payment-method-select"
+                        label="Método de Pago (para todo el lote)"
+                        v-model="selectedPaymentMethod"
+                        :options="paymentMethodOptions"
+                        placeholder="Seleccione un método de pago"
                     />
                 </div>
             </div>
@@ -156,7 +165,7 @@ import BaseAlert from './BaseAlert.vue';
 import BaseSelect from './BaseSelect.vue';
 import AppLayout from './AppLayout.vue';
 import axios from 'axios';
-import { parsePaymentMethods } from '../utils/paymentMethods.js';
+import { paymentMethodOptions } from '../utils/paymentMethods.js';
 
 const IconBilling = {
   render() { return h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' }, [ h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': 2, d: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }) ]); }
@@ -223,6 +232,8 @@ export default {
       puntosEmision: [],
       selectedEstablecimientoId: null,
       selectedPuntoEmisionId: null,
+      selectedPaymentMethod: '01',
+      paymentMethodOptions: paymentMethodOptions,
       filterStatus: 'Todos',
       currentPage: 1,
       itemsPerPage: 10,
@@ -487,11 +498,10 @@ export default {
       const totalSinImpuestos = precio / taxRate;
       const iva = precio - totalSinImpuestos;
 
-      const metodoPago = findValue('metodo de pago');
-      const pagos = parsePaymentMethods(metodoPago, precio).map(p => ({
-        ...p,
-        total: formatToString(p.total)
-      }));
+      const pagos = [{
+          formaPago: this.selectedPaymentMethod,
+          total: formatToString(precio)
+      }];
 
       return {
         // fechaEmision is now set by the server
