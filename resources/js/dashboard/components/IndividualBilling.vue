@@ -61,11 +61,11 @@
         <div v-for="(info, index) in additionalInfo" :key="index" class="grid grid-cols-1 md:grid-cols-11 gap-4 mb-2 items-center">
           <div class="md:col-span-5">
             <label class="text-sm font-medium text-gray-700">Nombre</label>
-            <input type="text" v-model="info.name" placeholder="Ej: Correo Alternativo" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <input type="text" v-model="info.name" placeholder="" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
           </div>
           <div class="md:col-span-5">
             <label class="text-sm font-medium text-gray-700">Valor</label>
-            <input type="text" v-model="info.value" placeholder="Ej: micorreo@dominio.com" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <input type="text" v-model="info.value" placeholder="" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
           </div>
           <div class="md:col-span-1 flex items-end">
             <button @click="removeAdditionalInfo(index)" class="mt-6 text-red-600 hover:text-red-900" title="Eliminar Info">
