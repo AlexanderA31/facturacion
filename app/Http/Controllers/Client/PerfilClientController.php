@@ -61,6 +61,7 @@ class PerfilClientController extends Controller implements HasMiddleware
                 'from_email' => 'sometimes|nullable|string',
                 'tipo_impuesto' => 'sometimes|string|nullable',
                 'codigo_porcentaje_iva' => 'sometimes|string|nullable',
+                'forma_pago_defecto' => 'sometimes|string|size:2',
             ]);
 
             if ($validator->fails()) {

@@ -421,7 +421,7 @@ export default {
         totalDescuento: this.totals.discount,
         totalConImpuestos: totalConImpuestos,
         importeTotal: this.totals.total,
-        pagos: [{ formaPago: '01', total: this.totals.total }], // Assuming cash payment for now
+        pagos: [{ formaPago: this.userProfile.forma_pago_defecto || '01', total: this.totals.total }],
         detalles: detalles,
         infoAdicional: infoAdicional,
       };

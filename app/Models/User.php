@@ -72,6 +72,7 @@ class User extends Authenticatable implements JWTSubject
         'logo_path',
         'tipo_impuesto',
         'codigo_porcentaje_iva',
+        'forma_pago_defecto',
     ];
 
     /**

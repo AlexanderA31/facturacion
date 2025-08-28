@@ -78,6 +78,15 @@
                         />
                         <p class="mt-2 text-sm text-gray-500">Seleccione el porcentaje de IVA a aplicar.</p>
                     </div>
+                    <div>
+                        <BaseSelect
+                            id="forma-pago-defecto-select"
+                            label="Forma de Pago por Defecto"
+                            v-model="form.forma_pago_defecto"
+                            :options="paymentMethodOptions"
+                        />
+                        <p class="mt-2 text-sm text-gray-500">Seleccione la forma de pago por defecto para sus facturas.</p>
+                    </div>
                 </div>
                 <div class="mt-6 flex justify-end">
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -152,6 +161,7 @@ export default {
         logo_path: '',
         tipo_impuesto: '2',
         codigo_porcentaje_iva: '2',
+        forma_pago_defecto: '01',
       },
       logoFile: null,
       logoPreview: null,
@@ -174,6 +184,16 @@ export default {
         { value: '0', text: 'IVA 0%' },
         { value: '6', text: 'No objeto de IVA' },
         { value: '7', text: 'Exento de IVA' },
+      ],
+      paymentMethodOptions: [
+        { value: '01', text: 'SIN UTILIZACION DEL SISTEMA FINANCIERO' },
+        { value: '15', text: 'COMPENSACIÓN DE DEUDAS' },
+        { value: '16', text: 'TARJETA DE DÉBITO' },
+        { value: '17', text: 'DINERO ELECTRÓNICO' },
+        { value: '18', text: 'TARJETA PREPAGO' },
+        { value: '19', text: 'TARJETA DE CRÉDITO' },
+        { value: '20', text: 'OTROS CON UTILIZACION DEL SISTEMA FINANCIERO' },
+        { value: '21', text: 'ENDOSO DE TÍTULOS' },
       ],
       token: localStorage.getItem('jwt_token'),
     };
@@ -201,6 +221,7 @@ export default {
             logo_path: profile.logo_path,
             tipo_impuesto: profile.tipo_impuesto,
             codigo_porcentaje_iva: profile.codigo_porcentaje_iva,
+            forma_pago_defecto: profile.forma_pago_defecto,
         };
         if (profile.logo_path) {
             this.logoPreview = `/storage/${profile.logo_path}`;
