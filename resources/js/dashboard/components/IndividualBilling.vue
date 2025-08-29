@@ -334,10 +334,11 @@ export default {
         });
         if (response.data && response.data.success) {
           const persona = response.data.data.data;
-          this.client.name = persona.nombre;
-          this.client.address = persona.direccion;
-          this.client.email = persona.email;
-          this.client.telefono = persona.telefono;
+          // Based on user's original snippet, the fields are likely in English
+          this.client.name = `${persona.first_name || ''} ${persona.last_name || ''}`.trim();
+          this.client.address = persona.address || '';
+          this.client.email = persona.email || '';
+          this.client.telefono = persona.phone_number || '';
         }
       } catch (error) {
         console.warn('No se pudo obtener los datos de la persona. El usuario puede ingresarlos manualmente.', error);
