@@ -75,6 +75,7 @@ Route::group(['middleware' => ['json.response']], function () {
     /* ---------------------------------- Rutas Productos ---------------------------------- */
     Route::middleware(['jwt', 'role:client'])->group(function () {
         Route::resource('products', ProductController::class)->except(['create', 'edit']);
+        Route::get('/persona/{id}', [ComprobantesController::class, 'getPersona']);
     });
 
     /* ---------------------------------- Rutas de comprobantes ---------------------------------- */

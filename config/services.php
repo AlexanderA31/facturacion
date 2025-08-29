@@ -40,4 +40,9 @@ return [
         'base_url' => env('EMITTO_BASE_URL', 'https://api-emitto.softecsa.com'),
     ],
 
+    'personas' => [
+        'token' => env('API_PERSONAS', 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIhzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI1OTE0NDU3LCJleHAiOjE3NTc0NTA0NTcsIm5iZiI6MTcyNTkxNDQ1NywianRpIjoiZnVsQ2M2cW1kbnRCVXBJTSIsInN1YiI6IjEiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.o-QZmnktnyzDUaoYc_KIHUeYV_arfq14H5g-0G8VJGA'),
+        'base_url' => env('URL_PERSONAS', 'https://apipersonas.softecsa.com/'),
+    ],
+
 ];

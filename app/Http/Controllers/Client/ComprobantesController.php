@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Storage;
 use PDF;
 use ZipArchive;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 
 class ComprobantesController extends Controller
@@ -353,6 +355,36 @@ class ComprobantesController extends Controller
             );
         } catch (\Exception $e) {
             return $this->sendError('Error al generar la factura', $e->getMessage(), 500);
+        }
+    }
+
+    public function getPersona($id)
+    {
+        try {
+            $token = config('services.personas.token');
+            $baseUrl = config('services.personas.base_url');
+
+            if (strlen($id) == 13) {
+                $url = $baseUrl . "api/ruc/" . $id;
+            } else {
+                $url = $baseUrl . "api/ci/" . $id;
+            }
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $token,
+                'User-agent' => 'Laravel',
+            ])->get($url);
+
+
+            if ($response->successful()) {
+                return $this->sendResponse('Datos de persona recuperados exitosamente.', $response->json());
+            } else {
+                Log::warning('Solicitud a API Personas fallida: ' . $response->status(), ['id' => $id, 'response' => $response->body()]);
+                return $this->sendError('No se pudo obtener los datos de la persona.', [], $response->status());
+            }
+        } catch (\Exception $e) {
+            Log::error('Excepción en solicitud a API Personas: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString(), ['id' => $id]);
+            return $this->sendError('Ocurrió un error al consultar el servicio de personas.', [], 500);
         }
     }
 }

@@ -234,7 +234,12 @@ export default {
   },
   watch: {
     selectedEstablecimientoId() { this.selectedPuntoEmisionId = null; },
-    puntoEmisionOptions(newOptions) { if (newOptions.length > 0 && !this.selectedPuntoEmisionId) this.selectedPuntoEmisionId = newOptions[0].value; }
+    puntoEmisionOptions(newOptions) { if (newOptions.length > 0 && !this.selectedPuntoEmisionId) this.selectedPuntoEmisionId = newOptions[0].value; },
+    'client.ruc'(newVal) {
+      if (newVal.length === 10 || newVal.length === 13) {
+        this.fetchPersonaData(newVal);
+      }
+    }
   },
   mounted() {
     this.fetchUserProfile(); this.fetchEstablecimientos(); this.fetchPuntosEmision(); this.fetchProducts();
@@ -319,6 +324,22 @@ export default {
         const response = await axios.get('/api/products', { headers: { 'Authorization': `Bearer ${this.token}` }});
         this.products = response.data.data;
       } catch (error) { console.error('Error fetching products:', error); }
+    },
+    async fetchPersonaData(id) {
+      try {
+        const response = await axios.get(`/api/persona/${id}`, {
+          headers: { 'Authorization': `Bearer ${this.token}` }
+        });
+        if (response.data && response.data.success) {
+          const persona = response.data.data.data;
+          this.client.name = persona.nombre;
+          this.client.address = persona.direccion;
+          this.client.email = persona.email;
+          this.client.telefono = persona.telefono;
+        }
+      } catch (error) {
+        console.warn('No se pudo obtener los datos de la persona. El usuario puede ingresarlos manualmente.', error);
+      }
     },
     async generateInvoice() {
       if (this.isSubmitting) return;
