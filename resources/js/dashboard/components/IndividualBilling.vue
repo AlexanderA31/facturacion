@@ -145,16 +145,18 @@
         <!-- Totals -->
         <div class="w-2/5">
           <table class="w-full rounded-lg overflow-hidden">
-            <tr v-for="(tax, code) in totals.iva" :key="code">
-              <td class="px-2 py-1 border font-bold bg-gray-50">Subtotal {{ getTarifaFromCodigoPorcentaje(code) }}%</td>
-              <td class="px-2 py-1 border text-right">${{ tax.base.toFixed(2) }}</td>
-            </tr>
-            <tr><td class="px-2 py-1 border font-bold bg-gray-50">Descuento</td><td class="px-2 py-1 border text-right">${{ totals.discount }}</td></tr>
-            <tr v-for="(tax, code) in totals.iva" :key="code">
-              <td class="px-2 py-1 border font-bold bg-gray-50">IVA {{ getTarifaFromCodigoPorcentaje(code) }}%</td>
-              <td class="px-2 py-1 border text-right">${{ tax.valor.toFixed(2) }}</td>
-            </tr>
-            <tr class="bg-gray-200"><td class="px-2 py-2 border font-bold text-lg">Valor Total</td><td class="px-2 py-2 border text-right font-bold text-lg">${{ totals.total }}</td></tr>
+            <tbody>
+              <tr v-for="(tax, code) in totals.iva" :key="code">
+                <td class="px-2 py-1 border font-bold bg-gray-50">Subtotal {{ getTarifaFromCodigoPorcentaje(code) }}%</td>
+                <td class="px-2 py-1 border text-right">${{ tax.base.toFixed(2) }}</td>
+              </tr>
+              <tr><td class="px-2 py-1 border font-bold bg-gray-50">Descuento</td><td class="px-2 py-1 border text-right">${{ totals.discount }}</td></tr>
+              <tr v-for="(tax, code) in totals.iva" :key="code">
+                <td class="px-2 py-1 border font-bold bg-gray-50">IVA {{ getTarifaFromCodigoPorcentaje(code) }}%</td>
+                <td class="px-2 py-1 border text-right">${{ tax.valor.toFixed(2) }}</td>
+              </tr>
+              <tr class="bg-gray-200"><td class="px-2 py-2 border font-bold text-lg">Valor Total</td><td class="px-2 py-2 border text-right font-bold text-lg">${{ totals.total }}</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
