@@ -14,6 +14,7 @@
             </template>
             Exportar a Excel
         </BaseButton>
+       
       </div>
     </div>
     <p class="text-gray-600 mb-6">Aquí puede ver las facturas que fallaron durante el proceso masivo y necesitan corrección. Edite los datos necesarios y vuelva a procesarlas.</p>
@@ -52,13 +53,18 @@
           </div>
       </div>
       <div class="mb-4 flex justify-end">
+        <BaseButton @click="clearTable" class="mr-2" variant="danger" :disabled="failedRows.length === 0">
+            Limpiar Tabla
+        </BaseButton>
         <!-- Start Button -->
         <BaseButton v-if="!isBilling" @click="startBilling" :disabled="failedRows.length === 0 || !selectedPuntoEmisionId" variant="success">
             <template #icon>
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </template>
             Facturar Corregidas
+            
         </BaseButton>
+         
         <!-- Billing In Progress Controls -->
         <div v-if="isBilling" class="flex items-center space-x-4">
             <div class="flex items-center text-lg font-medium text-gray-700">
@@ -576,6 +582,13 @@ export default {
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Facturas Fallidas");
         XLSX.writeFile(workbook, "facturas_correctivas.xlsx");
+    },
+    clearTable() {
+        if (window.confirm('¿Está seguro de que desea limpiar toda la tabla? Esta acción no se puede deshacer.')) {
+            this.failedRows = [];
+            this.saveState(); // This will also clear localStorage
+            this.$emitter.emit('show-alert', { type: 'success', message: 'La tabla ha sido limpiada.' });
+        }
     },
   },
 };

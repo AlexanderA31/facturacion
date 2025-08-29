@@ -18,7 +18,26 @@
         <div class="w-1/2 pl-4">
           <div class="bg-gray-50 rounded-lg p-4">
             <p class="text-xl font-bold">FACTURA</p>
-            <p class="text-red-600 font-bold text-xl">{{ getEstablecimientoCode() }}-{{ getPuntoEmisionCode() }}-{{ proximoSecuencial }}</p>
+            <p class="text-red-600 font-bold text-xl mb-4">{{ getEstablecimientoCode() }}-{{ getPuntoEmisionCode() }}-{{ proximoSecuencial }}</p>
+
+            <div class="grid grid-cols-1 gap-y-2">
+                <BaseSelect
+                    id="ind-establecimiento-select"
+                    label="Establecimiento"
+                    v-model="selectedEstablecimientoId"
+                    :options="establecimientoOptions"
+                    placeholder="Seleccione establecimiento"
+                />
+                <BaseSelect
+                    id="ind-punto-emision-select"
+                    label="Punto de Emisión"
+                    v-model="selectedPuntoEmisionId"
+                    :options="puntoEmisionOptions"
+                    :disabled="!selectedEstablecimientoId"
+                    placeholder="Seleccione punto de emisión"
+                />
+            </div>
+
             <p class="font-bold mt-4">Número de Autorización:</p>
             <p class="text-xs break-all">--</p>
             <p><span class="font-bold">Ambiente:</span> {{ userProfile.ambiente == '1' ? 'PRUEBAS' : 'PRODUCCIÓN' }}</p>
