@@ -18,7 +18,7 @@
         <div class="w-1/2 pl-4">
           <div class="bg-gray-50 rounded-lg p-4">
             <p class="text-xl font-bold">FACTURA</p>
-            <p class="text-red-600 font-bold text-xl mb-4">{{ getEstablecimientoCode() }}-{{ getPuntoEmisionCode() }}-{{ proximoSecuencial }}</p>
+            <p class="text-red-600 font-bold text-xl mb-4">{{ establecimientoCode }}-{{ puntoEmisionCode }}-{{ proximoSecuencial }}</p>
 
             <div class="grid grid-cols-1 gap-y-2">
                 <BaseSelect
@@ -206,6 +206,14 @@ export default {
     };
   },
   computed: {
+    establecimientoCode() {
+      const est = this.establecimientos.find(e => e.id == this.selectedEstablecimientoId);
+      return est ? est.numero : '000';
+    },
+    puntoEmisionCode() {
+      const pto = this.puntosEmision.find(p => p.id == this.selectedPuntoEmisionId);
+      return pto ? pto.numero : '000';
+    },
     establecimientoOptions() { return this.establecimientos.map(e => ({ value: e.id, text: `${e.numero} - ${e.nombre}` })); },
     puntoEmisionOptions() {
       if (!this.selectedEstablecimientoId) return [];
@@ -213,7 +221,7 @@ export default {
     },
     proximoSecuencial() {
       if (!this.selectedPuntoEmisionId) return '000000000';
-      const pto = this.puntosEmision.find(p => p.id === this.selectedPuntoEmisionId);
+      const pto = this.puntosEmision.find(p => p.id == this.selectedPuntoEmisionId);
       return pto ? String(pto.proximo_secuencial).padStart(9, '0') : '000000000';
     },
     totals() {
@@ -253,14 +261,6 @@ export default {
     document.removeEventListener('click', this.handleClickOutside);
   },
   methods: {
-    getEstablecimientoCode() {
-      const est = this.establecimientos.find(e => e.id === this.selectedEstablecimientoId);
-      return est ? est.numero : '000';
-    },
-    getPuntoEmisionCode() {
-      const pto = this.puntosEmision.find(p => p.id === this.selectedPuntoEmisionId);
-      return pto ? pto.numero : '000';
-    },
     handleClickOutside(event) { if (this.$el.contains(event.target) && !this.$el.querySelector('.relative').contains(event.target)) this.activeAutocomplete = null; },
     searchProducts(index) {
       const item = this.items[index];
