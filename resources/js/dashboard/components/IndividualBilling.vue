@@ -5,7 +5,7 @@
       <!-- Header -->
       <div class="flex justify-between items-start mb-4 pb-4">
         <!-- Emitter Info -->
-        <div class="w-1/2 pr-4">
+        <div class="w-1/2 pr-4 text-lg">
           <img v-if="userProfile.logo_path" :src="`/storage/${userProfile.logo_path}`" alt="Logo" class="max-w-xs max-h-20 mb-4 rounded-md">
           <p><span class="font-bold">Emisor:</span> {{ userProfile.name }}</p>
           <p><span class="font-bold">RUC:</span> {{ userProfile.ruc }}</p>
@@ -18,7 +18,7 @@
         <div class="w-1/2 pl-4">
           <div class="bg-gray-50 rounded-lg p-4">
             <p class="text-xl font-bold">FACTURA</p>
-            <p class="text-red-600 font-bold text-xl mb-4">{{ establecimientoCode }}-{{ puntoEmisionCode }}-{{ proximoSecuencial }}</p>
+            <p class="text-red-600 font-bold text-xl mb-1">{{ establecimientoCode }}-{{ puntoEmisionCode }}-{{ proximoSecuencial }}</p>
 
             <div class="grid grid-cols-1 gap-y-2">
                 <BaseSelect
@@ -37,9 +37,6 @@
                     placeholder="Seleccione punto de emisión"
                 />
             </div>
-
-            <p class="font-bold mt-4">Número de Autorización:</p>
-            <p class="text-xs break-all">--</p>
             <p><span class="font-bold">Ambiente:</span> {{ userProfile.ambiente == '1' ? 'PRUEBAS' : 'PRODUCCIÓN' }}</p>
             <p><span class="font-bold">Emisión:</span> NORMAL</p>
           </div>
