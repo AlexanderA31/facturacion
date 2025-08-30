@@ -5,8 +5,8 @@
       <!-- Header -->
       <div class="flex justify-between items-start mb-4 pb-4">
         <!-- Emitter Info -->
-        <div class="w-1/2 pr-4 text-lg">
-          <img v-if="userProfile.logo_path" :src="`/storage/${userProfile.logo_path}`" alt="Logo" class="max-w-xs max-h-20 mb-4 rounded-md">
+        <div class="w-1/2 pr-4 text-base">
+          <img v-if="userProfile.logo_path" :src="`/storage/${userProfile.logo_path}`" alt="Logo" class="max-w-xs max-h-30 mb-4 rounded-md">
           <p><span class="font-bold">Emisor:</span> {{ userProfile.name }}</p>
           <p><span class="font-bold">RUC:</span> {{ userProfile.ruc }}</p>
           <p><span class="font-bold">Correo:</span> {{ userProfile.email }}</p>
